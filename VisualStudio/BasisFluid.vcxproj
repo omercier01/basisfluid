@@ -113,11 +113,21 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile />
       <PrecompiledHeaderOutputFile />
+      <AdditionalIncludeDirectories>C:\Users\Olivier\Documents\projects\basisfluid2020\Libs\glm-0.9.5.4\glm;C:\Users\Olivier\Documents\projects\basisfluid2020\Libs\glfw-3.1.2.bin.WIN64\include;C:\Users\Olivier\Documents\projects\basisfluid2020\Libs\glew-1.13.0.WIN64\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>C:\Users\Olivier\Documents\projects\basisfluid2020\Libs\glfw-3.1.2.bin.WIN64\lib-vc2015;C:\Users\Olivier\Documents\projects\basisfluid2020\Libs\glew-1.13.0.WIN64\lib\Release MX\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>glew32mx.lib;glfw3dll.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy /y "$(ProjectDir)..\Libs\glew-1.13.0.WIN64\bin\Release MX\x64\glew32mx.dll" "$(OutDir)"
+xcopy /y "$(ProjectDir)..\Libs\glfw-3.1.2.bin.WIN64\lib-vc2015\glfw3.dll" "$(OutDir)"</Command>
+    </PostBuildEvent>
+    <PostBuildEvent>
+      <Message>Copying DLLs...</Message>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -149,13 +159,23 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile />
       <PrecompiledHeaderOutputFile />
+      <AdditionalIncludeDirectories>C:\Users\Olivier\Documents\projects\basisfluid2020\Libs\glm-0.9.5.4\glm;C:\Users\Olivier\Documents\projects\basisfluid2020\Libs\glfw-3.1.2.bin.WIN64\include;C:\Users\Olivier\Documents\projects\basisfluid2020\Libs\glew-1.13.0.WIN64\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>C:\Users\Olivier\Documents\projects\basisfluid2020\Libs\glfw-3.1.2.bin.WIN64\lib-vc2015;C:\Users\Olivier\Documents\projects\basisfluid2020\Libs\glew-1.13.0.WIN64\lib\Release MX\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>glew32mx.lib;glfw3dll.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy /y "$(ProjectDir)..\Libs\glew-1.13.0.WIN64\bin\Release MX\x64\glew32mx.dll" "$(OutDir)"
+xcopy /y "$(ProjectDir)..\Libs\glfw-3.1.2.bin.WIN64\lib-vc2015\glfw3.dll" "$(OutDir)"</Command>
+    </PostBuildEvent>
+    <PostBuildEvent>
+      <Message>Copying DLLs...</Message>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

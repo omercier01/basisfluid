@@ -1,3 +1,9 @@
+
+
+
+On Windows, running "VisualStudio\Build\x64\Release\BasisFluid.exe" directly might work.
+
+
 --------
 DEPENDENCIES
 --------
