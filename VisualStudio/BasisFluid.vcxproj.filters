@@ -6,6 +6,13 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\BasisFluid\Source\Main.cpp" />
-    <ClCompile Include="..\BasisFluid\Source\Application.cpp" />
+    <ClCompile Include="..\BasisFluid\Source\SimulationStep.cpp" />
+    <ClCompile Include="..\BasisFluid\Source\Draw.cpp" />
+    <ClCompile Include="..\BasisFluid\Source\Run.cpp" />
+    <ClCompile Include="..\BasisFluid\Source\Init.cpp" />
+    <ClCompile Include="..\BasisFluid\Source\Init_Obstacles.cpp" />
+    <ClCompile Include="..\BasisFluid\Source\Init_DataBuffers.cpp" />
+    <ClCompile Include="..\BasisFluid\Source\Init_ComputeShaders.cpp" />
+    <ClCompile Include="..\BasisFluid\Source\Init_BasisFlows.cpp" />
   </ItemGroup>
 </Project>

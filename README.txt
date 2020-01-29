@@ -1,7 +1,13 @@
 
 
 
-On Windows, running "VisualStudio\Build\x64\Release\BasisFluid.exe" directly might work.
+On Windows, running "VisualStudio\Build\x64\Release\BasisFluid.exe" directly should work.
+
+
+--------
+CONTROLS
+--------
+
 
 
 --------

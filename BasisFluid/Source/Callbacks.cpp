@@ -7,11 +7,11 @@ using namespace std;
 
 void Application::CallbackWindowClosed(GLFWwindow* /*pGlfwWindow*/)
 {
-    app->readyToQuit = true;
+    app->_readyToQuit = true;
 }
 
 inline string TrueFalseMessage(bool b) {
-    return b  ?"TRUE" : "FALSE";
+    return (b ? "TRUE" : "FALSE");
 }
 
 void Application::CallbackKey(GLFWwindow* /*pGlfwWindow*/, int key, int /*scancode*/, int action, int /*mods*/)
@@ -20,35 +20,35 @@ void Application::CallbackKey(GLFWwindow* /*pGlfwWindow*/, int key, int /*scanco
 
     switch(key) {
     case 'S':
-        app->seedParticles = !app->seedParticles;
-        cout << "Seed particles = " << TrueFalseMessage(app->seedParticles) << endl;
+        app->_seedParticles = !app->_seedParticles;
+        cout << "Seed particles = " << TrueFalseMessage(app->_seedParticles) << endl;
         break;
     case 'V':
-        app->showVelocityGrid = !app->showVelocityGrid;
-        cout << "Show velocity = " << TrueFalseMessage(app->showVelocityGrid) << endl;
+        app->_showVelocityGrid = !app->_showVelocityGrid;
+        cout << "Show velocity = " << TrueFalseMessage(app->_showVelocityGrid) << endl;
         break;
     case 'F':
-        app->useForcesFromParticles = !app->useForcesFromParticles;
-        cout << "Use particle buoyancy = " << TrueFalseMessage(app->useForcesFromParticles) << endl;
+        app->_useForcesFromParticles = !app->_useForcesFromParticles;
+        cout << "Use particle buoyancy = " << TrueFalseMessage(app->_useForcesFromParticles) << endl;
         break;
     case 'P':
-        app->drawParticles = !app->drawParticles;
-        cout << "Draw particles = " << TrueFalseMessage(app->drawParticles) << endl;
+        app->_drawParticles = !app->_drawParticles;
+        cout << "Draw particles = " << TrueFalseMessage(app->_drawParticles) << endl;
         break;
     case 'G':
-        app->drawGrid = !app->drawGrid;
-        cout << "Draw grid = " << TrueFalseMessage(app->drawGrid) << endl;
+        app->_drawGrid = !app->_drawGrid;
+        cout << "Draw grid = " << TrueFalseMessage(app->_drawGrid) << endl;
         break;
     case 'O':
-        app->drawObstacles = !app->drawObstacles;
-        cout << "Draw obstacles = " << TrueFalseMessage(app->drawObstacles) << endl;
+        app->_drawObstacles = !app->_drawObstacles;
+        cout << "Draw obstacles = " << TrueFalseMessage(app->_drawObstacles) << endl;
         break;
     //case '0':
     //    resetSimulation();
     //    break;
     case GLFW_KEY_SPACE:
-        app->stepSimulation = !app->stepSimulation;
-        cout << "Step simulation = " << TrueFalseMessage(app->stepSimulation) << endl;
+        app->_stepSimulation = !app->_stepSimulation;
+        cout << "Step simulation = " << TrueFalseMessage(app->_stepSimulation) << endl;
         break;
     }
 }
@@ -56,12 +56,11 @@ void Application::CallbackKey(GLFWwindow* /*pGlfwWindow*/, int key, int /*scanco
 
 void Application::CallbackMouseScroll(GLFWwindow* /*pGlfwWindow*/, double /*xOffset*/, double yOffset)
 {
-    static float factor = 0.1f;
     if(yOffset > 0) {
-        factor *= 1.2f;
+        app->_velocityArrowFactor *= 1.2f;
     } else {
-        factor /= 1.2f;
+        app->_velocityArrowFactor /= 1.2f;
     }
-    cout << "Arrow display factor =" << factor << "." << endl;
+    cout << "Velocity arrow length = " << app->_velocityArrowFactor << "." << endl;
     //pipelineArrows->in_arrowLengthFactor.receive(factor);
 }

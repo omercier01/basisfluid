@@ -19,9 +19,16 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\BasisFluid\Source\Application.cpp" />
+    <ClCompile Include="..\BasisFluid\Source\Init.cpp" />
+    <ClCompile Include="..\BasisFluid\Source\Init_BasisFlows.cpp" />
+    <ClCompile Include="..\BasisFluid\Source\Init_ComputeShaders.cpp" />
+    <ClCompile Include="..\BasisFluid\Source\Init_DataBuffers.cpp" />
+    <ClCompile Include="..\BasisFluid\Source\Init_Obstacles.cpp" />
+    <ClCompile Include="..\BasisFluid\Source\Run.cpp" />
+    <ClCompile Include="..\BasisFluid\Source\Draw.cpp" />
     <ClCompile Include="..\BasisFluid\Source\Main.cpp" />
     <ClCompile Include="..\BasisFluid\Source\Callbacks.cpp" />
+    <ClCompile Include="..\BasisFluid\Source\SimulationStep.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\BasisFluid\Source\Callbacks.h" />
@@ -125,7 +132,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>C:\Users\Olivier\Documents\projects\basisfluid2020\Libs\glfw-3.1.2.bin.WIN64\lib-vc2015;C:\Users\Olivier\Documents\projects\basisfluid2020\Libs\glew-1.13.0.WIN64\lib\Release\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>glew32.lib;glfw3dll.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>glew32.lib;glfw3dll.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>xcopy /y "$(ProjectDir)..\Libs\glew-1.13.0.WIN64\bin\Release\x64\glew32.dll" "$(OutDir)"
@@ -173,7 +180,7 @@ xcopy /y "$(ProjectDir)..\Libs\glfw-3.1.2.bin.WIN64\lib-vc2015\glfw3.dll" "$(Out
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>C:\Users\Olivier\Documents\projects\basisfluid2020\Libs\glfw-3.1.2.bin.WIN64\lib-vc2015;C:\Users\Olivier\Documents\projects\basisfluid2020\Libs\glew-1.13.0.WIN64\lib\Release\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>glew32.lib;glfw3dll.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>glew32.lib;glfw3dll.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>xcopy /y "$(ProjectDir)..\Libs\glew-1.13.0.WIN64\bin\Release\x64\glew32.dll" "$(OutDir)"
