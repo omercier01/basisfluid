@@ -3,154 +3,98 @@
 using namespace goglu;
 using namespace glm;
 
-VectorField2D::VectorField2D(float parBoundXMin, float parBoundXMax, float parBoundYMin,
-                             float parBoundYMax, unsigned int nbCellsX,
-                             unsigned int nbCellsY,
-                             VectorField2D::GridNodeLocation gridNodeLocation,
-                             VectorField2D::BoundaryCondition boundaryCondition) :
-    mNbCellsX(nbCellsX),
-    mNbCellsY(nbCellsY),
-    mVectors(1, 1),
-    mGridNodeLocation(gridNodeLocation),
-    mBoundaryCondition(boundaryCondition),
+VectorField2D::VectorField2D(
+    float boundXMin, float boundXMax, float boundYMin, float boundYMax,
+    unsigned int nbCellsX, unsigned int nbCellsY,
+    VectorField2D::GridNodeLocation gridNodeLocation,
+    VectorField2D::BoundaryCondition boundaryCondition) :
+    _nbCellsX(nbCellsX),
+    _nbCellsY(nbCellsY),
+    _vectors(1, 1),
+    _gridNodeLocation(gridNodeLocation),
+    _boundaryCondition(boundaryCondition) {
 
-    in_vectorsMetadataImage2D(*this),
-    out_gridNodeLocationsCpu(*this),
-    out_gridNodeLocationsBuffer(*this),
-    out_vectorValuesCpu(*this),
-    out_divergenceCpu(*this),
-    out_vectorsMetadataTexture2D(*this),
-    out_vectorsMetadataImage2D(*this),
-
-    in_int_vectorsMetadataImage2D(*this),
-    out_int_vectorsMetadataImage2D(*this),
-
-//    <<goglu>> {
-//        Beacon VectorField2D_dirtyblesInit;
-//    } <<goglu>>;
-    
-    GOGLU_BEGIN(
-        component_constructor VectorField2D
-    )GOGLU_END
-    #include "../../gogluGeneratedCode/src/dataStructures/VectorField2D.cpp_d/snippet0.goglu"
-{
-    boundXMin.set(parBoundXMin);
-    boundXMax.set(parBoundXMax);
-    boundYMin.set(parBoundYMin);
-    boundYMax.set(parBoundYMax);
+    _boundXMin = boundXMin;
+    _boundXMax = boundXMax;
+    _boundYMin = boundYMin;
+    _boundYMax = boundYMax;
 
     // resizes, but does not necessarily allocate the data.
-    switch(gridNodeLocation) {
+    switch (gridNodeLocation) {
     case GridNodeLocation::CENTER:
-        mVectors.resize(nbCellsX, nbCellsY);
+        _vectors.resize(nbCellsX, nbCellsY);
         break;
     case GridNodeLocation::CORNER:
-        mVectors.resize(nbCellsX+1, nbCellsY+1);
+        _vectors.resize(nbCellsX + 1, nbCellsY + 1);
+        break;
+    }
+}
+
+void VectorField2D::populateWithFunction(std::function<vec2(float x, float y)> function)
+{
+    vec2* _vectorsPointer = _vectors.getCpuDataPointer();
+    unsigned int nxVec = _vectors.mNbElementsX;
+
+    switch (_gridNodeLocation) {
+    case GridNodeLocation::CENTER:
+        for (unsigned int i = 0; i < _nbCellsX; i++)
+            for (unsigned int j = 0; j < _nbCellsY; j++) {
+                float x = _boundXMin + (i + 0.5f) / _nbCellsX * (_boundXMax - _boundXMin);
+                float y = _boundYMin + (j + 0.5f) / _nbCellsY * (_boundYMax - _boundYMin);
+                //            _vectors(i,j) = function(x, y);
+                            // TODO: setting dtaa one by one like this is probably sloooow!
+                            //_vectors.setCpuData(i, j, function(x, y));
+                _vectorsPointer[nxVec*j + i] = function(x, y);
+            }
+        break;
+    case GridNodeLocation::CORNER:
+        for (unsigned int i = 0; i < _nbCellsX + 1; i++)
+            for (unsigned int j = 0; j < _nbCellsY + 1; j++) {
+                float x = _boundXMin + float(i) / _nbCellsX * (_boundXMax - _boundXMin);
+                float y = _boundYMin + float(j) / _nbCellsY * (_boundYMax - _boundYMin);
+                //            _vectors(i,j) = function(x, y);
+                            //_vectors.setCpuData(i, j, function(x, y));
+                _vectorsPointer[nxVec*j + i] = function(x, y);
+            }
         break;
     }
 
-    // internal connections
-    createPullConnection(&out_int_vectorsMetadataImage2D,
-                         &mVectors.in_metadataImage2D)->activate();
-    createPushConnection(&out_int_vectorsMetadataImage2D,
-                         &mVectors.in_metadataImage2D)->activate();
-    createPullConnection(&mVectors.out_metadataImage2D,
-                         &in_int_vectorsMetadataImage2D)->activate();
+    _vectors.sourceStorageType = DataBuffer2D<vec2>::StorageType::CPU;
+    _vectors.dirtyData();
 
 }
 
-void VectorField2D::populateWithFunction(std::function<vec2 (float x, float y)> function)
+void VectorField2D::addFunction(std::function<vec2(float, float)> function)
 {
-    if(!mVectors.mbHasCpuStorage && !mVectors.mbHasTexture2DStorage) {
-        Application::sInsertDebugMessage(
-                "goglu::DataBuffer2D::populateWithFunction : No data storage"
-                "created, populating has no effect.",
-                GL_DEBUG_SEVERITY_LOW);
-        return;
-    }
 
-    if(mVectors.mbHasCpuStorage) {
-    
-        vec2* mVectorsPointer = mVectors.getCpuDataPointer();
-        unsigned int nxVec = mVectors.mNbElementsX;
-    
-        switch(mGridNodeLocation) {
-        case GridNodeLocation::CENTER:
-            for(unsigned int i=0; i<mNbCellsX; i++)
-            for(unsigned int j=0; j<mNbCellsY; j++) {
-                float x = boundXMin.get() + (i+0.5f)/mNbCellsX*(boundXMax.get()-boundXMin.get());
-                float y = boundYMin.get() + (j+0.5f)/mNbCellsY*(boundYMax.get()-boundYMin.get());
-    //            mVectors(i,j) = function(x, y);
-                // TODO: setting dtaa one by one like this is probably sloooow!
-                //mVectors.setCpuData(i, j, function(x, y));
-                mVectorsPointer[nxVec*j + i] = function(x, y);
-            }
-            break;
-        case GridNodeLocation::CORNER:
-            for(unsigned int i=0; i<mNbCellsX+1; i++)
-            for(unsigned int j=0; j<mNbCellsY+1; j++) {
-                float x = boundXMin.get() + float(i)/mNbCellsX*(boundXMax.get()-boundXMin.get());
-                float y = boundYMin.get() + float(j)/mNbCellsY*(boundYMax.get()-boundYMin.get());
-    //            mVectors(i,j) = function(x, y);
-                //mVectors.setCpuData(i, j, function(x, y));
-                mVectorsPointer[nxVec*j + i] = function(x, y);
-            }
-            break;
-        }
-    }
-    if(mVectors.mbHasTexture2DStorage) {
-        // TODO: set data on texture too.
-    }
-    
-    mVectors.sourceStorageType = DataBuffer2D<vec2>::StorageType::CPU;
-    mVectors.dirtyData();
-    
-}
+    vec2* _vectorsPointer = _vectors.getCpuDataPointer();
+    unsigned int nxVec = _vectors.mNbElementsX;
 
-void VectorField2D::addFunction(std::function<vec2 (float, float)> function)
-{
-    if(!mVectors.mbHasCpuStorage && !mVectors.mbHasTexture2DStorage) {
-        Application::sInsertDebugMessage(
-                "goglu::DataBuffer2D::addFunction : No data storage"
-                "created, populating has no effect.",
-                GL_DEBUG_SEVERITY_LOW);
-        return;
-    }
-
-    if(mVectors.mbHasCpuStorage) {
-    
-        vec2* mVectorsPointer = mVectors.getCpuDataPointer();
-        unsigned int nxVec = mVectors.mNbElementsX;
-    
-        switch(mGridNodeLocation) {
-        case GridNodeLocation::CENTER:
-            for(unsigned int i=0; i<mNbCellsX; i++)
-            for(unsigned int j=0; j<mNbCellsY; j++) {
-                float x = boundXMin.get() + (i+0.5f)/mNbCellsX*(boundXMax.get()-boundXMin.get());
-                float y = boundYMin.get() + (j+0.5f)/mNbCellsY*(boundYMax.get()-boundYMin.get());
+    switch (_gridNodeLocation) {
+    case GridNodeLocation::CENTER:
+        for (unsigned int i = 0; i < _nbCellsX; i++)
+            for (unsigned int j = 0; j < _nbCellsY; j++) {
+                float x = _boundXMin + (i + 0.5f) / _nbCellsX * (_boundXMax - _boundXMin);
+                float y = _boundYMin + (j + 0.5f) / _nbCellsY * (_boundYMax - _boundYMin);
                 // TODO: setting data one by one like this is probably sloooow!
-                //mVectors.addCpuData(i, j, function(x, y));
-                mVectorsPointer[nxVec*j + i] += function(x, y);
+                //_vectors.addCpuData(i, j, function(x, y));
+                _vectorsPointer[nxVec*j + i] += function(x, y);
             }
-            break;
-        case GridNodeLocation::CORNER:
-            for(unsigned int i=0; i<mNbCellsX+1; i++)
-            for(unsigned int j=0; j<mNbCellsY+1; j++) {
-                float x = boundXMin.get() + float(i)/mNbCellsX*(boundXMax.get()-boundXMin.get());
-                float y = boundYMin.get() + float(j)/mNbCellsY*(boundYMax.get()-boundYMin.get());
-                //mVectors.addCpuData(i, j, function(x, y));
-                mVectorsPointer[nxVec*j + i] += function(x, y);
+        break;
+    case GridNodeLocation::CORNER:
+        for (unsigned int i = 0; i < _nbCellsX + 1; i++)
+            for (unsigned int j = 0; j < _nbCellsY + 1; j++) {
+                float x = _boundXMin + float(i) / _nbCellsX * (_boundXMax - _boundXMin);
+                float y = _boundYMin + float(j) / _nbCellsY * (_boundYMax - _boundYMin);
+                //_vectors.addCpuData(i, j, function(x, y));
+                _vectorsPointer[nxVec*j + i] += function(x, y);
             }
-            break;
-        }
+        break;
     }
-    if(mVectors.mbHasTexture2DStorage) {
-        // TODO: set data on texture too.
-    }
-    
-    mVectors.sourceStorageType = DataBuffer2D<vec2>::StorageType::CPU;
-    mVectors.dirtyData();
-    
+
+    _vectors.sourceStorageType = DataBuffer2D<vec2>::StorageType::CPU;
+    _vectors.dirtyData();
+
 }
 
 vec2 VectorField2D::interp(vec2 pos)
@@ -163,65 +107,73 @@ vec2 VectorField2D::interp(vec2 pos)
     float weightX;
     float weightY;
 
-    float normalizedX = (x - boundXMin.get())/(boundXMax.get() - boundXMin.get())*mNbCellsX;
-    float normalizedY = (y - boundYMin.get())/(boundYMax.get() - boundYMin.get())*mNbCellsY;
+    float normalizedX = (x - _boundXMin) / (_boundXMax - _boundXMin)*_nbCellsX;
+    float normalizedY = (y - _boundYMin) / (_boundYMax - _boundYMin)*_nbCellsY;
 
 
-    switch(mBoundaryCondition) {
+    switch (_boundaryCondition) {
     case BoundaryCondition::LINEAR:
-        switch(mGridNodeLocation) {
-        case GridNodeLocation::CENTER :
-            if(normalizedX < 0.5) {
+        switch (_gridNodeLocation) {
+        case GridNodeLocation::CENTER:
+            if (normalizedX < 0.5) {
                 indexXLeft = 0;
                 indexXRight = 1;
                 weightX = normalizedX - 0.5f;
-            } else if(normalizedX >= mNbCellsX - 0.5f) {
-                indexXLeft = mNbCellsX - 2;
-                indexXRight = mNbCellsX - 1;
+            }
+            else if (normalizedX >= _nbCellsX - 0.5f) {
+                indexXLeft = _nbCellsX - 2;
+                indexXRight = _nbCellsX - 1;
                 weightX = normalizedX - (indexXLeft + 0.5f);
-            } else {
-                indexXLeft = clamp<int>(int(floor(normalizedX - 0.5f)), 0, mNbCellsX-2);
+            }
+            else {
+                indexXLeft = clamp<int>(int(floor(normalizedX - 0.5f)), 0, _nbCellsX - 2);
                 indexXRight = indexXLeft + 1;
                 weightX = normalizedX - (indexXLeft + 0.5f);
             }
-            if(normalizedY < 0.5) {
+            if (normalizedY < 0.5) {
                 indexYLeft = 0;
                 indexYRight = 1;
                 weightY = normalizedY - 0.5f;
-            } else if(normalizedY >= mNbCellsY - 0.5f) {
-                indexYLeft = mNbCellsY - 2;
-                indexYRight = mNbCellsY - 1;
+            }
+            else if (normalizedY >= _nbCellsY - 0.5f) {
+                indexYLeft = _nbCellsY - 2;
+                indexYRight = _nbCellsY - 1;
                 weightY = normalizedY - (indexYLeft + 0.5f);
-            } else {
-                indexYLeft = clamp<int>(int(floor(normalizedY - 0.5f)), 0, mNbCellsY-2);
+            }
+            else {
+                indexYLeft = clamp<int>(int(floor(normalizedY - 0.5f)), 0, _nbCellsY - 2);
                 indexYRight = indexYLeft + 1;
                 weightY = normalizedY - (indexYLeft + 0.5f);
             }
             break;
-        case GridNodeLocation::CORNER :
-            if(normalizedX < 0) {
+        case GridNodeLocation::CORNER:
+            if (normalizedX < 0) {
                 indexXLeft = 0;
                 indexXRight = 1;
                 weightX = normalizedX;
-            } else if(normalizedX >= mNbCellsX) {
-                indexXLeft = mNbCellsX - 1;
-                indexXRight = mNbCellsX;
+            }
+            else if (normalizedX >= _nbCellsX) {
+                indexXLeft = _nbCellsX - 1;
+                indexXRight = _nbCellsX;
                 weightX = normalizedX - indexXLeft;
-            } else {
-                indexXLeft = clamp<int>(int(floor(normalizedX)), 0, mNbCellsX-1);
+            }
+            else {
+                indexXLeft = clamp<int>(int(floor(normalizedX)), 0, _nbCellsX - 1);
                 indexXRight = indexXLeft + 1;
                 weightX = normalizedX - indexXLeft;
             }
-            if(normalizedY < 0) {
+            if (normalizedY < 0) {
                 indexYLeft = 0;
                 indexYRight = 1;
                 weightY = normalizedY;
-            } else if(normalizedY >= mNbCellsY) {
-                indexYLeft = mNbCellsY - 1;
-                indexYRight = mNbCellsY;
+            }
+            else if (normalizedY >= _nbCellsY) {
+                indexYLeft = _nbCellsY - 1;
+                indexYRight = _nbCellsY;
                 weightY = normalizedY - indexYLeft;
-            } else {
-                indexYLeft = clamp<int>(int(floor(normalizedY)), 0, mNbCellsY-1);
+            }
+            else {
+                indexYLeft = clamp<int>(int(floor(normalizedY)), 0, _nbCellsY - 1);
                 indexYRight = indexYLeft + 1;
                 weightY = normalizedY - indexYLeft;
             }
@@ -229,59 +181,67 @@ vec2 VectorField2D::interp(vec2 pos)
         }
         break;
     case BoundaryCondition::FLAT:
-        switch(mGridNodeLocation) {
-        case GridNodeLocation::CENTER :
-            if(normalizedX < 0.5) {
+        switch (_gridNodeLocation) {
+        case GridNodeLocation::CENTER:
+            if (normalizedX < 0.5) {
                 indexXLeft = 0;
                 indexXRight = 1;
                 weightX = 0;
-            } else if(normalizedX >= mNbCellsX - 0.5f) {
-                indexXLeft = mNbCellsX - 2;
-                indexXRight = mNbCellsX - 1;
+            }
+            else if (normalizedX >= _nbCellsX - 0.5f) {
+                indexXLeft = _nbCellsX - 2;
+                indexXRight = _nbCellsX - 1;
                 weightX = 1;
-            } else {
-                indexXLeft = clamp<int>(int(floor(normalizedX - 0.5f)), 0, mNbCellsX-2);
+            }
+            else {
+                indexXLeft = clamp<int>(int(floor(normalizedX - 0.5f)), 0, _nbCellsX - 2);
                 indexXRight = indexXLeft + 1;
                 weightX = normalizedX - (indexXLeft + 0.5f);
             }
-            if(normalizedY < 0.5) {
+            if (normalizedY < 0.5) {
                 indexYLeft = 0;
                 indexYRight = 1;
                 weightY = 0;
-            } else if(normalizedY >= mNbCellsY - 0.5f) {
-                indexYLeft = mNbCellsY - 2;
-                indexYRight = mNbCellsY - 1;
+            }
+            else if (normalizedY >= _nbCellsY - 0.5f) {
+                indexYLeft = _nbCellsY - 2;
+                indexYRight = _nbCellsY - 1;
                 weightY = 1;
-            } else {
-                indexYLeft = clamp<int>(int(floor(normalizedY - 0.5f)), 0, mNbCellsY-2);
+            }
+            else {
+                indexYLeft = clamp<int>(int(floor(normalizedY - 0.5f)), 0, _nbCellsY - 2);
                 indexYRight = indexYLeft + 1;
                 weightY = normalizedY - (indexYLeft + 0.5f);
             }
             break;
-        case GridNodeLocation::CORNER :
-            if(normalizedX < 0) {
+        case GridNodeLocation::CORNER:
+            if (normalizedX < 0) {
                 indexXLeft = 0;
                 indexXRight = 1;
                 weightX = 0;
-            } else if(normalizedX >= mNbCellsX) {
-                indexXLeft = mNbCellsX - 1;
-                indexXRight = mNbCellsX;
+            }
+            else if (normalizedX >= _nbCellsX) {
+                indexXLeft = _nbCellsX - 1;
+                indexXRight = _nbCellsX;
                 weightX = 1;
-            } else {
-                indexXLeft = clamp<int>(int(floor(normalizedX)), 0, mNbCellsX-1);
+            }
+            else {
+                indexXLeft = clamp<int>(int(floor(normalizedX)), 0, _nbCellsX - 1);
                 indexXRight = indexXLeft + 1;
                 weightX = normalizedX - indexXLeft;
             }
-            if(normalizedY < 0) {
+            if (normalizedY < 0) {
                 indexYLeft = 0;
                 indexYRight = 1;
                 weightY = 0;
-            } else if(normalizedY >= mNbCellsY) {
-                indexYLeft = mNbCellsY - 1;
-                indexYRight = mNbCellsY;
+            }
+            else if (normalizedY >= _nbCellsY) {
+                indexYLeft = _nbCellsY - 1;
+                indexYRight = _nbCellsY;
                 weightY = 1;
-            } else {
-                indexYLeft = clamp<int>(int(floor(normalizedY)), 0, mNbCellsY-1);
+            }
+            else {
+                indexYLeft = clamp<int>(int(floor(normalizedY)), 0, _nbCellsY - 1);
                 indexYRight = indexYLeft + 1;
                 weightY = normalizedY - indexYLeft;
             }
@@ -289,43 +249,51 @@ vec2 VectorField2D::interp(vec2 pos)
         }
         break;
     case BoundaryCondition::ZERO:
-        switch(mGridNodeLocation) {
-        case GridNodeLocation::CENTER :
-            if(normalizedX < 0.5) {
+        switch (_gridNodeLocation) {
+        case GridNodeLocation::CENTER:
+            if (normalizedX < 0.5) {
                 return vec2(0, 0);
-            } else if(normalizedX >= mNbCellsX - 0.5f) {
+            }
+            else if (normalizedX >= _nbCellsX - 0.5f) {
                 return vec2(0, 0);
-            } else {
-                indexXLeft = clamp<int>(int(floor(normalizedX - 0.5f)), 0, mNbCellsX-2);
+            }
+            else {
+                indexXLeft = clamp<int>(int(floor(normalizedX - 0.5f)), 0, _nbCellsX - 2);
                 indexXRight = indexXLeft + 1;
                 weightX = normalizedX - (indexXLeft + 0.5f);
             }
-            if(normalizedY < 0.5) {
+            if (normalizedY < 0.5) {
                 return vec2(0, 0);
-            } else if(normalizedY >= mNbCellsY - 0.5f) {
+            }
+            else if (normalizedY >= _nbCellsY - 0.5f) {
                 return vec2(0, 0);
-            } else {
-                indexYLeft = clamp<int>(int(floor(normalizedY - 0.5f)), 0, mNbCellsY-2);
+            }
+            else {
+                indexYLeft = clamp<int>(int(floor(normalizedY - 0.5f)), 0, _nbCellsY - 2);
                 indexYRight = indexYLeft + 1;
                 weightY = normalizedY - (indexYLeft + 0.5f);
             }
             break;
-        case GridNodeLocation::CORNER :
-            if(normalizedX < 0) {
+        case GridNodeLocation::CORNER:
+            if (normalizedX < 0) {
                 return vec2(0, 0);
-            } else if(normalizedX >= mNbCellsX) {
+            }
+            else if (normalizedX >= _nbCellsX) {
                 return vec2(0, 0);
-            } else {
-                indexXLeft = clamp<int>(int(floor(normalizedX)), 0, mNbCellsX-1);
+            }
+            else {
+                indexXLeft = clamp<int>(int(floor(normalizedX)), 0, _nbCellsX - 1);
                 indexXRight = indexXLeft + 1;
                 weightX = normalizedX - indexXLeft;
             }
-            if(normalizedY < 0) {
+            if (normalizedY < 0) {
                 return vec2(0, 0);
-            } else if(normalizedY >= mNbCellsY) {
+            }
+            else if (normalizedY >= _nbCellsY) {
                 return vec2(0, 0);
-            } else {
-                indexYLeft = clamp<int>(int(floor(normalizedY)), 0, mNbCellsY-1);
+            }
+            else {
+                indexYLeft = clamp<int>(int(floor(normalizedY)), 0, _nbCellsY - 1);
                 indexYRight = indexYLeft + 1;
                 weightY = normalizedY - indexYLeft;
             }
@@ -333,114 +301,122 @@ vec2 VectorField2D::interp(vec2 pos)
         }
         break;
     case BoundaryCondition::MIRROR:
-        switch(mGridNodeLocation) {
-        case GridNodeLocation::CENTER :
-            if(normalizedX < 0) {
+        switch (_gridNodeLocation) {
+        case GridNodeLocation::CENTER:
+            if (normalizedX < 0) {
                 normalizedX = -normalizedX;
             }
-            if(normalizedX >= mNbCellsX - 0.5f) {
-                float xInDomain01 = normalizedX/mNbCellsX;
+            if (normalizedX >= _nbCellsX - 0.5f) {
+                float xInDomain01 = normalizedX / _nbCellsX;
                 unsigned int temp = int(floor(xInDomain01)) % 2;
-                if(temp == 0) {
-                    normalizedX = mNbCellsX * fract(xInDomain01);
-                } else {
-                    normalizedX = mNbCellsX * (1 - fract(xInDomain01));
+                if (temp == 0) {
+                    normalizedX = _nbCellsX * fract(xInDomain01);
+                }
+                else {
+                    normalizedX = _nbCellsX * (1 - fract(xInDomain01));
                 }
             }
-            if(normalizedX < 0.5) {
+            if (normalizedX < 0.5) {
                 indexXLeft = 0;
                 indexXRight = indexXLeft;
                 weightX = 0;
-            } else if(normalizedX >= mNbCellsX - 0.5f) {
-                indexXLeft = mNbCellsX - 1;
+            }
+            else if (normalizedX >= _nbCellsX - 0.5f) {
+                indexXLeft = _nbCellsX - 1;
                 indexXRight = indexXLeft;
                 weightX = 0;
-            } else {
-                indexXLeft = clamp<int>(int(floor(normalizedX - 0.5f)), 0, mNbCellsX-2);
+            }
+            else {
+                indexXLeft = clamp<int>(int(floor(normalizedX - 0.5f)), 0, _nbCellsX - 2);
                 indexXRight = indexXLeft + 1;
                 weightX = normalizedX - (indexXLeft + 0.5f);
             }
 
-            if(normalizedY < 0) {
+            if (normalizedY < 0) {
                 normalizedY = -normalizedY;
             }
-            if(normalizedY >= mNbCellsY - 0.5f) {
-                float yInDomain01 = normalizedY/mNbCellsY;
+            if (normalizedY >= _nbCellsY - 0.5f) {
+                float yInDomain01 = normalizedY / _nbCellsY;
                 unsigned int temp = int(floor(yInDomain01)) % 2;
-                if(temp == 0) {
-                    normalizedY = mNbCellsY * fract(yInDomain01);
-                } else {
-                    normalizedY = mNbCellsY * (1 - fract(yInDomain01));
+                if (temp == 0) {
+                    normalizedY = _nbCellsY * fract(yInDomain01);
+                }
+                else {
+                    normalizedY = _nbCellsY * (1 - fract(yInDomain01));
                 }
             }
-            if(normalizedY < 0.5) {
+            if (normalizedY < 0.5) {
                 indexYLeft = 0;
                 indexYRight = indexYLeft;
                 weightY = normalizedY - indexYLeft;
-            } else if(normalizedY >= mNbCellsY - 0.5f) {
-                indexYLeft = mNbCellsY - 1;
+            }
+            else if (normalizedY >= _nbCellsY - 0.5f) {
+                indexYLeft = _nbCellsY - 1;
                 indexYRight = indexYLeft;
                 weightY = normalizedY - indexYLeft;
-            } else {
-                indexYLeft = clamp<int>(int(floor(normalizedY - 0.5f)), 0, mNbCellsY-2);
+            }
+            else {
+                indexYLeft = clamp<int>(int(floor(normalizedY - 0.5f)), 0, _nbCellsY - 2);
                 indexYRight = indexYLeft + 1;
                 weightY = normalizedY - (indexYLeft + 0.5f);
             }
             break;
-        case GridNodeLocation::CORNER :
-            if(normalizedX < 0) {
+        case GridNodeLocation::CORNER:
+            if (normalizedX < 0) {
                 normalizedX = -normalizedX;
             }
-            if(normalizedX >= mNbCellsX) {
-                float xInDomain01 = normalizedX/mNbCellsX;
+            if (normalizedX >= _nbCellsX) {
+                float xInDomain01 = normalizedX / _nbCellsX;
                 unsigned int temp = int(floor(xInDomain01)) % 2;
-                if(temp == 0) {
-                    normalizedX = mNbCellsX * fract(xInDomain01);
-                } else {
-                    normalizedX = mNbCellsX * (1 - fract(xInDomain01));
+                if (temp == 0) {
+                    normalizedX = _nbCellsX * fract(xInDomain01);
+                }
+                else {
+                    normalizedX = _nbCellsX * (1 - fract(xInDomain01));
                 }
             }
-            indexXLeft = clamp<int>(int(floor(normalizedX)), 0, mNbCellsX-1);
+            indexXLeft = clamp<int>(int(floor(normalizedX)), 0, _nbCellsX - 1);
             indexXRight = indexXLeft + 1;
             weightX = normalizedX - indexXLeft;
 
-            if(normalizedY < 0) {
+            if (normalizedY < 0) {
                 normalizedY = -normalizedY;
             }
-            if(normalizedY >= mNbCellsY) {
-                float yInDomain01 = normalizedY/mNbCellsY;
+            if (normalizedY >= _nbCellsY) {
+                float yInDomain01 = normalizedY / _nbCellsY;
                 unsigned int temp = int(floor(yInDomain01)) % 2;
-                if(temp == 0) {
-                    normalizedY = mNbCellsY * fract(yInDomain01);
-                } else {
-                    normalizedY = mNbCellsY * (1 - fract(yInDomain01));
+                if (temp == 0) {
+                    normalizedY = _nbCellsY * fract(yInDomain01);
+                }
+                else {
+                    normalizedY = _nbCellsY * (1 - fract(yInDomain01));
                 }
             }
-            indexYLeft = clamp<int>(int(floor(normalizedY)), 0, mNbCellsY-1);
+            indexYLeft = clamp<int>(int(floor(normalizedY)), 0, _nbCellsY - 1);
             indexYRight = indexYLeft + 1;
             weightY = normalizedY - indexYLeft;
             break;
         }
         break;
     case BoundaryCondition::PERIODIC:
-        switch(mGridNodeLocation) {
-        case GridNodeLocation::CENTER :
-            normalizedX -= mNbCellsX * floor(normalizedX/mNbCellsX);
-            indexXLeft = clamp<int>(int(floor(normalizedX - 0.5f)), 0, mNbCellsX-2);
+        switch (_gridNodeLocation) {
+        case GridNodeLocation::CENTER:
+            normalizedX -= _nbCellsX * floor(normalizedX / _nbCellsX);
+            indexXLeft = clamp<int>(int(floor(normalizedX - 0.5f)), 0, _nbCellsX - 2);
             indexXRight = indexXLeft + 1;
-            weightX = normalizedX - (indexXLeft+0.5f);
-            normalizedY -= mNbCellsY * floor(normalizedY/mNbCellsY);
-            indexYLeft = clamp<int>(int(floor(normalizedY - 0.5f)), 0, mNbCellsY-2);
+            weightX = normalizedX - (indexXLeft + 0.5f);
+            normalizedY -= _nbCellsY * floor(normalizedY / _nbCellsY);
+            indexYLeft = clamp<int>(int(floor(normalizedY - 0.5f)), 0, _nbCellsY - 2);
             indexYRight = indexYLeft + 1;
-            weightY = normalizedY - (indexYLeft+0.5f);
+            weightY = normalizedY - (indexYLeft + 0.5f);
             break;
-        case GridNodeLocation::CORNER :
-            normalizedX -= mNbCellsX * floor(normalizedX/mNbCellsX);
-            indexXLeft = clamp<int>(int(floor(normalizedX)), 0, mNbCellsX-1);
+        case GridNodeLocation::CORNER:
+            normalizedX -= _nbCellsX * floor(normalizedX / _nbCellsX);
+            indexXLeft = clamp<int>(int(floor(normalizedX)), 0, _nbCellsX - 1);
             indexXRight = indexXLeft + 1;
             weightX = normalizedX - indexXLeft;
-            normalizedY -= mNbCellsY * floor(normalizedY/mNbCellsY);
-            indexYLeft = clamp<int>(int(floor(normalizedY)), 0, mNbCellsY-1);
+            normalizedY -= _nbCellsY * floor(normalizedY / _nbCellsY);
+            indexYLeft = clamp<int>(int(floor(normalizedY)), 0, _nbCellsY - 1);
             indexYRight = indexYLeft + 1;
             weightY = normalizedY - indexYLeft;
             break;
@@ -448,56 +424,41 @@ vec2 VectorField2D::interp(vec2 pos)
         break;
     }
 
-    //TODO: indices might still be out of range because of numerical errors,
-    //check for that and if it happens, the out-of-bound indices will have to
-    //be dealt with in terms of indices, not positions.
+    _vectors.refreshCpuData();
+    vec2* _vectorsPointer = _vectors.getCpuDataPointer();
 
-//    return (1-weightX)*(1-weightY)*mVectors(indexXLeft , indexYLeft ) +
-//           (1-weightX)*(  weightY)*mVectors(indexXLeft , indexYRight) +
-//           (  weightX)*(1-weightY)*mVectors(indexXRight, indexYLeft ) +
-//           (  weightX)*(  weightY)*mVectors(indexXRight, indexYRight);
+    const unsigned int nx = _vectors.mNbElementsX;
 
-    mVectors.refreshCpuData();
-    vec2* mVectorsPointer = mVectors.getCpuDataPointer();
-    
-    const unsigned int nx = mVectors.mNbElementsX;
-    
-    return (1-weightX)*(
-               (1-weightY)*mVectorsPointer[nx*indexYLeft + indexXLeft] +
-               (  weightY)*mVectorsPointer[nx*indexYRight + indexXLeft]
-           )
-           +
-           (weightX)*(
-               (1-weightY)*mVectorsPointer[nx*indexYLeft + indexXRight] +
-               (  weightY)*mVectorsPointer[nx*indexYRight + indexXRight]
-           );
-           
+    return (1 - weightX)*(
+        (1 - weightY)*_vectorsPointer[nx*indexYLeft + indexXLeft] +
+        (weightY)*_vectorsPointer[nx*indexYRight + indexXLeft]
+        )
+        +
+        (weightX)*(
+        (1 - weightY)*_vectorsPointer[nx*indexYLeft + indexXRight] +
+            (weightY)*_vectorsPointer[nx*indexYRight + indexXRight]
+            );
+
 }
 
 void VectorField2D::addVectorCpuData(unsigned int i, unsigned int j, vec2 data)
 {
-    mVectors.addCpuData(i, j, data);
-    out_vectorsMetadataImage2D.dirtyConnections();
-    out_vectorsMetadataTexture2D.dirtyConnections();
-    out_vectorValuesCpu.dirtyConnections();
+    _vectors.addCpuData(i, j, data);
 }
 
 void VectorField2D::setVectorCpuData(unsigned int i, unsigned int j, vec2 data)
 {
-    mVectors.setCpuData(i, j, data);
-    out_vectorsMetadataImage2D.dirtyConnections();
-    out_vectorsMetadataTexture2D.dirtyConnections();
-    out_vectorValuesCpu.dirtyConnections();
+    _vectors.setCpuData(i, j, data);
 }
 
 glm::vec2 VectorField2D::getVectorCpuData(unsigned int i, unsigned int j)
 {
-    return mVectors.getCpuData(i, j);
+    return _vectors.getCpuData(i, j);
 }
 
 void VectorField2D::createVectorCpuStorage()
 {
-    mVectors.createCpuStorage();
+    _vectors.createCpuStorage();
 }
 
 
@@ -508,9 +469,9 @@ void VectorField2D::createVectorTexture2DStorage(
     GLenum sizedExternalFormat,
     unsigned int nbMipmapLevels)
 {
-    mVectors.createTexture2DStorage(internalFormat, sizedInternalFormat,
-                                    externalFormat, sizedExternalFormat,
-                                    nbMipmapLevels);
+    _vectors.createTexture2DStorage(internalFormat, sizedInternalFormat,
+        externalFormat, sizedExternalFormat,
+        nbMipmapLevels);
     vectorTexture2DStorageAdjustBoundaryCondition();
 }
 
@@ -521,8 +482,8 @@ void VectorField2D::createVectorTexture2DStorage(
     GLenum externalFormat,
     GLenum sizedExternalFormat)
 {
-    mVectors.createTexture2DStorage(internalFormat, sizedInternalFormat,
-                                    externalFormat, sizedExternalFormat);
+    _vectors.createTexture2DStorage(internalFormat, sizedInternalFormat,
+        externalFormat, sizedExternalFormat);
     vectorTexture2DStorageAdjustBoundaryCondition();
 }
 
@@ -531,35 +492,31 @@ void VectorField2D::vectorTexture2DStorageAdjustBoundaryCondition()
 {
     //LINEAR, FLAT, ZERO, MIRROR, PERIODIC
     float borderColor[] = { 0.0f, 0.0f, 0.0f, 0.0f };
-    switch(mBoundaryCondition) {
-        case VectorField2D::BoundaryCondition::ZERO:
-            glTextureParameteri(mVectors.mGlidTexture2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-            glTextureParameteri(mVectors.mGlidTexture2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-            glTextureParameterfv(mVectors.mGlidTexture2D, GL_TEXTURE_BORDER_COLOR, borderColor);
-            break;
-        case VectorField2D::BoundaryCondition::LINEAR:
-            // not supported by OpgnGL, substiture with FLAT boundary condition
-            glTextureParameteri(mVectors.mGlidTexture2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-            glTextureParameteri(mVectors.mGlidTexture2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-            Application::sInsertDebugMessage(
-                "goglu::VectorField2D::vectorTexture2DStorageAdjustBoundaryCondition : "
-                "LINEAR boundary condition not supported on GPU, FLAT used instead.",
-                GL_DEBUG_SEVERITY_LOW);
-            break;
-        case VectorField2D::BoundaryCondition::FLAT:
-            glTextureParameteri(mVectors.mGlidTexture2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-            glTextureParameteri(mVectors.mGlidTexture2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-            break;
-        case VectorField2D::BoundaryCondition::MIRROR:
-            glTextureParameteri(mVectors.mGlidTexture2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-            glTextureParameteri(mVectors.mGlidTexture2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
-            break;
-        case VectorField2D::BoundaryCondition::PERIODIC:
-            glTextureParameteri(mVectors.mGlidTexture2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-            glTextureParameteri(mVectors.mGlidTexture2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-            break;
-        default:
-            // TODO: should not happen
+    switch (_boundaryCondition) {
+    case VectorField2D::BoundaryCondition::ZERO:
+        glTextureParameteri(_vectors.mGlidTexture2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+        glTextureParameteri(_vectors.mGlidTexture2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+        glTextureParameterfv(_vectors.mGlidTexture2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+        break;
+    case VectorField2D::BoundaryCondition::LINEAR:
+        // not supported by OpenGL, substiture with FLAT boundary condition
+        glTextureParameteri(_vectors.mGlidTexture2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTextureParameteri(_vectors.mGlidTexture2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        break;
+    case VectorField2D::BoundaryCondition::FLAT:
+        glTextureParameteri(_vectors.mGlidTexture2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTextureParameteri(_vectors.mGlidTexture2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        break;
+    case VectorField2D::BoundaryCondition::MIRROR:
+        glTextureParameteri(_vectors.mGlidTexture2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+        glTextureParameteri(_vectors.mGlidTexture2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+        break;
+    case VectorField2D::BoundaryCondition::PERIODIC:
+        glTextureParameteri(_vectors.mGlidTexture2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTextureParameteri(_vectors.mGlidTexture2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        break;
+    default:
+        // TODO: should not happen
         break;
     }
 }
@@ -567,17 +524,17 @@ void VectorField2D::vectorTexture2DStorageAdjustBoundaryCondition()
 
 void VectorField2D::setVectorsFromImage(Metadata2DImage2D metadataImage2D, unsigned int level)
 {
-    mVectors.setFromImage(metadataImage2D, level);
+    _vectors.setFromImage(metadataImage2D, level);
 }
 
 unsigned int VectorField2D::nbElementsX()
 {
-    switch(mGridNodeLocation) {
+    switch (_gridNodeLocation) {
     case GridNodeLocation::CENTER:
-        return mNbCellsX;
+        return _nbCellsX;
         break;
     case GridNodeLocation::CORNER:
-        return mNbCellsX + 1;
+        return _nbCellsX + 1;
         break;
     default:
         // TODO: error, unknows grid location type.
@@ -587,12 +544,12 @@ unsigned int VectorField2D::nbElementsX()
 
 unsigned int VectorField2D::nbElementsY()
 {
-    switch(mGridNodeLocation) {
+    switch (_gridNodeLocation) {
     case GridNodeLocation::CENTER:
-        return mNbCellsY;
+        return _nbCellsY;
         break;
     case GridNodeLocation::CORNER:
-        return mNbCellsY + 1;
+        return _nbCellsY + 1;
         break;
     default:
         // TODO: error, unknows grid location type.
@@ -601,12 +558,12 @@ unsigned int VectorField2D::nbElementsY()
 }
 
 
-void VectorField2D::setBounds(float inBoundXMin, float inBoundXMax, float inBoundYMin, float inBoundYMax)
+void VectorField2D::setBounds(float in_boundXMin, float in_boundXMax, float in_boundYMin, float in_boundYMax)
 {
-    boundXMin.set(inBoundXMin);
-    boundXMax.set(inBoundXMax);
-    boundYMin.set(inBoundYMin);
-    boundYMax.set(inBoundYMax);
+    _boundXMin = in_boundXMin;
+    _boundXMax = in_boundXMax;
+    _boundYMin = in_boundYMin;
+    _boundYMax = in_boundYMax;
 }
 
 
@@ -614,41 +571,49 @@ uvec2 VectorField2D::pointToClosestIndex(vec2 point)
 {
     uvec2 index;
 
-    float normalizedX = (point.x - boundXMin.get())/(boundXMax.get() - boundXMin.get())*mNbCellsX;
-    float normalizedY = (point.y - boundYMin.get())/(boundYMax.get() - boundYMin.get())*mNbCellsY;
+    float normalizedX = (point.x - _boundXMin) / (_boundXMax - _boundXMin)*_nbCellsX;
+    float normalizedY = (point.y - _boundYMin) / (_boundYMax - _boundYMin)*_nbCellsY;
 
 
-    switch(mGridNodeLocation) {
-    case GridNodeLocation::CENTER :
-        if(normalizedX < 0) {
+    switch (_gridNodeLocation) {
+    case GridNodeLocation::CENTER:
+        if (normalizedX < 0) {
             index.x = 0;
-        } else if(normalizedX >= mNbCellsX) {
-            index.x = mNbCellsX-1;
-        } else {
-            index.x = clamp<int>(int(floor(normalizedX)), 0, mNbCellsX-1);
         }
-        if(normalizedY < 0) {
+        else if (normalizedX >= _nbCellsX) {
+            index.x = _nbCellsX - 1;
+        }
+        else {
+            index.x = clamp<int>(int(floor(normalizedX)), 0, _nbCellsX - 1);
+        }
+        if (normalizedY < 0) {
             index.y = 0;
-        } else if(normalizedY >= mNbCellsY) {
-            index.y = mNbCellsY-1;
-        } else {
-            index.y = clamp<int>(int(floor(normalizedY)), 0, mNbCellsY-1);
+        }
+        else if (normalizedY >= _nbCellsY) {
+            index.y = _nbCellsY - 1;
+        }
+        else {
+            index.y = clamp<int>(int(floor(normalizedY)), 0, _nbCellsY - 1);
         }
         break;
-    case GridNodeLocation::CORNER :
-        if(normalizedX < 0) {
+    case GridNodeLocation::CORNER:
+        if (normalizedX < 0) {
             index.x = 0;
-        } else if(normalizedX >= mNbCellsX) {
-            index.x = mNbCellsX;
-        } else {
-            index.x = clamp<int>(int(floor(normalizedX + 0.5)), 0, mNbCellsX);
         }
-        if(normalizedY < 0) {
+        else if (normalizedX >= _nbCellsX) {
+            index.x = _nbCellsX;
+        }
+        else {
+            index.x = clamp<int>(int(floor(normalizedX + 0.5)), 0, _nbCellsX);
+        }
+        if (normalizedY < 0) {
             index.y = 0;
-        } else if(normalizedY >= mNbCellsY) {
-            index.y = mNbCellsY;
-        } else {
-            index.y = clamp<int>(int(floor(normalizedY + 0.5)), 0, mNbCellsY);
+        }
+        else if (normalizedY >= _nbCellsY) {
+            index.y = _nbCellsY;
+        }
+        else {
+            index.y = clamp<int>(int(floor(normalizedY + 0.5)), 0, _nbCellsY);
         }
         break;
     }
@@ -660,41 +625,49 @@ uvec2 VectorField2D::pointToFlooredIndex(vec2 point)
 {
     uvec2 index;
 
-    float normalizedX = (point.x - boundXMin.get())/(boundXMax.get() - boundXMin.get())*mNbCellsX;
-    float normalizedY = (point.y - boundYMin.get())/(boundYMax.get() - boundYMin.get())*mNbCellsY;
+    float normalizedX = (point.x - _boundXMin) / (_boundXMax - _boundXMin)*_nbCellsX;
+    float normalizedY = (point.y - _boundYMin) / (_boundYMax - _boundYMin)*_nbCellsY;
 
 
-    switch(mGridNodeLocation) {
-    case GridNodeLocation::CENTER :
-        if(normalizedX < 0) {
+    switch (_gridNodeLocation) {
+    case GridNodeLocation::CENTER:
+        if (normalizedX < 0) {
             index.x = 0;
-        } else if(normalizedX >= mNbCellsX) {
-            index.x = mNbCellsX-1;
-        } else {
-            index.x = clamp<int>(int(floor(normalizedX-0.5)), 0, mNbCellsX-1);
         }
-        if(normalizedY < 0) {
+        else if (normalizedX >= _nbCellsX) {
+            index.x = _nbCellsX - 1;
+        }
+        else {
+            index.x = clamp<int>(int(floor(normalizedX - 0.5)), 0, _nbCellsX - 1);
+        }
+        if (normalizedY < 0) {
             index.y = 0;
-        } else if(normalizedY >= mNbCellsY) {
-            index.y = mNbCellsY-1;
-        } else {
-            index.y = clamp<int>(int(floor(normalizedY-0.5)), 0, mNbCellsY-1);
+        }
+        else if (normalizedY >= _nbCellsY) {
+            index.y = _nbCellsY - 1;
+        }
+        else {
+            index.y = clamp<int>(int(floor(normalizedY - 0.5)), 0, _nbCellsY - 1);
         }
         break;
-    case GridNodeLocation::CORNER :
-        if(normalizedX < 0) {
+    case GridNodeLocation::CORNER:
+        if (normalizedX < 0) {
             index.x = 0;
-        } else if(normalizedX >= mNbCellsX) {
-            index.x = mNbCellsX;
-        } else {
-            index.x = clamp<int>(int(floor(normalizedX)), 0, mNbCellsX);
         }
-        if(normalizedY < 0) {
+        else if (normalizedX >= _nbCellsX) {
+            index.x = _nbCellsX;
+        }
+        else {
+            index.x = clamp<int>(int(floor(normalizedX)), 0, _nbCellsX);
+        }
+        if (normalizedY < 0) {
             index.y = 0;
-        } else if(normalizedY >= mNbCellsY) {
-            index.y = mNbCellsY;
-        } else {
-            index.y = clamp<int>(int(floor(normalizedY)), 0, mNbCellsY);
+        }
+        else if (normalizedY >= _nbCellsY) {
+            index.y = _nbCellsY;
+        }
+        else {
+            index.y = clamp<int>(int(floor(normalizedY)), 0, _nbCellsY);
         }
         break;
     }
@@ -708,14 +681,14 @@ vec2 VectorField2D::indexToPosition(uvec2 index)
 {
     vec2 pos;
 
-    switch(mGridNodeLocation) {
-    case GridNodeLocation::CENTER :
-        pos.x = boundXMin.get() + (index.x + 0.5f)*(boundXMax.get()-boundXMin.get())/mNbCellsX;
-        pos.y = boundYMin.get() + (index.y + 0.5f)*(boundYMax.get()-boundYMin.get())/mNbCellsY;
+    switch (_gridNodeLocation) {
+    case GridNodeLocation::CENTER:
+        pos.x = _boundXMin + (index.x + 0.5f)*(_boundXMax - _boundXMin) / _nbCellsX;
+        pos.y = _boundYMin + (index.y + 0.5f)*(_boundYMax - _boundYMin) / _nbCellsY;
         break;
-    case GridNodeLocation::CORNER :
-        pos.x = boundXMin.get() + (index.x)*(boundXMax.get()-boundXMin.get())/mNbCellsX;
-        pos.y = boundYMin.get() + (index.y)*(boundYMax.get()-boundYMin.get())/mNbCellsY;
+    case GridNodeLocation::CORNER:
+        pos.x = _boundXMin + (index.x)*(_boundXMax - _boundXMin) / _nbCellsX;
+        pos.y = _boundYMin + (index.y)*(_boundYMax - _boundYMin) / _nbCellsY;
         break;
     }
 
@@ -725,182 +698,172 @@ vec2 VectorField2D::indexToPosition(uvec2 index)
 
 
 
-//void VectorField2D::createGridNodeLocationsCpuStorage() {
-//    gridNodeLocations.get()->createCpuStorage();
-//    gridNodeLocations.get()->resize(nbElementsX() * nbElementsY());
-//    gridNodeLocations.get()->dataCpu.dirtyItselfAndDependents();
+//
+////==============================================================================
+//// PLUGS ACTIONS
+////==============================================================================
+//
+//// copies and returns a linear buffer containing the grid positions.
+//Metadata1DCpu VectorField2D::out_gridNodeLocationsCpu_getData() {
+//
+//    _vectors.dataCpu.refresh();
+//
+//    Metadata1DCpu metadata;
+//    vec2* data;
+//    float cellWidthX = (_boundXMax - _boundXMin) / _nbCellsX;
+//    float cellWidthY = (_boundYMax - _boundYMin) / _nbCellsY;
+//
+//    switch (_gridNodeLocation) {
+//    case GridNodeLocation::CENTER:
+//        data = new vec2[_nbCellsX*_nbCellsY];
+//        for (unsigned int i = 0; i < _nbCellsX; i++) {
+//            for (unsigned int j = 0; j < _nbCellsY; j++) {
+//                data[_nbCellsY*j + i] = vec2(_boundXMin + (i + 0.5f)*cellWidthX,
+//                    _boundYMin + (j + 0.5f)*cellWidthY);
+//            }
+//        }
+//        break;
+//    case GridNodeLocation::CORNER:
+//        data = new vec2[(_nbCellsX + 1)*(_nbCellsY + 1)];
+//        for (unsigned int i = 0; i <= _nbCellsX; i++) {
+//            for (unsigned int j = 0; j <= _nbCellsY; j++) {
+//                data[(_nbCellsY + 1)*j + i] = vec2(_boundXMin + i * cellWidthX,
+//                    _boundYMin + j * cellWidthY);
+//            }
+//        }
+//        break;
+//    }
+//
+//    metadata.dataPointer = data;
+//    return metadata;
 //}
-
-//void VectorField2D::createGridNodeLocationsBufferStorage(GLenum dataType) {
-//    gridNodeLocations.createBufferStorage(dataType, 2);
-//    gridNodeLocations.resize(nbElementsX() * nbElementsY());
-//    gridNodeLocations.get()->dataBuffer.dirtyItselfAndDependents();
+//void VectorField2D::out_gridNodeLocationsCpu_receivePushConnectionUpdate(ConnectionAbstract* /*connection*/) {}
+//
+//
+//GLuint VectorField2D::out_gridNodeLocationsBuffer_getData() {
+//    //TODO: generate grid node postions.
+//    return 0;
 //}
-
-
-
-
-//==============================================================================
-// PLUGS ACTIONS
-//==============================================================================
-
-// copies and returns a linear buffer containing the grid positions.
-Metadata1DCpu VectorField2D::out_gridNodeLocationsCpu_getData() {
-
-    mVectors.dataCpu.refresh();
-
-    Metadata1DCpu metadata;
-    vec2* data;
-    float cellWidthX = (boundXMax.get() - boundXMin.get())/mNbCellsX;
-    float cellWidthY = (boundYMax.get() - boundYMin.get())/mNbCellsY;
-
-    switch(mGridNodeLocation) {
-    case GridNodeLocation::CENTER:
-        data = new vec2[mNbCellsX*mNbCellsY];
-        for(unsigned int i=0; i<mNbCellsX; i++) {
-        for(unsigned int j=0; j<mNbCellsY; j++) {
-            data[mNbCellsY*j + i] = vec2(boundXMin.get() + (i+0.5f)*cellWidthX,
-                                         boundYMin.get() + (j+0.5f)*cellWidthY);
-        }}
-        break;
-    case GridNodeLocation::CORNER:
-        data = new vec2[(mNbCellsX+1)*(mNbCellsY+1)];
-        for(unsigned int i=0; i<=mNbCellsX; i++) {
-        for(unsigned int j=0; j<=mNbCellsY; j++) {
-            data[(mNbCellsY+1)*j + i] = vec2(boundXMin.get() + i*cellWidthX,
-                                             boundYMin.get() + j*cellWidthY);
-        }}
-        break;
-    }
-
-    metadata.dataPointer = data;
-    return metadata;
-}
-void VectorField2D::out_gridNodeLocationsCpu_receivePushConnectionUpdate(ConnectionAbstract* /*connection*/) {}
-
-
-GLuint VectorField2D::out_gridNodeLocationsBuffer_getData() {
-    //TODO: generate grid node postions.
-    return 0;
-}
-void VectorField2D::out_gridNodeLocationsBuffer_receivePushConnectionUpdate(ConnectionAbstract* /*connection*/) {}
-
-
-// creates and return a linear copy of the vector data.
-Metadata1DCpu VectorField2D::out_vectorValuesCpu_getData() {
-
-    Metadata1DCpu metadata;
-    vec2* data;
-
-    switch(mGridNodeLocation) {
-    case GridNodeLocation::CENTER:
-        data = new vec2[mNbCellsX*mNbCellsY];
-        break;
-    case GridNodeLocation::CORNER:
-        data = new vec2[(mNbCellsX+1)*(mNbCellsY+1)];
-        break;
-    }
-
-//    mVectors.sourceStorageType = DataBuffer2D<vec2>::StorageType::TEXTURE2D;
-    mVectors.dataCpu.dirtyItselfAndDependents();
-    memcpy(data, mVectors.dataCpu.get(), mVectors.dataSizeInBytes());
-
-    metadata.dataPointer = data;
-    return metadata;
-}
-void VectorField2D::out_vectorValuesCpu_receivePushConnectionUpdate(ConnectionAbstract* /*connection*/) {}
-
-
-Metadata2DCpu VectorField2D::out_divergenceCpu_getData() {
-    Metadata2DCpu metadata;
-    float* data;
-
-    float hx = (boundXMax.get() - boundXMin.get())/mNbCellsX;
-    float hy = (boundYMax.get() - boundYMin.get())/mNbCellsY;
-    vec2 vecHx = vec2(hx, 0);
-    vec2 vecHy = vec2(0, hy);
-
-    switch(mGridNodeLocation) {
-    case GridNodeLocation::CENTER:
-        data = new float[mNbCellsX*mNbCellsY];
-
-        for(unsigned int i=0; i<mNbCellsX; ++i) {
-        for(unsigned int j=0; j<mNbCellsY; ++j) {
-            vec2 c = vec2(boundXMin.get() + (i+0.5)*hx, boundYMin.get() + (j+0.5)*hy);
-            data[mNbCellsY*j + i] = 0.5f/hx*(interp(c+vecHx).x - interp(c-vecHx).x) +
-                                    0.5f/hy*(interp(c+vecHy).y - interp(c-vecHy).y);
-//            data[mNbCellsY*j + i] *= 100;
-//            data[mNbCellsY*j + i] = 0.5;
-        }}
-
-        break;
-    case GridNodeLocation::CORNER:
-        data = new float[(mNbCellsX+1)*(mNbCellsY+1)];
-
-        for(unsigned int i=0; i<mNbCellsX+1; ++i) {
-        for(unsigned int j=0; j<mNbCellsY+1; ++j) {
-            vec2 c = vec2(boundXMin.get() + i*hx, boundYMin.get() + j*hy);
-            data[(mNbCellsY+1)*j + i] = 0.5f/hx*(interp(c+vecHx).x - interp(c-vecHx).x) +
-                                        0.5f/hy*(interp(c+vecHy).y - interp(c-vecHy).y);
-//            data[(mNbCellsY+1)*j + i] = 1;
-        }}
-
-        break;
-    }
-
-//    memcpy(data, mVectors.dataCpu.get(), mVectors.dataSizeInBytes());
-
-
-    metadata.dataPointer = data;
-    return metadata;
-}
-void VectorField2D::out_divergenceCpu_receivePushConnectionUpdate(ConnectionAbstract* /*connection*/) {}
-
-
-Metadata2DTexture2D VectorField2D::out_vectorsMetadataTexture2D_getData()
-{
-    return mVectors.out_metadataTexture2D.getData();
-}
-void VectorField2D::out_vectorsMetadataTexture2D_receivePushConnectionUpdate(ConnectionAbstract* /*connection*/) {}
-
-
-Metadata2DImage2D VectorField2D::out_vectorsMetadataImage2D_getData(unsigned int level)
-{
-    return mVectors.out_metadataImage2D.getData(level);
-}
-void VectorField2D::out_vectorsMetadataImage2D_receivePushConnectionUpdate(ConnectionAbstract* /*connection*/) {}
-
-
-void VectorField2D::in_vectorsMetadataImage2D_dirtyDependents()
-{
-    out_int_vectorsMetadataImage2D.dirtyConnections();
-}
-void VectorField2D::in_vectorsMetadataImage2D_receive(Metadata2DImage2D data)
-{
-    out_int_vectorsMetadataImage2D.pushUpdate(data);
-}
-void VectorField2D::in_vectorsMetadataImage2D_receivePullConnectionUpdate(ConnectionAbstract* /*connection*/) {}
-
-
-Metadata2DImage2D VectorField2D::out_int_vectorsMetadataImage2D_getData()
-{
-    return in_vectorsMetadataImage2D.pullUpdate();
-}
-void VectorField2D::out_int_vectorsMetadataImage2D_receivePushConnectionUpdate(ConnectionAbstract* /*connection*/) {}
-
-
-void VectorField2D::in_int_vectorsMetadataImage2D_dirtyDependents()
-{
-    out_int_vectorsMetadataImage2D.dirtyConnections();
-}
-void VectorField2D::in_int_vectorsMetadataImage2D_receivePullConnectionUpdate(ConnectionAbstract* /*connection*/) {}
-
-
-//<<goglu>> {
-//    Beacon VectorField2D_dirtyblesDefs;
-//} <<goglu>>;
-
-GOGLU_BEGIN(
-    component_definitions VectorField2D
-)GOGLU_END
-#include "../../gogluGeneratedCode/src/dataStructures/VectorField2D.cpp_d/snippet1.goglu"
+//void VectorField2D::out_gridNodeLocationsBuffer_receivePushConnectionUpdate(ConnectionAbstract* /*connection*/) {}
+//
+//
+//// creates and return a linear copy of the vector data.
+//Metadata1DCpu VectorField2D::out_vectorValuesCpu_getData() {
+//
+//    Metadata1DCpu metadata;
+//    vec2* data;
+//
+//    switch (_gridNodeLocation) {
+//    case GridNodeLocation::CENTER:
+//        data = new vec2[_nbCellsX*_nbCellsY];
+//        break;
+//    case GridNodeLocation::CORNER:
+//        data = new vec2[(_nbCellsX + 1)*(_nbCellsY + 1)];
+//        break;
+//    }
+//
+//    //    _vectors.sourceStorageType = DataBuffer2D<vec2>::StorageType::TEXTURE2D;
+//    _vectors.dataCpu.dirtyItselfAndDependents();
+//    memcpy(data, _vectors.dataCpu.get(), _vectors.dataSizeInBytes());
+//
+//    metadata.dataPointer = data;
+//    return metadata;
+//}
+//void VectorField2D::out_vectorValuesCpu_receivePushConnectionUpdate(ConnectionAbstract* /*connection*/) {}
+//
+//
+//Metadata2DCpu VectorField2D::out_divergenceCpu_getData() {
+//    Metadata2DCpu metadata;
+//    float* data;
+//
+//    float hx = (_boundXMax - _boundXMin) / _nbCellsX;
+//    float hy = (_boundYMax - _boundYMin) / _nbCellsY;
+//    vec2 vecHx = vec2(hx, 0);
+//    vec2 vecHy = vec2(0, hy);
+//
+//    switch (_gridNodeLocation) {
+//    case GridNodeLocation::CENTER:
+//        data = new float[_nbCellsX*_nbCellsY];
+//
+//        for (unsigned int i = 0; i < _nbCellsX; ++i) {
+//            for (unsigned int j = 0; j < _nbCellsY; ++j) {
+//                vec2 c = vec2(_boundXMin + (i + 0.5)*hx, _boundYMin + (j + 0.5)*hy);
+//                data[_nbCellsY*j + i] = 0.5f / hx * (interp(c + vecHx).x - interp(c - vecHx).x) +
+//                    0.5f / hy * (interp(c + vecHy).y - interp(c - vecHy).y);
+//                //            data[_nbCellsY*j + i] *= 100;
+//                //            data[_nbCellsY*j + i] = 0.5;
+//            }
+//        }
+//
+//        break;
+//    case GridNodeLocation::CORNER:
+//        data = new float[(_nbCellsX + 1)*(_nbCellsY + 1)];
+//
+//        for (unsigned int i = 0; i < _nbCellsX + 1; ++i) {
+//            for (unsigned int j = 0; j < _nbCellsY + 1; ++j) {
+//                vec2 c = vec2(_boundXMin + i * hx, _boundYMin + j * hy);
+//                data[(_nbCellsY + 1)*j + i] = 0.5f / hx * (interp(c + vecHx).x - interp(c - vecHx).x) +
+//                    0.5f / hy * (interp(c + vecHy).y - interp(c - vecHy).y);
+//                //            data[(_nbCellsY+1)*j + i] = 1;
+//            }
+//        }
+//
+//        break;
+//    }
+//
+//    //    memcpy(data, _vectors.dataCpu.get(), _vectors.dataSizeInBytes());
+//
+//
+//    metadata.dataPointer = data;
+//    return metadata;
+//}
+//void VectorField2D::out_divergenceCpu_receivePushConnectionUpdate(ConnectionAbstract* /*connection*/) {}
+//
+//
+//Metadata2DTexture2D VectorField2D::out_vectorsMetadataTexture2D_getData()
+//{
+//    return _vectors.out_metadataTexture2D.getData();
+//}
+//void VectorField2D::out_vectorsMetadataTexture2D_receivePushConnectionUpdate(ConnectionAbstract* /*connection*/) {}
+//
+//
+//Metadata2DImage2D VectorField2D::out_vectorsMetadataImage2D_getData(unsigned int level)
+//{
+//    return _vectors.out_metadataImage2D.getData(level);
+//}
+//void VectorField2D::out_vectorsMetadataImage2D_receivePushConnectionUpdate(ConnectionAbstract* /*connection*/) {}
+//
+//
+//void VectorField2D::in_vectorsMetadataImage2D_dirtyDependents()
+//{
+//    out_int_vectorsMetadataImage2D.dirtyConnections();
+//}
+//void VectorField2D::in_vectorsMetadataImage2D_receive(Metadata2DImage2D data)
+//{
+//    out_int_vectorsMetadataImage2D.pushUpdate(data);
+//}
+//void VectorField2D::in_vectorsMetadataImage2D_receivePullConnectionUpdate(ConnectionAbstract* /*connection*/) {}
+//
+//
+//Metadata2DImage2D VectorField2D::out_int_vectorsMetadataImage2D_getData()
+//{
+//    return in_vectorsMetadataImage2D.pullUpdate();
+//}
+//void VectorField2D::out_int_vectorsMetadataImage2D_receivePushConnectionUpdate(ConnectionAbstract* /*connection*/) {}
+//
+//
+//void VectorField2D::in_int_vectorsMetadataImage2D_dirtyDependents()
+//{
+//    out_int_vectorsMetadataImage2D.dirtyConnections();
+//}
+//void VectorField2D::in_int_vectorsMetadataImage2D_receivePullConnectionUpdate(ConnectionAbstract* /*connection*/) {}
+//
+//
+////<<goglu>> {
+////    Beacon VectorField2D_dirtyblesDefs;
+////} <<goglu>>;
+//
+//GOGLU_BEGIN(
+//    component_definitions VectorField2D
+//)GOGLU_END
+//#include "../../gogluGeneratedCode/src/dataStructures/VectorField2D.cpp_d/snippet1.goglu"

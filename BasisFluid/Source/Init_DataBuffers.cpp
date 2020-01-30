@@ -11,22 +11,20 @@ using namespace std;
 bool Application::Init_DataBuffers() {
 
     _velocityField = make_unique<VectorField2D>(
-        domainLeft, domainRight, domainBottom, domainTop,
-        nbCellsXTotal, nbCellsYTotal,
+        _domainLeft, _domainRight, _domainBottom, _domainTop,
+        _nbCellsXTotal, _nbCellsYTotal,
         VectorField2D::GridNodeLocation::CORNER,
         VectorField2D::BoundaryCondition::FLAT);
     _velocityField->createVectorCpuStorage();
     _velocityField->createVectorTexture2DStorage(
         GL_RG, GL_RG32F, GL_RG, GL_FLOAT, 1);
-    _velocityField->populateWithFunction(
-        [=]
-    (float /*x*/, float /*y*/) {
+    _velocityField->populateWithFunction( [=](float /*x*/, float /*y*/) {
         return vec2(0);
     });
 
 
-    _prevVelocityField = make_unique<VectorField2D>(domainLeft, domainRight, domainBottom, domainTop,
-        nbCellsXTotal, nbCellsYTotal,
+    _prevVelocityField = make_unique<VectorField2D>(_domainLeft, _domainRight, _domainBottom, _domainTop,
+        _nbCellsXTotal, _nbCellsYTotal,
         VectorField2D::GridNodeLocation::CORNER,
         VectorField2D::BoundaryCondition::FLAT);
     _prevVelocityField->createVectorCpuStorage();
@@ -40,7 +38,7 @@ bool Application::Init_DataBuffers() {
 
 
 
-    _nbParticlesPerCell = make_unique<DataBuffer2D<unsigned int>>(nbCellsXTotal, nbCellsYTotal);
+    _nbParticlesPerCell = make_unique<DataBuffer2D<unsigned int>>(_nbCellsXTotal, _nbCellsYTotal);
     _nbParticlesPerCell->createCpuStorage();
     _nbParticlesPerCell->createTexture2DStorage(
         GL_RED_INTEGER, GL_R32I, GL_RED_INTEGER, GL_INT, 1);
@@ -53,7 +51,7 @@ bool Application::Init_DataBuffers() {
 
 
 
-    _forceField = new VectorField2D(domainLeft, domainRight, domainBottom, domainTop,
+    _forceField = make_unique<VectorField2D>(_domainLeft, _domainRight, _domainBottom, _domainTop,
         forcesGridRes, forcesGridRes,
         VectorField2D::GridNodeLocation::CORNER,
         VectorField2D::BoundaryCondition::FLAT);
@@ -87,11 +85,11 @@ bool Application::Init_DataBuffers() {
     //according to their frequencies. We only need to create one basis template
     //per anisotropy ratio, so here we compute lvlX=0 and lvlY=iRatio.    
     _basisFlowTemplates = new std::unique_ptr<VectorField2D>[_maxAnisoLvl + 1];
-    for (unsigned int iRatio = 0; iRatio < maxAnisoLvl + 1; iRatio++) {
+    for (unsigned int iRatio = 0; iRatio < _maxAnisoLvl + 1; iRatio++) {
         _basisFlowTemplates[iRatio] = make_unique<VectorField2D>(
             -0.5f, 0.5f,
             -0.5f / float(1 << iRatio), 0.5f / float(1 << iRatio),
-            nbCellsXBasis, nbCellsYBasis,
+            _nbCellsXBasis, _nbCellsYBasis,
             VectorField2D::GridNodeLocation::CORNER,
             VectorField2D::BoundaryCondition::ZERO);
         _basisFlowTemplates[iRatio]->createVectorCpuStorage();

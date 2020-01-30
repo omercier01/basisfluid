@@ -4,7 +4,7 @@
 #define GRIDDATA2D_H
 
 //#include "glm/glm.hpp"
-#include "../DataBuffer/DataBuffer2D.h"
+#include "DataBuffer2D.h"
 
 
 
@@ -35,13 +35,13 @@ public:
     unsigned int nbElementsX();
     unsigned int nbElementsY();
     
-    glm::uvec2 pointToClosestIndex(vec2 point);
-    glm::vec2 indexToPosition(uvec2 index);
+    glm::uvec2 pointToClosestIndex(glm::vec2 point);
+    glm::vec2 indexToPosition(glm::uvec2 index);
 };
 
 } // namespace goglu.
 
 // include definitions because the class is templated.
-#include "GridData2D.cpp"
+#include "GridData2D.tpp"
 
 #endif // GRIDDATA2D_H

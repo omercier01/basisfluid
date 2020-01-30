@@ -18,11 +18,11 @@ public:
     enum class GridNodeLocation{ CENTER, CORNER };
     enum class InterpolationMethod{ LINEAR };
 public:
-    DataBuffer2D<glm::vec2> mVectors;
-    float boundXMin, boundYMin, boundXMax, boundYMax;
-    unsigned int mNbCellsX, mNbCellsY;
-    BoundaryCondition mBoundaryCondition;
-    GridNodeLocation mGridNodeLocation;
+    DataBuffer2D<glm::vec2> _vectors;
+    float _boundXMin, _boundYMin, _boundXMax, _boundYMax;
+    unsigned int _nbCellsX, _nbCellsY;
+    BoundaryCondition _boundaryCondition;
+    GridNodeLocation _gridNodeLocation;
 
 public:
     VectorField2D(float boundXMin, float boundXMax, float boundYMin,

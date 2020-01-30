@@ -60,17 +60,7 @@
 #ifndef DATABUFFER1D_H
 #define DATABUFFER1D_H
 
-#ifndef GLEW_MX
-#define GLEW_MX
-#endif
 #include "GL/glew.h"
-GLEWContext* glewGetContext();
-
-#include "../connections/InputPlug.h"
-#include "../connections/OutputPlug.h"
-#include "../connections/Dirtyable.h"
-
-namespace goglu{
 
 struct Metadata1DCpu {
     void* dataPointer;
@@ -93,45 +83,30 @@ class DataBuffer1D
 public:
 //private:
 
-    Metadata1DBuffer metadataBuffer;
-    Metadata1DCpu metadataCpu;
+    Metadata1DBuffer _metadataBuffer;
+    Metadata1DCpu _metadataCpu;
 
     enum class StorageType {UNKNOWN, CPU, BUFFER, TEXTURE1D, TEXTUREBUFFER};
-    StorageType sourceStorageType;
+    StorageType _sourceStorageType;
 
-    unsigned int capacity;
-    unsigned int mNbElements;
-    GLuint mGlidBuffer;
-    GLuint mGlidTexture1D;
-    GLuint mGlidTextureBuffer;
-    bool mbHasCpuStorage;
-    bool mbHasBufferStorage;
-    bool mbHasTexture1DStorage;
-    bool mbHasTextureBufferStorage;
-    GLenum mTexture1DInternalFormat; // internal texel format. (http://docs.gl/gl4/glTexStorage1D)
-    GLenum mTexture1DSizedInternalFormat;
-    GLenum mTexture1DExternalFormat; // external texel format, used to communicate with user, e.g. set or get the texture data. (http://docs.gl/gl4/glGetTexImage)
-    GLenum mTexture1DSizedExternalFormat;
-    GLenum mTextureBufferSizedInternalFormat; // internal texture buffer format. (http://docs.gl/gl4/glTexBuffer)
-
-public:
-    // TODO: also allow tranfers through GPU data directly.
-    // TODO: only have outputs for the metadata, which includes the data pointer, sizes, format, etc, and no outputs for the data itself?
-    INPUTPLUG_EXT_PULLPUSH(metadataCpu, Metadata1DCpu, DataBuffer1D<T>);
-//    INPUTPLUG_PULLPUSH(DataTexture, GLuint, DataBuffer1D<T>);
-//    INPUTPLUG_PULLPUSH(DataTextureBuffer, GLuint, DataBuffer1D<T>);
-//    OUTPUTPLUG_PULLPUSH(DataCpu, T*, DataBuffer1D<T>);
-//    OUTPUTPLUG_PULLPUSH(metadataCpu, std::tuple<T*, unsigned int>, DataBuffer1D<T>); // <dataPointer, nbElements>, format is inferred from the *dataPointer
-//    OUTPUTPLUG_PULLPUSH(DataTexture, GLuint, DataBuffer1D<T>);
-//    OUTPUTPLUG_PULLPUSH(DataBuffer, GLuint, DataBuffer1D<T>);
-    INPUTPLUG_EXT_PULLPUSH(metadataBuffer, Metadata1DBuffer, DataBuffer1D<T>);
-    OUTPUTPLUG_EXT_PULLPUSH(metadataBuffer, Metadata1DBuffer, DataBuffer1D<T>);
-//    OUTPUTPLUG_PULLPUSH(DataTextureBuffer, GLuint, DataBuffer1D<T>);
-    OUTPUTPLUG_EXT_PULL(nbParticles, unsigned int, DataBuffer1D<T>);
+    unsigned int _capacity;
+    unsigned int _nbElements;
+    GLuint _glidBuffer;
+    GLuint _glidTexture1D;
+    GLuint _glidTextureBuffer;
+    bool _hasCpuStorage;
+    bool _hasBufferStorage;
+    bool _hasTexture1DStorage;
+    bool _hasTextureBufferStorage;
+    GLenum _texture1DInternalFormat; // internal texel format. (http://docs.gl/gl4/glTexStorage1D)
+    GLenum _texture1DSizedInternalFormat;
+    GLenum _texture1DExternalFormat; // external texel format, used to communicate with user, e.g. set or get the texture data. (http://docs.gl/gl4/glGetTexImage)
+    GLenum _texture1DSizedExternalFormat;
+    GLenum _textureBufferSizedInternalFormat; // internal texture buffer format. (http://docs.gl/gl4/glTexBuffer)
 
 public:
-    DIRTYABLE_DATA(dataCpu, T*, DataBuffer1D<T>);
-    DIRTYABLE_DATA(dataBuffer, GLuint, DataBuffer1D<T>);
+    T* _dataCpu;
+    GLuint dataBuffer;
 
 public:
 
@@ -170,14 +145,12 @@ public:
     //void copyFrom(DataBuffer* src);
 
     unsigned int dataCpuSizeInBytes() {
-        return mNbElements * sizeof(T);
+        return _nbElements * sizeof(T);
         //return metadataCpu.mNbElements * metadataCpu.nbElementsPerComponent * sizeof(T)
     }
 };
 
-} // namespace goglu.
-
 // include definitions because the class is templated.
-#include "DataBuffer1D.cpp"
+#include "DataBuffer1D.tpp"
 
 #endif // DATABUFFER1D_H

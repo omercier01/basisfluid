@@ -13,6 +13,35 @@
 #include <memory>
 #include <vector>
 
+#define BASE_GRID_SIZE 64
+#define ACCEL_GRID_SIZE 64
+#define INTEGRAL_GRID_SIZE 32
+
+#define INVERSION_OPENMP 1
+#define USE_DECOMPRESSED_COEFFICIENTS   1
+#define INVERSION_INNER_DOUBLE_PRECISION 1
+#define INVERSION_STORAGE_DOUBLE_PRECISION 1
+#define DEF_COEFF_COMPUTE_GPU 1 // compute coefficients (A, BB, T) and forces on GPU
+#define EXPLICIT_ENERGY_TRANSFER 1
+#define EXPLICIT_TRANSPORT_ROTATION 1
+#define USE_PRECISE_BASIS_EVAL 0
+#define INTEGRATE_BASIS_ONE_BASIS_PER_DISPATCH   0
+#define INTEGRATE_BASIS_ONE_BASIS_PER_INVOCATION 1
+#define SAFETY_ASSERTS 0   // useful for debugging, otherwise turn off for performance
+
+
+#if INVERSION_INNER_DOUBLE_PRECISION
+    typedef double scalar_inversion_inner;
+#else
+    typedef float scalar_inversion_inner;
+#endif
+
+#if INVERSION_STORAGE_DOUBLE_PRECISION
+    typedef double scalar_inversion_storage;
+#else
+    typedef float scalar_inversion_storage;
+#endif
+
 // Global class to manage program execution
 class Application {
 public:
@@ -46,6 +75,18 @@ public:
     const float _domainBottom = _domainCenter.y - _domainHalfSize.y;
     const float _domainTop = _domainCenter.y + _domainHalfSize.y;
 
+    const int nbCells = BASE_GRID_SIZE - 1; // 64 corner data points, so 63 cells
+    const int _nbCellsXTotal = nbCells;
+    const int _nbCellsXBasis = nbCells;
+    const int _nbCellsYTotal = nbCells;
+    const int _nbCellsYBasis = nbCells;
+
+    uint obstacleDisplayRes = BASE_GRID_SIZE;
+    uint integralGridRes = INTEGRAL_GRID_SIZE - 1;//32-1; // e.g. 32 grid points, 31 cells
+    uint accelBasisRes = ACCEL_GRID_SIZE;//32; // raw data, so 32 cells
+    uint accelParticlesRes = accelBasisRes;//32; // stored at cell center, so 32 grid points == 32 cells
+    uint forcesGridRes = BASE_GRID_SIZE - 1;//32-1; // 32 grid points, 31 cells
+
     const int _minFreqLvl = 1;
     const int _maxFreqLvl = 1;
     const int _minAnisoLvl = 0;
@@ -57,8 +98,6 @@ public:
 
 
 public:
-
-
 
     GLFWwindow* _glfwWindow;
 
@@ -85,7 +124,6 @@ public:
     std::unique_ptr<DataBuffer1D<vec2>> _obstacleLines = nullptr;
 
     // force projection buffers
-    typedef double scalar_inversion_storage;
     std::unique_ptr<DataBuffer1D<scalar_inversion_storage>> _vecX = nullptr;
     std::unique_ptr<DataBuffer1D<scalar_inversion_storage>> _vecTemp = nullptr;
     std::unique_ptr<DataBuffer1D<scalar_inversion_storage>> _vecXForces = nullptr;

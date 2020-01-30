@@ -6,21 +6,10 @@
 #ifndef DATABUFFER2D_H
 #define DATABUFFER2D_H
 
-#ifndef GLEW_MX
-#define GLEW_MX
-#endif
 #include "GL/glew.h"
-GLEWContext* glewGetContext();
-
 #include "glm/glm.hpp"
 //#include "glm/core/setup.hpp"
 //#include "glm/core/type.hpp"
-
-#include "../connections/InputPlug.h"
-#include "../connections/OutputPlug.h"
-#include "../connections/Dirtyable.h"
-
-namespace goglu{
 
 struct Metadata2DCpu {
     void* dataPointer;
@@ -56,41 +45,27 @@ class DataBuffer2D
 public:
 //private:
 
-    Metadata2DTexture2D metadataTexture2D;
-    Metadata2DImage2D metadataImage2D;
+    Metadata2DTexture2D _metadataTexture2D;
+    Metadata2DImage2D _metadataImage2D;
 
     enum class StorageType {CPU, TEXTURE2D};
-    StorageType sourceStorageType;
+    StorageType _sourceStorageType;
 
-    typedef typename T dataType;
-    unsigned int mNbElementsX, mNbElementsY;
+    typedef typename T _dataType;
+    unsigned int _nbElementsX, _nbElementsY;
 //    GLuint mGlidBuffer; // if you want to transfer to buffer, transfer through a DataBuffer1D.
-    GLuint mGlidTexture2D;
-    bool mbHasCpuStorage;
+    GLuint _glidTexture2D;
+    bool _hasCpuStorage;
 //    bool mbHasBufferStorage;
-    bool mbHasTexture2DStorage;
-    GLenum mTexture2DInternalFormat; // internal texel format. (http://docs.gl/gl4/glTexStorage1D)
-    GLenum mTexture2DSizedInternalFormat;
-    GLenum mTexture2DExternalFormat; // external texel format, used to communicate with user, e.g. set or get the texture data. (http://docs.gl/gl4/glGetTexImage)
-    GLenum mTexture2DSizedExternalFormat;
+    bool _hasTexture2DStorage;
+    GLenum _texture2DInternalFormat; // internal texel format. (http://docs.gl/gl4/glTexStorage1D)
+    GLenum _texture2DSizedInternalFormat;
+    GLenum _texture2DExternalFormat; // external texel format, used to communicate with user, e.g. set or get the texture data. (http://docs.gl/gl4/glGetTexImage)
+    GLenum _texture2DSizedExternalFormat;
 
 public:
-    // TODO: also allow tranfers through GPU data directly.
-    INPUTPLUG_EXT_PULLPUSH(metadataCpu, Metadata2DCpu, DataBuffer2D<T>);
-//    INPUTPLUG_PULLPUSH(DataTexture, GLuint, DataBuffer2D<T>);
-//    INPUTPLUG_PULLPUSH(DataTextureBuffer, GLuint, DataBuffer2D<T>);
-    // TODO: turn into a PULL_QUERY and query for only certain parts of the data. QueryType would be std::tuple<x, y, sizeX, sizeY>.
-//    OUTPUTPLUG_PULL(DataCpu, T*, DataBuffer2D<T>);
-//    OUTPUTPLUG_PULLPUSH(metadataCpu, std::tuple<T*, unsigned int, unsigned int>, DataBuffer2D<T>); // <dataPointer, nbElementsX, nbElementsY>
-//    OUTPUTPLUG_PULLPUSH(DataTexture2D, GLuint, DataBuffer2D<T>);
-    OUTPUTPLUG_EXT_PULLPUSH(metadataTexture2D, Metadata2DTexture2D, DataBuffer2D<T>);
-//    OUTPUTPLUG_PULLPUSH(DataBuffer, GLuint, DataBuffer2D<T>);
-    INPUTPLUG_EXT_PULLPUSH(metadataImage2D, Metadata2DImage2D, DataBuffer2D<T>);
-    OUTPUTPLUG_EXT_PULL_QUERY(metadataImage2D, Metadata2DImage2D, unsigned int, DataBuffer2D<T>);
-
-public:
-    DIRTYABLE_DATA(dataCpu, T*, DataBuffer2D<T>);
-    DIRTYABLE_DATA(dataTexture2D, GLuint, DataBuffer2D<T>);
+    T* _dataCpu;
+    GLuint _dataTexture2D;
 //    DIRTYABLE_DATA(dataBuffer, GLuint, DataBuffer2D<T>);
 
 public:
@@ -118,8 +93,6 @@ public:
 
     void bindBufferToTarget(GLenum target);
 
-    void loadFromFile(std::string filename);
-
     T getCpuData(unsigned int i, unsigned int j);
     T getCpuData_noRefresh(unsigned int i, unsigned int j) const;
     T* getCpuDataPointer();
@@ -136,12 +109,10 @@ public:
 
     T interp(glm::vec2 pos);
 
-    unsigned int dataSizeInBytes() { return mNbElementsX * mNbElementsY * sizeof(T);}
+    unsigned int dataSizeInBytes() { return _nbElementsX * _nbElementsY * sizeof(T);}
 };
 
-} // namespace goglu.
-
 // include definitions because the class is templated.
-#include "DataBuffer2D.cpp"
+#include "DataBuffer2D.tpp"
 
 #endif // DATABUFFER2D_H

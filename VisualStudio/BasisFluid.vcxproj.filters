@@ -1,8 +1,11 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClInclude Include="..\BasisFluid\Source\Callbacks.h" />
     <ClInclude Include="..\BasisFluid\Source\Application.h" />
+    <ClInclude Include="..\BasisFluid\Source\VectorField2D.h" />
+    <ClInclude Include="..\BasisFluid\Source\DataBuffer2D.h" />
+    <ClInclude Include="..\BasisFluid\Source\DataBuffer1D.h" />
+    <ClInclude Include="..\BasisFluid\Source\GridData2D.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\BasisFluid\Source\Main.cpp" />
@@ -14,5 +17,9 @@
     <ClCompile Include="..\BasisFluid\Source\Init_DataBuffers.cpp" />
     <ClCompile Include="..\BasisFluid\Source\Init_ComputeShaders.cpp" />
     <ClCompile Include="..\BasisFluid\Source\Init_BasisFlows.cpp" />
+    <ClCompile Include="..\BasisFluid\Source\VectorField2D.cpp" />
+    <ClCompile Include="..\BasisFluid\Source\DataBuffer2D.tpp" />
+    <ClCompile Include="..\BasisFluid\Source\DataBuffer1D.tpp" />
+    <ClCompile Include="..\BasisFluid\Source\GridData2D.tpp" />
   </ItemGroup>
 </Project>
