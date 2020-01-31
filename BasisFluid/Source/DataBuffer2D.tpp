@@ -7,22 +7,17 @@
 //#include "../Application.h"
 
 template<class T>
-DataBuffer2D<T>::DataBuffer2D(unsigned int sizeX, unsigned int sizeY) :
-    in_metadataCpu(*this),
-//    outDataCpu(*this),
-    out_metadataTexture2D(*this),
-    in_metadataImage2D(*this),
-    out_metadataImage2D(*this),
-    dataCpu(*this),
-    dataTexture2D(*this)
+DataBuffer2D<T>::DataBuffer2D(unsigned int sizeX, unsigned int sizeY)
+    //dataCpu(*this),
+    //dataTexture2D(*this)
 //    dataBuffer(*this)
 {
     _nbElementsX = sizeX;
     _nbElementsY = sizeY;
 //    mNbDataElements = _nbElementsX*_nbElementsY;
-    mbHasCpuStorage = false;
+    _hasCpuStorage = false;
 //    mbHasBufferStorage = false;
-    mbHasTexture2DStorage = false;
+    _hasTexture2DStorage = false;
 
 }
 
@@ -43,8 +38,8 @@ void DataBuffer2D<T>::deleteCpuStorage()
 template<class T>
 void DataBuffer2D<T>::createBufferStorage()
 {
-    glCreateBuffers(1, &mGlidBuffer);
-    glNamedBufferStorage(mGlidBuffer, dataSizeInBytes(), NULL,
+    glCreateBuffers(1, &_glidBuffer);
+    glNamedBufferStorage(_glidBuffer, dataSizeInBytes(), NULL,
                             GL_DYNAMIC_STORAGE_BIT | GL_MAP_READ_BIT |
                             GL_MAP_WRITE_BIT);
     _hasBufferStorage = true;
@@ -53,7 +48,7 @@ void DataBuffer2D<T>::createBufferStorage()
 template<class T>
 void DataBuffer2D<T>::deleteBufferStorage()
 {
-    glDeleteBuffers(1, &mGlidBuffer);
+    glDeleteBuffers(1, &_glidBuffer);
     mbHasBufferStorage = false;
 }
 
@@ -133,24 +128,24 @@ void DataBuffer2D<T>::deleteTexture2DStorage()
 //template<class T>
 //void DataBuffer2D<T>::transferCpuDataToGpu()
 //{
-//    if(mbHasTexture2DStorage) {
+//    if(_hasTexture2DStorage) {
 //        glTextureSubImage2D(_glidTexture2D, 0, 0, 0, mSizeX, mSizeY,
 //                            _texture2DExternalFormat,
 //                            _texture2DSizedExternalFormat, mpData);
 //        glGenerateTextureMipmap(_glidTexture2D);
 //    }
 //    if(mbHasBufferStorage) {
-//        glNamedBufferSubData(mGlidBuffer, 0, dataSizeInBytes(), mpData);
+//        glNamedBufferSubData(_glidBuffer, 0, dataSizeInBytes(), mpData);
 //    }
 //}
 
 //template<class T>
 //void DataBuffer2D<T>::transferBufferDataToCpu()
 //{
-//    if(mbHasCpuStorage && mbHasBufferStorage) {
-//        glGetNamedBufferSubData( mGlidBuffer, 0, dataSizeInBytes(), mpData);
+//    if(_hasCpuStorage && mbHasBufferStorage) {
+//        glGetNamedBufferSubData( _glidBuffer, 0, dataSizeInBytes(), mpData);
 //    } else {
-//        if(!mbHasCpuStorage) {
+//        if(!_hasCpuStorage) {
 //            Application::sInsertDebugMessage(
 //                    "DataBuffer2D::transferBufferDataToCpu : DataBuffer "
 //                    "has no CPU storage, cannot transfer BUFFER data to it.",
@@ -167,12 +162,12 @@ void DataBuffer2D<T>::deleteTexture2DStorage()
 //template<class T>
 //void DataBuffer2D<T>::transferTexture2DDataToCpu()
 //{
-//    if(mbHasCpuStorage && mbHasTexture2DStorage) {
+//    if(_hasCpuStorage && _hasTexture2DStorage) {
 //        glGetTextureImage(_glidTexture2D, 0, _texture2DExternalFormat,
 //                          _texture2DSizedExternalFormat, dataSizeInBytes(),
 //                          mpData);
 //    } else {
-//        if(!mbHasCpuStorage) {
+//        if(!_hasCpuStorage) {
 //            Application::sInsertDebugMessage(
 //                    "DataBuffer2D::transferTexture2DToCpu : DataBuffer "
 //                    "has no CPU storage, cannot transfer TEXTURE_2D data to it.",
@@ -208,7 +203,7 @@ void DataBuffer2D<T>::setFromCpuData(T* inData) {
     }
 
 //    if(mbHasBufferStorage) {
-//        glNamedBufferSubData(mGlidBuffer, 0, dataSizeInBytes(), inData);
+//        glNamedBufferSubData(_glidBuffer, 0, dataSizeInBytes(), inData);
 //    }
 
 }
@@ -300,7 +295,7 @@ void DataBuffer2D<T>::resize(unsigned int newSizeX, unsigned int newSizeY)
     int nbElementsToCopyY = glm::min(newSizeY, _nbElementsY);
 //    mNbDataElements = newSizeX*newSizeY;
 
-    if(mbHasCpuStorage) {
+    if(_hasCpuStorage) {
         T* newData = new T[newSizeX*newSizeY];
         for(int i=0; i<nbElementsToCopyX; i++) {
             for(int j=0; j<nbElementsToCopyY; j++) {
@@ -315,8 +310,8 @@ void DataBuffer2D<T>::resize(unsigned int newSizeX, unsigned int newSizeY)
 //        for(int j=0; j<newSizeY; j++) {
 //            newData[newSizeY*j + i] = 0;
 //        }
-        delete[] dataCpu.get();
-        dataCpu.set(newData);
+        delete[] _dataCpu;
+        _dataCpu = newData;
     }
 
 //    if(mbHasBufferStorage) {
@@ -325,13 +320,13 @@ void DataBuffer2D<T>::resize(unsigned int newSizeX, unsigned int newSizeY)
 //        glNamedBufferStorage(newBuffer, dataSizeInBytes(), NULL,
 //                             GL_DYNAMIC_STORAGE_BIT | GL_MAP_READ_BIT |
 //                             GL_MAP_WRITE_BIT);
-//        glCopyNamedBufferSubData(mGlidBuffer, newBuffer, 0, 0,
+//        glCopyNamedBufferSubData(_glidBuffer, newBuffer, 0, 0,
 //                                 sizeof(T)*nbElementsToCopyX*nbElementsToCopyY);
-//        glDeleteBuffers(1, &mGlidBuffer);
-//        mGlidBuffer = newBuffer;
+//        glDeleteBuffers(1, &_glidBuffer);
+//        _glidBuffer = newBuffer;
 //    }
 
-    if(mbHasTexture2DStorage) {
+    if(_hasTexture2DStorage) {
         GLuint newTexture;
         glCreateTextures(GL_TEXTURE_2D, 1, &newTexture);
         unsigned int nbLevels;
@@ -360,74 +355,45 @@ void DataBuffer2D<T>::resize(unsigned int newSizeX, unsigned int newSizeY)
 template<class T>
 void DataBuffer2D<T>::bindBufferToTarget(GLenum target)
 {
-    if(mbHasBufferStorage) {
-        glBindBuffer(target, mGlidBuffer);
-    } else {
-        Application::sInsertDebugMessage(
-                "DataBuffer2D::bindToTarget : DataBuffer has no "
-                "BUFFER storage, cannot bind it to a target.",
-                GL_DEBUG_SEVERITY_HIGH);
-    }
+    glBindBuffer(target, _glidBuffer);
 }
 
 
 template <class T>
 T DataBuffer2D<T>::getCpuData(unsigned int i, unsigned int j)
 {
-    dataCpu.refresh();
-    return dataCpu.get()[_nbElementsX*j + i];
+    return _dataCpu[_nbElementsX*j + i];
 }
 
 
 template <class T>
 T DataBuffer2D<T>::getCpuData_noRefresh(unsigned int i, unsigned int j) const
 {
-    return dataCpu.get_noRefresh()[_nbElementsX*j + i];
+    return _dataCpu[_nbElementsX*j + i];
 }
 
 template <class T>
 T* DataBuffer2D<T>::getCpuDataPointer()
 {
-    return dataCpu.get();
-}
-
-
-template <class T>
-void DataBuffer2D<T>::refreshCpuData()
-{
-    dataCpu.refresh();
+    return _dataCpu;
 }
 
 
 template <class T>
 void DataBuffer2D<T>::setCpuData(unsigned int i, unsigned int j, T inData)
 {
-    dataCpu.refresh();
-    sourceStorageType = StorageType::CPU;
-    dataCpu.get()[_nbElementsX*j + i] = inData;
-    if(!dataCpu.getIsDirty()) { // WARNING: is this correct or should I dirty all the time?
-        dataCpu.dirtyItselfAndDependents();
-    }
+    _sourceStorageType = StorageType::CPU;
+    _dataCpu[_nbElementsX*j + i] = inData;
 }
 
 template <class T>
 void DataBuffer2D<T>::addCpuData(unsigned int i, unsigned int j, T inData)
 {
-    dataCpu.refresh();
-    sourceStorageType = StorageType::CPU;
-    dataCpu.get()[_nbElementsX*j + i] += inData;
-    if(!dataCpu.getIsDirty()) { // WARNING: is this correct or should I dirty all the time?
-        dataCpu.dirtyItselfAndDependents();
-    }
+    _sourceStorageType = StorageType::CPU;
+    _dataCpu[_nbElementsX*j + i] += inData;
 }
 
 
-template <class T>
-void DataBuffer2D<T>::dirtyData()
-{
-    dataCpu.dirtyItselfAndDependents();
-    //dataTexture2D.dirtyItselfAndDependents();
-}
 
 //
 //
@@ -437,10 +403,10 @@ void DataBuffer2D<T>::dirtyData()
 //
 ////template <class T>
 ////void DataBuffer2D<T>::InDataCpu_dirtyDependents() {
-////    if(mbHasCpuStorage) {
+////    if(_hasCpuStorage) {
 //////        dataCpu.dirtyItselfAndDependents();
 ////    }
-////    if(mbHasTexture2DStorage) {
+////    if(_hasTexture2DStorage) {
 //////        dataTexture2D.dirtyItselfAndDependents();
 ////    }
 //////    if(mbHasBufferStorage) {

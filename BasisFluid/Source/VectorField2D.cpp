@@ -1,6 +1,5 @@
 #include "VectorField2D.h"
 
-using namespace goglu;
 using namespace glm;
 
 VectorField2D::VectorField2D(
@@ -33,7 +32,7 @@ VectorField2D::VectorField2D(
 void VectorField2D::populateWithFunction(std::function<vec2(float x, float y)> function)
 {
     vec2* _vectorsPointer = _vectors.getCpuDataPointer();
-    unsigned int nxVec = _vectors.mNbElementsX;
+    unsigned int nxVec = _vectors._nbElementsX;
 
     switch (_gridNodeLocation) {
     case GridNodeLocation::CENTER:
@@ -59,7 +58,7 @@ void VectorField2D::populateWithFunction(std::function<vec2(float x, float y)> f
         break;
     }
 
-    _vectors.sourceStorageType = DataBuffer2D<vec2>::StorageType::CPU;
+    _vectors._sourceStorageType = DataBuffer2D<vec2>::StorageType::CPU;
     _vectors.dirtyData();
 
 }
@@ -68,7 +67,7 @@ void VectorField2D::addFunction(std::function<vec2(float, float)> function)
 {
 
     vec2* _vectorsPointer = _vectors.getCpuDataPointer();
-    unsigned int nxVec = _vectors.mNbElementsX;
+    unsigned int nxVec = _vectors._nbElementsX;
 
     switch (_gridNodeLocation) {
     case GridNodeLocation::CENTER:
@@ -92,7 +91,7 @@ void VectorField2D::addFunction(std::function<vec2(float, float)> function)
         break;
     }
 
-    _vectors.sourceStorageType = DataBuffer2D<vec2>::StorageType::CPU;
+    _vectors._sourceStorageType = DataBuffer2D<vec2>::StorageType::CPU;
     _vectors.dirtyData();
 
 }
@@ -427,7 +426,7 @@ vec2 VectorField2D::interp(vec2 pos)
     _vectors.refreshCpuData();
     vec2* _vectorsPointer = _vectors.getCpuDataPointer();
 
-    const unsigned int nx = _vectors.mNbElementsX;
+    const unsigned int nx = _vectors._nbElementsX;
 
     return (1 - weightX)*(
         (1 - weightY)*_vectorsPointer[nx*indexYLeft + indexXLeft] +
@@ -494,26 +493,26 @@ void VectorField2D::vectorTexture2DStorageAdjustBoundaryCondition()
     float borderColor[] = { 0.0f, 0.0f, 0.0f, 0.0f };
     switch (_boundaryCondition) {
     case VectorField2D::BoundaryCondition::ZERO:
-        glTextureParameteri(_vectors.mGlidTexture2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-        glTextureParameteri(_vectors.mGlidTexture2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-        glTextureParameterfv(_vectors.mGlidTexture2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+        glTextureParameteri(_vectors._glidTexture2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+        glTextureParameteri(_vectors._glidTexture2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+        glTextureParameterfv(_vectors._glidTexture2D, GL_TEXTURE_BORDER_COLOR, borderColor);
         break;
     case VectorField2D::BoundaryCondition::LINEAR:
         // not supported by OpenGL, substiture with FLAT boundary condition
-        glTextureParameteri(_vectors.mGlidTexture2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTextureParameteri(_vectors.mGlidTexture2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTextureParameteri(_vectors._glidTexture2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTextureParameteri(_vectors._glidTexture2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         break;
     case VectorField2D::BoundaryCondition::FLAT:
-        glTextureParameteri(_vectors.mGlidTexture2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTextureParameteri(_vectors.mGlidTexture2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTextureParameteri(_vectors._glidTexture2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTextureParameteri(_vectors._glidTexture2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         break;
     case VectorField2D::BoundaryCondition::MIRROR:
-        glTextureParameteri(_vectors.mGlidTexture2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-        glTextureParameteri(_vectors.mGlidTexture2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+        glTextureParameteri(_vectors._glidTexture2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+        glTextureParameteri(_vectors._glidTexture2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
         break;
     case VectorField2D::BoundaryCondition::PERIODIC:
-        glTextureParameteri(_vectors.mGlidTexture2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTextureParameteri(_vectors.mGlidTexture2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTextureParameteri(_vectors._glidTexture2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTextureParameteri(_vectors._glidTexture2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
         break;
     default:
         // TODO: should not happen

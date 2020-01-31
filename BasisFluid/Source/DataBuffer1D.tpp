@@ -93,7 +93,7 @@ template<class T>
 void DataBuffer1D<T>::createBufferStorage(GLenum dataType, unsigned int nbElementsPerComponent, GLbitfield flags)
 {
     glCreateBuffers(1, &_glidBuffer);
-    glNamedBufferStorage(_glidBuffer, _nbElements * nbElementsPerComponent * sizeOfEnumType(dataType), NULL,
+    glNamedBufferStorage(_glidBuffer, _nbElements * nbElementsPerComponent * SizeOfEnumType(dataType), NULL,
         flags);
     _hasBufferStorage = true;
 

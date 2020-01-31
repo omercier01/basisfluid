@@ -43,8 +43,8 @@ bool Application::Init_DataBuffers() {
     _nbParticlesPerCell->createTexture2DStorage(
         GL_RED_INTEGER, GL_R32I, GL_RED_INTEGER, GL_INT, 1);
 
-    for (unsigned int i = 0; i < _nbParticlesPerCell->mNbElementsX; ++i) {
-        for (unsigned int j = 0; j < _nbParticlesPerCell->mNbElementsY; ++j) {
+    for (unsigned int i = 0; i < _nbParticlesPerCell->_nbElementsX; ++i) {
+        for (unsigned int j = 0; j < _nbParticlesPerCell->_nbElementsY; ++j) {
             _nbParticlesPerCell->setCpuData(i, j, 0);
         }
     }
@@ -52,7 +52,7 @@ bool Application::Init_DataBuffers() {
 
 
     _forceField = make_unique<VectorField2D>(_domainLeft, _domainRight, _domainBottom, _domainTop,
-        forcesGridRes, forcesGridRes,
+        _forcesGridRes, _forcesGridRes,
         VectorField2D::GridNodeLocation::CORNER,
         VectorField2D::BoundaryCondition::FLAT);
     _forceField->createVectorCpuStorage();
@@ -73,7 +73,7 @@ bool Application::Init_DataBuffers() {
 
     //all translated basis flows parameters
     _basisFlowParams = make_unique<DataBuffer1D<BasisFlow>>(1);
-    _basisFlowParams->sourceStorageType = DataBuffer1D<BasisFlow>::StorageType::BUFFER;
+    _basisFlowParams->_sourceStorageType = DataBuffer1D<BasisFlow>::StorageType::BUFFER;
     _basisFlowParams->createCpuStorage();
     _basisFlowParams->createBufferStorage(GL_FLOAT, sizeof(BasisFlow) / sizeof(float));
     _basisFlowParams->resize(0);
@@ -104,20 +104,20 @@ bool Application::Init_DataBuffers() {
 
 
     _partPos = make_unique<DataBuffer1D<vec2>>(1);
-    _partPos->sourceStorageType = DataBuffer1D<vec2>::StorageType::CPU;
+    _partPos->_sourceStorageType = DataBuffer1D<vec2>::StorageType::CPU;
     _partPos->createCpuStorage();
     _partPos->createBufferStorage(GL_FLOAT, 2);
     _partPos->resize(0);
 
     _partVecs = make_unique<DataBuffer1D<vec2>>(1);
-    _partVecs->sourceStorageType = DataBuffer1D<vec2>::StorageType::CPU;
+    _partVecs->_sourceStorageType = DataBuffer1D<vec2>::StorageType::CPU;
     _partVecs->createCpuStorage();
     _partVecs->createBufferStorage(GL_FLOAT, 2);
     _partVecs->resize(0);
 
 
     _partAges = make_unique<DataBuffer1D<float>>(1);
-    _partAges->sourceStorageType = DataBuffer1D<float>::StorageType::CPU;
+    _partAges->_sourceStorageType = DataBuffer1D<float>::StorageType::CPU;
     _partAges->createCpuStorage();
     _partAges->createBufferStorage(GL_FLOAT, 1);
     _partAges->resize(0);
@@ -144,13 +144,13 @@ bool Application::Init_DataBuffers() {
         _velocityField->nbElementsX() * _velocityField->nbElementsY());
     _bufferGridPoints->createCpuStorage();
     _bufferGridPoints->createBufferStorage(GL_FLOAT, 2);
-    _bufferGridPoints->sourceStorageType = DataBuffer1D<vec2>::StorageType::CPU;
+    _bufferGridPoints->_sourceStorageType = DataBuffer1D<vec2>::StorageType::CPU;
 
     _bufferArrows = make_unique<DataBuffer1D<vec2>>(
         _velocityField->nbElementsX() * _velocityField->nbElementsY());
     _bufferArrows->createCpuStorage();
     _bufferArrows->createBufferStorage(GL_FLOAT, 2);
-    _bufferArrows->sourceStorageType = DataBuffer1D<vec2>::StorageType::CPU;
+    _bufferArrows->_sourceStorageType = DataBuffer1D<vec2>::StorageType::CPU;
 
 
     //colors = new DataBuffer1D<vec3>(1);
@@ -161,7 +161,7 @@ bool Application::Init_DataBuffers() {
 
 
     _obstacleLines = make_unique<DataBuffer1D<vec2>>(1);
-    _obstacleLines->sourceStorageType = DataBuffer1D<vec2>::StorageType::CPU;
+    _obstacleLines->_sourceStorageType = DataBuffer1D<vec2>::StorageType::CPU;
     _obstacleLines->createCpuStorage();
     _obstacleLines->createBufferStorage(GL_FLOAT, 2);
     _obstacleLines->resize(0);
@@ -169,30 +169,30 @@ bool Application::Init_DataBuffers() {
 
 
     _vecX = make_unique<DataBuffer1D<scalar_inversion_storage>>(0);
-    _vecX->sourceStorageType = DataBuffer1D<scalar_inversion_storage>::StorageType::CPU;
+    _vecX->_sourceStorageType = DataBuffer1D<scalar_inversion_storage>::StorageType::CPU;
     _vecX->createCpuStorage();
 
     _vecTemp = make_unique<DataBuffer1D<scalar_inversion_storage>>(0);
-    _vecTemp->sourceStorageType = DataBuffer1D<scalar_inversion_storage>::StorageType::CPU;
+    _vecTemp->_sourceStorageType = DataBuffer1D<scalar_inversion_storage>::StorageType::CPU;
     _vecTemp->createCpuStorage();
 
     _vecXForces = make_unique<DataBuffer1D<scalar_inversion_storage>>(0);
-    _vecXForces->sourceStorageType = DataBuffer1D<scalar_inversion_storage>::StorageType::CPU;
+    _vecXForces->_sourceStorageType = DataBuffer1D<scalar_inversion_storage>::StorageType::CPU;
     _vecXForces->createCpuStorage();
 
     _vecXBoundaryForces = make_unique<DataBuffer1D<scalar_inversion_storage>>(0);
-    _vecXBoundaryForces->sourceStorageType = DataBuffer1D<scalar_inversion_storage>::StorageType::CPU;
+    _vecXBoundaryForces->_sourceStorageType = DataBuffer1D<scalar_inversion_storage>::StorageType::CPU;
     _vecXBoundaryForces->createCpuStorage();
 
     _vecB = make_unique<DataBuffer1D<scalar_inversion_storage>>(0);
-    _vecB->sourceStorageType = DataBuffer1D<scalar_inversion_storage>::StorageType::CPU;
+    _vecB->_sourceStorageType = DataBuffer1D<scalar_inversion_storage>::StorageType::CPU;
     _vecB->createCpuStorage();
 
 
     /*_accelBasisCentersIds = new DataBuffer2D<std::vector<unsigned int>*>(accelBasisRes, accelBasisRes);
     _accelBasisCentersIds->sourceStorageType = DataBuffer2D<std::vector<unsigned int>*>::StorageType::CPU;*/
     _accelBasisCentersIds = make_unique<DataBuffer2D<std::vector<unsigned int>>>(_accelBasisRes, _accelBasisRes);
-    _accelBasisCentersIds->sourceStorageType = DataBuffer2D<std::vector<unsigned int>>::StorageType::CPU;
+    _accelBasisCentersIds->_sourceStorageType = DataBuffer2D<std::vector<unsigned int>>::StorageType::CPU;
     _accelBasisCentersIds->createCpuStorage();
     /*for (uint i = 0; i < accelBasisRes; i++) {
         for (uint j = 0; j < accelBasisRes; j++) {
@@ -202,58 +202,58 @@ bool Application::Init_DataBuffers() {
 
 
     _integrationGridGpu = make_unique<DataBuffer2D<vec4>>(((_integralGridRes + 1) - 1) / INTEGRAL_GPU_GROUP_DIM + 1, ((_integralGridRes + 1) - 1) / INTEGRAL_GPU_GROUP_DIM + 1);
-    _integrationGridGpu->sourceStorageType = DataBuffer2D<vec4>::StorageType::TEXTURE2D;
+    _integrationGridGpu->_sourceStorageType = DataBuffer2D<vec4>::StorageType::TEXTURE2D;
     _integrationGridGpu->createTexture2DStorage(GL_RGBA, GL_RGBA32F, GL_RGBA, GL_FLOAT, 1);
 
     // Read from buffer instead of image directly, so we only need to transfer a single float instead of the whole image data
     _integrationTransferBufferGpu = make_unique<DataBuffer1D<vec4>>(1);
-    _integrationTransferBufferGpu->sourceStorageType = DataBuffer1D<vec4>::StorageType::CPU;
+    _integrationTransferBufferGpu->_sourceStorageType = DataBuffer1D<vec4>::StorageType::CPU;
     _integrationTransferBufferGpu->createCpuStorage();
     _integrationTransferBufferGpu->createBufferStorage(GL_FLOAT, 4);
-    _integrationTransferBufferGpu->sourceStorageType = DataBuffer1D<vec4>::StorageType::BUFFER;
+    _integrationTransferBufferGpu->_sourceStorageType = DataBuffer1D<vec4>::StorageType::BUFFER;
 
 
 
     _integrationMultipleTransferBufferGpu = make_unique<DataBuffer1D<float>>(1);
-    _integrationMultipleTransferBufferGpu->sourceStorageType = DataBuffer1D<float>::StorageType::CPU;
+    _integrationMultipleTransferBufferGpu->_sourceStorageType = DataBuffer1D<float>::StorageType::CPU;
     _integrationMultipleTransferBufferGpu->createCpuStorage();
     _integrationMultipleTransferBufferGpu->setCpuData(0, 1.2345f);
     _integrationMultipleTransferBufferGpu->createBufferStorage(GL_FLOAT, 1, GL_MAP_READ_BIT | GL_DYNAMIC_STORAGE_BIT | GL_MAP_WRITE_BIT);
-    _integrationMultipleTransferBufferGpu->sourceStorageType = DataBuffer1D<float>::StorageType::BUFFER;
+    _integrationMultipleTransferBufferGpu->_sourceStorageType = DataBuffer1D<float>::StorageType::BUFFER;
 
 
     //integrationBasisCentersBufferGpu = new DataBuffer1D<vec2>(1);
     _integrationBasisCentersBufferGpu = make_unique<DataBuffer1D<vec2>>(1);
-    _integrationBasisCentersBufferGpu->sourceStorageType = DataBuffer1D<vec2>::StorageType::CPU;
+    _integrationBasisCentersBufferGpu->_sourceStorageType = DataBuffer1D<vec2>::StorageType::CPU;
     _integrationBasisCentersBufferGpu->createCpuStorage();
     _integrationBasisCentersBufferGpu->createBufferStorage(GL_FLOAT, 2, GL_MAP_WRITE_BIT); // aligned to float4 for GPU.
-    _integrationBasisCentersBufferGpu->sourceStorageType = DataBuffer1D<vec2>::StorageType::BUFFER;
+    _integrationBasisCentersBufferGpu->_sourceStorageType = DataBuffer1D<vec2>::StorageType::BUFFER;
 
 
     //_intersectingBasesIds = make_unique<DataBuffer1D<std::vector<unsigned int>*>>(0);
     _intersectingBasesIds = make_unique<DataBuffer1D<vector<unsigned int>>>(0);
     _intersectingBasesIds->createCpuStorage();
-    _intersectingBasesIds->sourceStorageType = DataBuffer1D<vector<unsigned int>*>::StorageType::CPU;
-    _intersectingBasesIds->sourceStorageType = DataBuffer1D<vector<unsigned int>>::StorageType::CPU;
+    //_intersectingBasesIds->_sourceStorageType = DataBuffer1D<vector<unsigned int>*>::StorageType::CPU;
+    _intersectingBasesIds->_sourceStorageType = DataBuffer1D<vector<unsigned int>>::StorageType::CPU;
 
     //_intersectingBasesSignificantBBIds = make_unique<DataBuffer1D<std::vector<unsigned int>*>>(0);
     _intersectingBasesSignificantBBIds = make_unique<DataBuffer1D<vector<unsigned int>>>(0);
     _intersectingBasesSignificantBBIds->createCpuStorage();
     //_intersectingBasesSignificantBBIds->sourceStorageType = DataBuffer1D<std::vector<unsigned int>*>::StorageType::CPU;
-    _intersectingBasesSignificantBBIds->sourceStorageType = DataBuffer1D<vector<unsigned int>>::StorageType::CPU;
+    _intersectingBasesSignificantBBIds->_sourceStorageType = DataBuffer1D<vector<unsigned int>>::StorageType::CPU;
 
     //_intersectingBasesIdsTransport = make_unique<DataBuffer1D<std::vector<unsigned int>*>>(0);
     _intersectingBasesIdsTransport = make_unique<DataBuffer1D<vector<unsigned int>>>(0);
     _intersectingBasesIdsTransport->createCpuStorage();
     //_intersectingBasesIdsTransport->sourceStorageType = DataBuffer1D<std::vector<unsigned int>*>::StorageType::CPU;
-    _intersectingBasesIdsTransport->sourceStorageType = DataBuffer1D<vector<unsigned int>>::StorageType::CPU;
+    _intersectingBasesIdsTransport->_sourceStorageType = DataBuffer1D<vector<unsigned int>>::StorageType::CPU;
 
     for (int iRelFreq = 0; iRelFreq < _nbExplicitTransferFreqs; iRelFreq++) {
         //_intersectingBasesIdsDeformation[iRelFreq] = make_unique<DataBuffer1D<std::vector<CoeffBBDecompressedIntersectionInfo>*>>(0);
         _intersectingBasesIdsDeformation[iRelFreq] = make_unique<DataBuffer1D<vector<CoeffBBDecompressedIntersectionInfo>>>(0);
         _intersectingBasesIdsDeformation[iRelFreq]->createCpuStorage();
         //_intersectingBasesIdsDeformation[iRelFreq]->sourceStorageType = DataBuffer1D<std::vector<CoeffBBDecompressedIntersectionInfo>*>::StorageType::CPU;
-        _intersectingBasesIdsDeformation[iRelFreq]->sourceStorageType = DataBuffer1D<vector<CoeffBBDecompressedIntersectionInfo>>::StorageType::CPU;
+        _intersectingBasesIdsDeformation[iRelFreq]->_sourceStorageType = DataBuffer1D<vector<CoeffBBDecompressedIntersectionInfo>>::StorageType::CPU;
     }
 
 

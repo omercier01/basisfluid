@@ -32,7 +32,7 @@ public:
 
     void populateWithFunction(std::function<glm::vec2 (float x, float y)> function);
     void addFunction(std::function<glm::vec2 (float x, float y)> function);
-    vec2 interp(glm::vec2 pos);
+    glm::vec2 interp(glm::vec2 pos);
 
     void addVectorCpuData(unsigned int i, unsigned int j, glm::vec2 data);
     void setVectorCpuData(unsigned int i, unsigned int j, glm::vec2 data);
@@ -54,9 +54,9 @@ public:
     void setBounds(float inBoundXMin, float inBoundXMax,
                    float inBoundYMin, float inBoundYMax);
 
-    glm::uvec2 pointToClosestIndex(vec2 point);
-    glm::uvec2 pointToFlooredIndex(vec2 point);
-    vec2 indexToPosition(uvec2 index);
+    glm::uvec2 pointToClosestIndex(glm::vec2 point);
+    glm::uvec2 pointToFlooredIndex(glm::vec2 point);
+    glm::vec2 indexToPosition(glm::uvec2 index);
 };
 
 #endif // VECTORFIELD2D_H

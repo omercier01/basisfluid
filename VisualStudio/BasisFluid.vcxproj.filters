@@ -6,6 +6,8 @@
     <ClInclude Include="..\BasisFluid\Source\DataBuffer2D.h" />
     <ClInclude Include="..\BasisFluid\Source\DataBuffer1D.h" />
     <ClInclude Include="..\BasisFluid\Source\GridData2D.h" />
+    <ClInclude Include="..\BasisFluid\Source\BasisFlows.h" />
+    <ClInclude Include="..\BasisFluid\Source\Utils.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\BasisFluid\Source\Main.cpp" />
@@ -21,5 +23,6 @@
     <ClCompile Include="..\BasisFluid\Source\DataBuffer2D.tpp" />
     <ClCompile Include="..\BasisFluid\Source\DataBuffer1D.tpp" />
     <ClCompile Include="..\BasisFluid\Source\GridData2D.tpp" />
+    <ClCompile Include="..\BasisFluid\Source\BasisFlows.cpp" />
   </ItemGroup>
 </Project>
