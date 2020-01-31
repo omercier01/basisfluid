@@ -4,6 +4,7 @@
 
 #include "VectorField2D.h"
 #include "GridData2D.h"
+#include "BasisFlows.h"
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -27,19 +28,20 @@
 #define USE_PRECISE_BASIS_EVAL 0
 #define INTEGRATE_BASIS_ONE_BASIS_PER_DISPATCH   0
 #define INTEGRATE_BASIS_ONE_BASIS_PER_INVOCATION 1
-#define SAFETY_ASSERTS 0   // useful for debugging, otherwise turn off for performance
-
+#define SAFETY_ASSERTS 0 // useful for debugging, otherwise turn off for performance
+#define INTEGRATION_SUM_DOUBLE_PRECISION 1
+#define INTEGRAL_GPU_GROUP_DIM 32
 
 #if INVERSION_INNER_DOUBLE_PRECISION
-    typedef double scalar_inversion_inner;
+typedef double scalar_inversion_inner;
 #else
-    typedef float scalar_inversion_inner;
+typedef float scalar_inversion_inner;
 #endif
 
 #if INVERSION_STORAGE_DOUBLE_PRECISION
-    typedef double scalar_inversion_storage;
+typedef double scalar_inversion_storage;
 #else
-    typedef float scalar_inversion_storage;
+typedef float scalar_inversion_storage;
 #endif
 
 // Global class to manage program execution
@@ -61,6 +63,31 @@ public:
     void SimulationStep();
     void Draw();
 
+    float MatBBCoeff(int i, int j);
+    float MatBBCoeff(const BasisFlow& b1, const BasisFlow& b2);
+    scalar_inversion_inner InverseBBMatrixMain(
+        unsigned int iRow, scalar_inversion_storage* vecX, scalar_inversion_storage* vecB,
+        BasisFlow* basisDataPointer, unsigned int basisBitMask, float alpha);
+    
+    glm::vec2 MatTCoeff(BasisFlow bTransported, BasisFlow bTransporting);
+    
+    void InverseBBMatrix(
+        DataBuffer1D<scalar_inversion_storage>* vecX,
+        DataBuffer1D<scalar_inversion_storage>* vecB,
+        float tol, unsigned int basisBitMask, unsigned int minFreq);
+
+
+    void SaveCoeffsBB(std::string filename);
+    void LoadCoeffsBB(std::string filename);
+    void SaveCoeffsT(std::string filename);
+    void LoadCoeffsT(std::string filename);
+
+    glm::vec2 TranslatedBasisEval(const glm::vec2 p, const glm::ivec2 freqLvl, const glm::vec2 center);
+    glm::dvec2 TranslatedBasisEvalPrecise(const glm::dvec2 p, const glm::ivec2 freqLvl, const glm::dvec2 center);
+    glm::mat2 TranslatedBasisGradEval(const glm::vec2 p, const glm::ivec2 freqLvl, const glm::vec2 center);
+    glm::dmat2 TranslatedBasisGradEvalPrecise(const glm::dvec2 p, const glm::ivec2 freqLvl, const glm::dvec2 center);
+    glm::vec2 AverageBasisOnSupport(BasisFlow bVec, BasisFlow bSupport);
+
 public:
     static void CallbackWindowClosed(GLFWwindow* pGlfwWindow);
     static void CallbackKey(GLFWwindow* pGlfwWindow, int key, int scancode, int action, int mods);
@@ -81,11 +108,11 @@ public:
     const int _nbCellsYTotal = nbCells;
     const int _nbCellsYBasis = nbCells;
 
-    uint obstacleDisplayRes = BASE_GRID_SIZE;
-    uint integralGridRes = INTEGRAL_GRID_SIZE - 1;//32-1; // e.g. 32 grid points, 31 cells
-    uint accelBasisRes = ACCEL_GRID_SIZE;//32; // raw data, so 32 cells
-    uint accelParticlesRes = accelBasisRes;//32; // stored at cell center, so 32 grid points == 32 cells
-    uint forcesGridRes = BASE_GRID_SIZE - 1;//32-1; // 32 grid points, 31 cells
+    glm::uint _obstacleDisplayRes = BASE_GRID_SIZE;
+    glm::uint _integralGridRes = INTEGRAL_GRID_SIZE - 1;//32-1; // e.g. 32 grid points, 31 cells
+    glm::uint _accelBasisRes = ACCEL_GRID_SIZE;//32; // raw data, so 32 cells
+    glm::uint _accelParticlesRes = _accelBasisRes;//32; // stored at cell center, so 32 grid points == 32 cells
+    glm::uint _forcesGridRes = BASE_GRID_SIZE - 1;//32-1; // 32 grid points, 31 cells
 
     const int _minFreqLvl = 1;
     const int _maxFreqLvl = 1;
@@ -95,11 +122,13 @@ public:
     //const int _maxAnisoLvlFileToUse = maxAnisoLvl;
     //const float _diffusionRatioLastFrequency = 0.1f*float(1<<maxFreqLvl);
     //const float _lengthLvl0 = 1.0f; // WARNING: not used everywhere, better to set it to 1 for now.
+    #define _lengthLvl0 1.0f
 
+    const float _coeffSnapSize = _lengthLvl0/float(1<<_maxFreqLvl)/32.0f;
 
 public:
 
-    GLFWwindow* _glfwWindow;
+    GLFWwindow * _glfwWindow;
 
     static const unsigned int _nbExplicitTransferFreqs = 6;
     const glm::ivec2 _explicitTransferFreqs[_nbExplicitTransferFreqs] = { {1,0}, {0,1}, {1,1}, {-1,0}, {0,-1}, {-1,-1} };
@@ -110,6 +139,7 @@ public:
     std::unique_ptr<DataBuffer2D<unsigned int>> _nbParticlesPerCell = nullptr;
     std::unique_ptr<VectorField2D> _forceField = nullptr;
     std::unique_ptr<VectorField2D>* _basisFlowTemplates = nullptr;
+    std::unique_ptr<DataBuffer1D<BasisFlow>> _basisFlowParams = nullptr;
 
     // particles buffers
     std::unique_ptr<DataBuffer1D<vec2>> _partPos = nullptr;
@@ -137,14 +167,19 @@ public:
     std::unique_ptr<DataBuffer1D<vec4>> _integrationTransferBufferGpu = nullptr;
     std::unique_ptr<DataBuffer1D<float>> _integrationMultipleTransferBufferGpu = nullptr;
     std::unique_ptr<DataBuffer1D<vec2>> _integrationBasisCentersBufferGpu = nullptr;
-    std::unique_ptr<DataBuffer1D<vector<unsigned int>>> _intersectingBasesIds = nullptr;
-    std::unique_ptr<DataBuffer1D<vector<unsigned int>>> _intersectingBasesSignificantBBIds = nullptr;
-    std::unique_ptr<DataBuffer1D<vector<unsigned int>>> _intersectingBasesIdsTransport = nullptr;
+    std::unique_ptr<DataBuffer1D<std::vector<unsigned int>>> _intersectingBasesIds = nullptr;
+    std::unique_ptr<DataBuffer1D<std::vector<unsigned int>>> _intersectingBasesSignificantBBIds = nullptr;
+    std::unique_ptr<DataBuffer1D<std::vector<unsigned int>>> _intersectingBasesIdsTransport = nullptr;
     std::unique_ptr<DataBuffer1D<std::vector<CoeffBBDecompressedIntersectionInfo>>>
-        _intersectingBasesIdsDeformation[_nbExplicitTransferFreqs] = nullptr;
+        _intersectingBasesIdsDeformation[_nbExplicitTransferFreqs];
 
+    std::vector<std::vector<unsigned int>> _orthogonalBasisGroupIds;
+    std::vector<std::vector<unsigned int>> _sameBasisTemplateGroupIds;
 
-    bool _readyToQuit = false;
+    MapTypeBB _coeffsBB;
+    MapTypeT _coeffsT;
+
+    // Parameters
     bool _seedParticles = true;
     bool _showVelocityGrid = false;
     bool _useForcesFromParticles = true;
@@ -153,6 +188,18 @@ public:
     bool _drawObstacles = true;
     bool _stepSimulation = true;
     float _velocityArrowFactor = 0.1f;
+    uint _maxNbItMatBBInversion = 10;
+    float _relaxationAlpha = 1.f;
+    #define _bInversionGaussSeidel 1
+    const unsigned int _minSizeParallelInverse = 0;
+
+    // Status
+    bool _readyToQuit = false;
+    bool _newBBCoeffComputed = false;
+    bool _newACoeffComputed  = false;
+    bool _newTCoeffComputed  = false;
+    bool _newRCoeffComputed  = false;
+
 };
 
 extern Application* app;

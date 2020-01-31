@@ -3,6 +3,44 @@
 
 #include "Application.h"
 
+#include <set>
+#include <tuple>
+#include <unordered_map>
+
+
+// coefficients for BB matrix
+// keys are freqLvlX1, freqLvlY1, freqLvlX2, freqLvlY2, centerDiffX, centerDiffY
+typedef std::tuple<int, int, int, int, float, float> KeyTypeBB;
+struct KeyTypeBB_hash : public std::unary_function<KeyTypeBB, std::size_t>
+{
+    std::size_t operator()(const KeyTypeBB& k) const
+    {
+        std::hash<float> hasher_float;
+        std::hash<int> hasher_uint;
+        return hasher_uint (std::get<0>(k)) ^ hasher_uint (std::get<1>(k)) ^
+            hasher_uint (std::get<2>(k)) ^ hasher_uint (std::get<3>(k)) ^
+            hasher_float(std::get<4>(k)) ^ hasher_float(std::get<5>(k));
+    }
+};
+typedef std::unordered_map<KeyTypeBB,float,KeyTypeBB_hash> MapTypeBB;
+
+// coefficients for T matrix
+// keys are freqLvlX1, freqLvlY1, freqLvlX2, freqLvlY2, centerDiffX, centerDiffY
+typedef std::tuple<int, int, int, int, float, float> KeyTypeT;
+struct KeyTypeT_hash : public std::unary_function<KeyTypeT, std::size_t>
+{
+    std::size_t operator()(const KeyTypeT& k) const
+    {
+        std::hash<float> hasher_float;
+        std::hash<int> hasher_uint;
+    return hasher_uint (std::get<0>(k)) ^ hasher_uint (std::get<1>(k)) ^
+            hasher_uint (std::get<2>(k)) ^ hasher_uint (std::get<3>(k)) ^
+            hasher_float(std::get<4>(k)) ^ hasher_float(std::get<5>(k));
+    }
+};
+typedef std::unordered_map<KeyTypeT,vec2,KeyTypeT_hash> MapTypeT;
+
+
 
 // stored in a vector indexed by _k_, so _k_ does not need to be stored here.
 struct CoeffADecompressedIntersectionInfo {
@@ -50,10 +88,6 @@ struct BasisSupport {
     float right;
     float bottom;
     float top;
-#if SIM3D
-    float back;
-    float front;
-#endif
 
     // supports are rectangular. They are used for computations, while the stretched corners are used to compute the effective basis velocity field (but if the basis is not stretched, then the basis support can be used too).
     BasisSupport(
@@ -71,10 +105,6 @@ struct BasisSupport {
 
 bool intersectionInteriorEmpty(BasisSupport &sup1, BasisSupport &sup2);
 
-
-#if SIM3D
-enum class AXIS { X, Y, Z };
-#endif
 
 
 enum BASIS_FLAGS {
@@ -128,9 +158,6 @@ struct BasisFlow {
         bitFlags = 0;
         this->freqLvl = glm::vec2(0);
         this->center = glm::vec2(0);
-#if SIM3D
-        this->axis = AXIS(-1);
-#endif
         this->normSquared = 0; //1;
     }
 
@@ -149,15 +176,7 @@ glm::dmat2 flowBasisHatGrad(glm::dvec2 p, int log2Aniso);
 glm::vec2 squareFlow(glm::vec2 p, BasisFlow b);
 
 
-void InverseBBMatrix(
-    DataBuffer1D<scalar_inversion_storage>* vecX,
-    DataBuffer1D<scalar_inversion_storage>* vecB,
-    float tol, unsigned int basisBitMask, unsigned int minFreq);
-
 float IntegrateBasisGrid(BasisFlow& b, VectorField2D* velField);
 float IntegrateBasisBasis(BasisFlow b1, BasisFlow b2);
-glm::dvec2 TranslatedBasisEvalPrecise(const glm::dvec2 p, const glm::ivec2 freqLvl, const glm::dvec2 center);
-glm::mat2 TranslatedBasisGradEval(const glm::dvec2 p, const glm::ivec2 freqLvl, const glm::vec2 center);
-glm::dmat2 TranslatedBasisGradEvalPrecise(const glm::dvec2 p, const glm::ivec2 freqLvl, const glm::dvec2 center);
 
 #endif // BASISFLOWS_H
