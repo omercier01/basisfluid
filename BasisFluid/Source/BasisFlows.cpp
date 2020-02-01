@@ -1,5 +1,6 @@
 //#include "glm/glm.hpp"
 
+#include "Application.h"
 #include "BasisFlows.h"
 
 #include "Utils.h"
@@ -24,7 +25,7 @@ template <class T>
 int minVec(T v) { return glm::min<int>(v.x, v.y); }
 
 
-bool intersectionInteriorEmpty(BasisSupport& sup1, BasisSupport& sup2)
+bool IntersectionInteriorEmpty(const BasisSupport& sup1, const BasisSupport& sup2)
 {
     return (glm::max(sup1.left, sup2.left) >= glm::min(sup1.right, sup2.right))
         || (glm::max(sup1.bottom, sup2.bottom) >= glm::min(sup1.top, sup2.top))
@@ -32,9 +33,8 @@ bool intersectionInteriorEmpty(BasisSupport& sup1, BasisSupport& sup2)
 }
 
 
-bool BasisFlow::emptyIntersectionWithBasis(BasisFlow& b) const
-{
-    return intersectionInteriorEmpty(getSupport(), b.getSupport());
+bool BasisFlow::EmptyIntersectionWithBasis(const BasisFlow& b) const {
+    return IntersectionInteriorEmpty(getSupport(), b.getSupport());
 }
 
 
@@ -46,7 +46,7 @@ scalar_inversion_inner Application::InverseBBMatrixMain(
     scalar_inversion_inner tempX = scalar_inversion_inner(vecB[iRow]);
 
 #if USE_DECOMPRESSED_COEFFICIENTS
-    vector<CoeffBBDecompressedIntersectionInfo>& intersectionInfos = coeffsBBDecompressedIntersections[iRow];
+    vector<CoeffBBDecompressedIntersectionInfo>& intersectionInfos = _coeffsBBDecompressedIntersections[iRow];
     for (const CoeffBBDecompressedIntersectionInfo& inter : intersectionInfos) {
         //            if( atLeastOneBitNotSet(basisDataPointer[inter.j].bitFlags, basisBitMask) ) {
         //                continue;
@@ -95,22 +95,23 @@ void Application::InverseBBMatrix(
 {
 
 
+
     uint maxNbItMatBBInversion = _maxNbItMatBBInversion;
     uint n = vecX->_nbElements;
     float alpha = _relaxationAlpha;
 
     // get references
-    vecX->refreshCpuData();
+    //vecX->refreshCpuData();
     scalar_inversion_storage* vecXPointer = vecX->getCpuDataPointer();
-    _vecTemp->refreshCpuData();
+    //_vecTemp->refreshCpuData();
     scalar_inversion_storage* vecTempPointer = _vecTemp->getCpuDataPointer();
-    vecB->refreshCpuData();
+    //vecB->refreshCpuData();
     scalar_inversion_storage* vecBPointer = vecB->getCpuDataPointer();
-    _basisFlowParams->refreshCpuData();
+    //_basisFlowParams->refreshCpuData();
     BasisFlow* basisFlowParamsPointer = _basisFlowParams->getCpuDataPointer();
-    _intersectingBasesSignificantBBIds->refreshCpuData();
+    //_intersectingBasesSignificantBBIds->refreshCpuData();
 
-#if _bInversionGaussSeidel
+    if (_bInversionGaussSeidel)
     {
 
         // zero x
@@ -121,20 +122,20 @@ void Application::InverseBBMatrix(
 
         scalar_inversion_inner xSquaredDiff = 999999;
         uint iIt = 0;
-        if (_maxNbItMatBBInversion == 0)
+        if (maxNbItMatBBInversion == 0)
         {
             for (uint iRow = 0; iRow < n; iRow++) {
                 if (
                     AllBitsSet(basisFlowParamsPointer[iRow].bitFlags, basisBitMask) &&
-                    basisFlowParamsPointer[iRow].freqLvl.x >= minFreq
-                    && basisFlowParamsPointer[iRow].freqLvl.y >= minFreq
+                    uint(basisFlowParamsPointer[iRow].freqLvl.x) >= minFreq
+                    && uint(basisFlowParamsPointer[iRow].freqLvl.y) >= minFreq
                     ) {
                     vecXPointer[iRow] = vecBPointer[iRow];
                 }
             }
         }
         else {
-            while (xSquaredDiff > tol && iIt < _maxNbItMatBBInversion) {
+            while (xSquaredDiff > tol && iIt < maxNbItMatBBInversion) {
                 xSquaredDiff = 0;
 
 #if INVERSION_OPENMP
@@ -149,8 +150,8 @@ void Application::InverseBBMatrix(
                             int iRow = ids[idid];
                             if (
                                 AllBitsSet(basisFlowParamsPointer[iRow].bitFlags, basisBitMask) &&
-                                basisFlowParamsPointer[iRow].freqLvl.x >= minFreq
-                                && basisFlowParamsPointer[iRow].freqLvl.y >= minFreq
+                                uint(basisFlowParamsPointer[iRow].freqLvl.x) >= minFreq
+                                && uint(basisFlowParamsPointer[iRow].freqLvl.y) >= minFreq
                                 ) {
                                 xSquaredDiff += InverseBBMatrixMain(iRow, vecXPointer, vecBPointer, basisFlowParamsPointer, basisBitMask, alpha);
                             }
@@ -161,8 +162,8 @@ void Application::InverseBBMatrix(
                             int iRow = ids[idid];
                             if (
                                 AllBitsSet(basisFlowParamsPointer[iRow].bitFlags, basisBitMask) &&
-                                basisFlowParamsPointer[iRow].freqLvl.x >= minFreq
-                                && basisFlowParamsPointer[iRow].freqLvl.y >= minFreq
+                                uint(basisFlowParamsPointer[iRow].freqLvl.x) >= minFreq
+                                && uint(basisFlowParamsPointer[iRow].freqLvl.y) >= minFreq
                                 ) {
                                 xSquaredDiff += InverseBBMatrixMain(iRow, vecXPointer, vecBPointer, basisFlowParamsPointer, basisBitMask, alpha);
                             }
@@ -205,10 +206,8 @@ void Application::InverseBBMatrix(
 
             }
         }
-
     }
-#else
-    {
+    else {
 
         //Invert with Jacobi
         // TODO: make this paralll and as fast as Gauss-Seidel if we want to compare them fairly.
@@ -224,22 +223,22 @@ void Application::InverseBBMatrix(
             xSquaredDiff = 0;
             for (uint iRow = 0; iRow < n; iRow++) {
 
-                if (atLeastOneBitNotSet(basisFlowParamsPointer[iRow].bitFlags, basisBitMask)) {
+                if (AtLeastOneBitNotSet(basisFlowParamsPointer[iRow].bitFlags, basisBitMask)) {
                     continue;
                 }
                 scalar_inversion_inner tempX = scalar_inversion_inner(vecBPointer[iRow]);
 
 #if USE_DECOMPRESSED_COEFFICIENTS
-                vector<CoeffBBDecompressedIntersectionInfo>& intersectionInfos = coeffsBBDecompressedIntersections[iRow];
+                vector<CoeffBBDecompressedIntersectionInfo>& intersectionInfos = _coeffsBBDecompressedIntersections[iRow];
                 for (CoeffBBDecompressedIntersectionInfo& inter : intersectionInfos) {
-                    if (allBitsSet(basisFlowParamsPointer[inter.j].bitFlags, basisBitMask)) {
+                    if (AllBitsSet(basisFlowParamsPointer[inter.j].bitFlags, basisBitMask)) {
                         tempX -= inter.coeff * scalar_inversion_inner(vecXPointer[inter.j]);
                     }
                 }
                 // TODO: remove division once 3D bases have norm 1
                 BasisFlow bi = basisFlowParamsPointer[iRow];
                 scalar_inversion_storage newX = scalar_inversion_storage(tempX / scalar_inversion_inner(bi.normSquared));
-                xSquaredDiff += sqr(scalar_inversion_inner(newX - vecXPointer[iRow]));
+                xSquaredDiff += Sqr(scalar_inversion_inner(newX - vecXPointer[iRow]));
                 vecTempPointer[iRow] = newX;
 #else
                 vector<uint>* localIntersectingBasesIds = intersectingBasesSignificantBBIds->getCpuData_noRefresh(iRow);
@@ -269,19 +268,19 @@ void Application::InverseBBMatrix(
             iIt++;
         }
 
-        if (tw->outputProfileText.get() && tw->outputProfileText_details.get())
-        {
-            cout << "Jacobi xSquaredDiff: " << xSquaredDiff << endl;
-        }
-
     }
-#endif
+
+
+
 
     vecX->_sourceStorageType = DataBuffer1D<scalar_inversion_storage>::StorageType::CPU;
+    //vecX->dirtyData();
     _vecTemp->_sourceStorageType = DataBuffer1D<scalar_inversion_storage>::StorageType::CPU;
+    //vecTemp->dirtyData();
     vecB->_sourceStorageType = DataBuffer1D<scalar_inversion_storage>::StorageType::CPU;
+    //vecB->dirtyData();
     _basisFlowParams->_sourceStorageType = DataBuffer1D<BasisFlow>::StorageType::CPU;
-
+    //basisFlowParams->dirtyData();
 }
 
 
@@ -295,25 +294,6 @@ dvec2 eigenLaplace(dvec2 p, dvec2 k) {
 
 
 // jacobian matrix
-#if SIM3D
-    // Z-aligned
-dmat3 gradEigenLaplace(dvec3 p, dvec3 k) {
-    // glm is column-major
-    return dmat3(
-        sqr(k.x)*M_PI * k.z * cos(k.x*M_PI*p.x)*cos(k.y*M_PI*p.y)*cos(k.z*M_PI*p.z),            // xdx
-        -k.x*M_PI * k.y * k.z * sin(k.x*M_PI*p.x)*sin(k.y*M_PI*p.y)*cos(k.z*M_PI*p.z),          // ydx
-        k.x*M_PI*(sqr(k.x) + sqr(k.y)) * sin(k.x*M_PI*p.x)*cos(k.y*M_PI*p.y)*sin(k.z*M_PI*p.z), // zdx
-
-        -k.y*M_PI*k.x * k.z * sin(k.x*M_PI*p.x)*sin(k.y*M_PI*p.y)*cos(k.z*M_PI*p.z),            // xdy
-        k.y*M_PI*k.y * k.z * cos(k.x*M_PI*p.x)*cos(k.y*M_PI*p.y)*cos(k.z*M_PI*p.z),             // ydy
-        k.y*M_PI*(sqr(k.x) + sqr(k.y)) * cos(k.x*M_PI*p.x)*sin(k.y*M_PI*p.y)*sin(k.z*M_PI*p.z), // zdy
-
-        -k.z*M_PI*k.x * k.z * sin(k.x*M_PI*p.x)*cos(k.y*M_PI*p.y)*sin(k.z*M_PI*p.z),            // xdz
-        -k.z*M_PI*k.y * k.z * cos(k.x*M_PI*p.x)*sin(k.y*M_PI*p.y)*sin(k.z*M_PI*p.z),            // ydz
-        -k.z*M_PI*(sqr(k.x) + sqr(k.y)) * cos(k.x*M_PI*p.x)*cos(k.y*M_PI*p.y)*cos(k.z*M_PI*p.z) // zdz
-    );
-}
-#else
 dmat2 gradEigenLaplace(dvec2 p, dvec2 k) {
     // glm is column-major
     return dmat2(
@@ -323,19 +303,141 @@ dmat2 gradEigenLaplace(dvec2 p, dvec2 k) {
         -k.x*k.y * M_PI * cos(k.x*M_PI*p.x) * cos(k.y*M_PI*p.y)  // ydy
     );
 }
+
+
+
+
+// integrates basis(...) dot a vector field defined on a grid
+// TODO: pass basis info by reference when the function does not modify the basis? would avoid copying a lot of data...
+float Application::IntegrateBasisGrid(BasisFlow& b, VectorField2D* velField)
+{
+
+    // compute intersection of supports
+    BasisSupport supportBasis = b.getSupport();
+    BasisSupport supportField = BasisSupport(_domainLeft, _domainRight, _domainBottom, _domainTop);
+    float supLeft = glm::max(supportBasis.left, supportField.left);
+    float supRight = glm::min(supportBasis.right, supportField.right);
+    float supBottom = glm::max(supportBasis.bottom, supportField.bottom);
+    float supTop = glm::min(supportBasis.top, supportField.top);
+
+    if (supLeft >= supRight || supBottom >= supTop
+        ) {
+        return 0.f;
+    }
+
+    // compute integral as discretized sum at grid centers
+#if INTEGRATION_SUM_DOUBLE_PRECISION
+    double sum = 0;
+#else
+    float sum = 0;
 #endif
 
 
-//}
 
-//#endif
+
+#if DEF_COEFF_COMPUTE_GPU
+
+#if INTEGRATE_BASIS_ONE_BASIS_PER_DISPATCH
+
+    // data basis
+    auto connBasis = createPullConnection(
+        &basisFlowTemplates[abs(b.freqLvl.x - b.freqLvl.y)]->out_vectorsMetadataTexture2D,
+        &pipelineIntegrateBasisGrid_onePerDispatch->in_texBasis);
+    connBasis->activate();
+    int minLvl = glm::min<int>(b.freqLvl.x, b.freqLvl.y);
+    pipelineIntegrateBasisGrid_onePerDispatch->in_postScalingBasis.receive(float(1 << minLvl));
+    pipelineIntegrateBasisGrid_onePerDispatch->in_centerBasis.receive(b.center);
+    pipelineIntegrateBasisGrid_onePerDispatch->in_halfWidthsBasis.receive(0.5f*vec2(supportBasis.right - supportBasis.left, supportBasis.top - supportBasis.bottom));
+    if (b.freqLvl.x <= b.freqLvl.y) {
+        pipelineIntegrateBasisGrid_onePerDispatch->in_forwardRotBasis.receive(mat2(1, 0, 0, 1));
+        pipelineIntegrateBasisGrid_onePerDispatch->in_backwardRotBasis.receive(mat2(1, 0, 0, 1));
+    }
+    else {
+        pipelineIntegrateBasisGrid_onePerDispatch->in_forwardRotBasis.receive(mat2(0, 1, -1, 0));
+        pipelineIntegrateBasisGrid_onePerDispatch->in_backwardRotBasis.receive(mat2(0, -1, 1, 0));
+    }
+
+    // data field
+    auto connField = createPullConnection(
+        &velField->out_vectorsMetadataTexture2D,
+        &pipelineIntegrateBasisGrid_onePerDispatch->in_texField);
+    connField->activate();
+    pipelineIntegrateBasisGrid_onePerDispatch->in_centerField.receive(domainCenter);
+    pipelineIntegrateBasisGrid_onePerDispatch->in_halfWidthsField.receive(0.5f*vec2(supportField.right - supportField.left, supportField.top - supportField.bottom));
+
+    // other data
+    auto connTransfer = createPushConnection(
+        &pipelineIntegrateBasisGrid_onePerDispatch->out_transferBuffer,
+        &integrationTransferBufferGpu->in_metadataBuffer);
+    connTransfer->activate();
+    pipelineIntegrateBasisGrid_onePerDispatch->in_integralGridRes.receive(integralGridRes);
+    pipelineIntegrateBasisGrid_onePerDispatch->in_supportInterLeftBottom.receive(vec2(supLeft, supBottom));
+    pipelineIntegrateBasisGrid_onePerDispatch->in_supportInterRightTop.receive(vec2(supRight, supTop));
+
+    unsigned int nbGroupDiv = 1;
+    unsigned int it = 0;
+    uvec2 nbGroups;
+    do
+    {
+        nbGroups = uvec2(((integralGridRes + 1) - 1) / nbGroupDiv / INTEGRAL_GPU_GROUP_DIM + 1,
+            ((integralGridRes + 1) - 1) / nbGroupDiv / INTEGRAL_GPU_GROUP_DIM + 1);
+
+        pipelineIntegrateBasisGrid_onePerDispatch->in_globalIteration.receive(it++);
+        pipelineIntegrateBasisGrid_onePerDispatch->goglu_nbWorkGroups.set(glm::uvec3(nbGroups.x, nbGroups.y, 1));
+        pipelineIntegrateBasisGrid_onePerDispatch->execute();
+        glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+
+        nbGroupDiv *= INTEGRAL_GPU_GROUP_DIM;
+
+    } while (nbGroups.x > 1 && nbGroups.y > 1);
+
+    sum = integrationTransferBufferGpu->getCpuData(0).x;
+
+    connBasis->deactivate(); delete connBasis;
+    connField->deactivate(); delete connField;
+    connTransfer->deactivate(); delete connTransfer;
+
+#elif INTEGRATE_BASIS_ONE_BASIS_PER_INVOCATION
+    // SHOULD NEVER REACH THIS
+    velField; // to remove warning
+    cout << "********" << endl;
+    cout << "********" << endl;
+    cout << "********" << endl;
+    cout << "********" << endl;
+    cout << "SHOULD NOT REACH THIS" << endl;
+    cout << "********" << endl;
+    cout << "********" << endl;
+    cout << "********" << endl;
+    cout << "********" << endl;
+#endif
+
+#else
+
+    for (uint i = 0; i <= _integralGridRes; i++) {
+        for (uint j = 0; j <= _integralGridRes; j++) {
+
+            vec2 p = vec2(supLeft + float(i) / _integralGridRes * (supRight - supLeft),
+                supBottom + float(j) / _integralGridRes * (supTop - supBottom));
+
+            sum += ((i == 0 || i == _integralGridRes) ? 0.5f : 1.f) * ((j == 0 || j == _integralGridRes) ? 0.5f : 1.f) *
+                glm::dot(TranslatedBasisEval(p, b.freqLvl, b.center),
+                    velField->interp(p));
+
+        }
+    }
+
+#endif
+
+    return float(sum) * (supRight - supLeft)*(supTop - supBottom) / Sqr(_integralGridRes);
+}
+
 
 
 
 
 
 // integrates basis(...) dot basis(...)
-float IntegrateBasisBasis(BasisFlow b1, BasisFlow b2) {
+float Application::IntegrateBasisBasis(BasisFlow b1, BasisFlow b2) {
 
     BasisSupport sup1 = b1.getSupport();
     BasisSupport sup2 = b2.getSupport();
@@ -343,15 +445,8 @@ float IntegrateBasisBasis(BasisFlow b1, BasisFlow b2) {
     float supRight = glm::min(sup1.right, sup2.right);
     float supBottom = glm::max(sup1.bottom, sup2.bottom);
     float supTop = glm::min(sup1.top, sup2.top);
-#if SIM3D
-    float supBack = glm::max(sup1.back, sup2.back);
-    float supFront = glm::min(sup1.front, sup2.front);
-#endif
 
     if (supLeft >= supRight || supBottom >= supTop
-#if SIM3D
-        || supBack >= supFront
-#endif
         ) {
         return 0.f;
     }
@@ -364,97 +459,21 @@ float IntegrateBasisBasis(BasisFlow b1, BasisFlow b2) {
     float sum = 0;
 #endif
 
-#if DEF_COEFF_COMPUTE_GPU
-
-    int minLvl;
 
 
-    // data I
-    auto connI = createPullConnection(
-        &basisFlowTemplates[abs(b1.freqLvl.x - b1.freqLvl.y)]->out_vectorsMetadataTexture2D,
-        &pipelineIntegrateBasisBasis->in_texBi);
-    connI->activate();
-    minLvl = glm::min<int>(b1.freqLvl.x, b1.freqLvl.y);
-    pipelineIntegrateBasisBasis->in_postScalingI.receive(float(1 << minLvl));
-    pipelineIntegrateBasisBasis->in_centerI.receive(b1.center);
-    pipelineIntegrateBasisBasis->in_halfWidthsI.receive(0.5f*vec2(sup1.right - sup1.left, sup1.top - sup1.bottom));
-    if (b1.freqLvl.x <= b1.freqLvl.y) {
-        pipelineIntegrateBasisBasis->in_forwardRotI.receive(mat2(1, 0, 0, 1));
-        pipelineIntegrateBasisBasis->in_backwardRotI.receive(mat2(1, 0, 0, 1));
-    }
-    else {
-        pipelineIntegrateBasisBasis->in_forwardRotI.receive(mat2(0, 1, -1, 0));
-        pipelineIntegrateBasisBasis->in_backwardRotI.receive(mat2(0, -1, 1, 0));
-    }
+    for (int i = 0; i <= int(_integralGridRes); i++) {
+        for (int j = 0; j <= int(_integralGridRes); j++) {
 
-    // data J
-    auto connJ = createPullConnection(
-        &basisFlowTemplates[abs(b2.freqLvl.x - b2.freqLvl.y)]->out_vectorsMetadataTexture2D,
-        &pipelineIntegrateBasisBasis->in_texBj);
-    connJ->activate();
-    minLvl = glm::min<int>(b2.freqLvl.x, b2.freqLvl.y);
-    pipelineIntegrateBasisBasis->in_postScalingJ.receive(float(1 << minLvl));
-    pipelineIntegrateBasisBasis->in_centerJ.receive(b2.center);
-    pipelineIntegrateBasisBasis->in_halfWidthsJ.receive(0.5f*vec2(sup2.right - sup2.left, sup2.top - sup2.bottom));
-    if (b2.freqLvl.x <= b2.freqLvl.y) {
-        pipelineIntegrateBasisBasis->in_forwardRotJ.receive(mat2(1, 0, 0, 1));
-        pipelineIntegrateBasisBasis->in_backwardRotJ.receive(mat2(1, 0, 0, 1));
-    }
-    else {
-        pipelineIntegrateBasisBasis->in_forwardRotJ.receive(mat2(0, 1, -1, 0));
-        pipelineIntegrateBasisBasis->in_backwardRotJ.receive(mat2(0, -1, 1, 0));
-    }
-
-    // other data
-    auto connTransfer = createPushConnection(
-        &pipelineIntegrateBasisBasis->out_transferBuffer,
-        &integrationTransferBufferGpu->in_metadataBuffer);
-    connTransfer->activate();
-    pipelineIntegrateBasisBasis->in_integralGridRes.receive(integralGridRes);
-    pipelineIntegrateBasisBasis->in_supportInterLeftBottom.receive(vec2(supLeft, supBottom));
-    pipelineIntegrateBasisBasis->in_supportInterRightTop.receive(vec2(supRight, supTop));
-
-
-    unsigned int nbGroupDiv = 1;
-    unsigned int it = 0;
-    uvec2 nbGroups;
-    do
-    {
-        nbGroups = uvec2(((integralGridRes + 1) - 1) / nbGroupDiv / INTEGRAL_GPU_GROUP_DIM + 1,
-            ((integralGridRes + 1) - 1) / nbGroupDiv / INTEGRAL_GPU_GROUP_DIM + 1);
-
-        pipelineIntegrateBasisBasis->in_globalIteration.receive(it++);
-        pipelineIntegrateBasisBasis->goglu_nbWorkGroups.set(glm::uvec3(nbGroups.x, nbGroups.y, 1));
-        pipelineIntegrateBasisBasis->execute();
-        glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-
-        nbGroupDiv *= INTEGRAL_GPU_GROUP_DIM;
-
-    } while (nbGroups.x > 1 && nbGroups.y > 1);
-
-
-    sum = integrationTransferBufferGpu->getCpuData(0).x;
-
-    connI->deactivate(); delete connI;
-    connJ->deactivate(); delete connJ;
-    connTransfer->deactivate(); delete connTransfer;
-
-#else
-
-    for (int i = 0; i <= integralGridRes; i++) {
-        for (int j = 0; j <= integralGridRes; j++) {
-
-            vec2 p = vec2(supLeft + float(i) / integralGridRes * (supRight - supLeft),
-                supBottom + float(j) / integralGridRes * (supTop - supBottom));
-            sum += ((i == 0 || i == integralGridRes) ? 0.5f : 1.f) * ((j == 0 || j == integralGridRes) ? 0.5f : 1.f) *
-                glm::dot(translatedBasisEval(p, b1.freqLvl, b1.center),
-                    translatedBasisEval(p, b2.freqLvl, b2.center));
+            vec2 p = vec2(supLeft + float(i) / _integralGridRes * (supRight - supLeft),
+                supBottom + float(j) / _integralGridRes * (supTop - supBottom));
+            sum += ((i == 0 || i == _integralGridRes) ? 0.5f : 1.f) * ((j == 0 || j == _integralGridRes) ? 0.5f : 1.f) *
+                glm::dot(TranslatedBasisEval(p, b1.freqLvl, b1.center),
+                    TranslatedBasisEval(p, b2.freqLvl, b2.center));
         }
     }
 
-#endif
 
-    return float(sum) * (supRight - supLeft)*(supTop - supBottom) / sqr(integralGridRes);
+    return float(sum) * (supRight - supLeft)*(supTop - supBottom) / Sqr(_integralGridRes);
 
 
 }
@@ -544,24 +563,24 @@ vec2 Application::AverageBasisOnSupport(BasisFlow bVec, BasisFlow bSupport) {
 
 #else
 
-    for (uint i = 0; i <= integralGridRes; i++) {
-        for (uint j = 0; j <= integralGridRes; j++) {
+    for (uint i = 0; i <= _integralGridRes; i++) {
+        for (uint j = 0; j <= _integralGridRes; j++) {
 
-            vec2 p = vec2(supLeft + float(i) / integralGridRes * (supRight - supLeft),
-                supBottom + float(j) / integralGridRes * (supTop - supBottom));
-
-
+            vec2 p = vec2(supLeft + float(i) / _integralGridRes * (supRight - supLeft),
+                supBottom + float(j) / _integralGridRes * (supTop - supBottom));
 
 
-            sum += ((i == 0 || i == integralGridRes) ? 0.5f : 1.f) * ((j == 0 || j == integralGridRes) ? 0.5f : 1.f) *
-                translatedBasisEval(p, bVec.freqLvl, bVec.center);
+
+
+            sum += ((i == 0 || i == _integralGridRes) ? 0.5f : 1.f) * ((j == 0 || j == _integralGridRes) ? 0.5f : 1.f) *
+                TranslatedBasisEval(p, bVec.freqLvl, bVec.center);
         }
     }
 
 #endif
 
     // divide by domain size to get averaged value
-    return vec2(sum) * (supRight - supLeft)*(supTop - supBottom) / float(sqr(integralGridRes)) / ((1.f / float(1 << bSupport.freqLvl.x))*(1.f / float(1 << bSupport.freqLvl.y)));
+    return vec2(sum) * (supRight - supLeft)*(supTop - supBottom) / float(Sqr(_integralGridRes)) / ((1.f / float(1 << bSupport.freqLvl.x))*(1.f / float(1 << bSupport.freqLvl.y)));
 
 }
 
@@ -586,7 +605,7 @@ void Application::SaveCoeffsBB(string filename)
                 val << endl;
         }
         file.close();
-        cout << "saved BB coefficient to " << filename << endl;
+        std::cout << "saved BB coefficient to " << filename << endl;
     }
 }
 
@@ -643,7 +662,7 @@ void Application::SaveCoeffsT(string filename)
                 val.y << endl;
         }
         file.close();
-        cout << "saved R coefficient to " << filename << endl;
+        std::cout << "saved R coefficient to " << filename << endl;
     }
 }
 
@@ -685,10 +704,10 @@ void Application::LoadCoeffsT(string filename)
 
 
 // TODO: optimize this using const&
-vec2 AppBasisFluid::matTCoeff(int i, int j) {
-    BasisFlow bTransported = basisFlowParams->getCpuData(i);
-    BasisFlow bTransporting = basisFlowParams->getCpuData(j);
-    return matTCoeff(bTransported, bTransporting);
+vec2 Application::MatTCoeff(int i, int j) {
+    BasisFlow bTransported = _basisFlowParams->getCpuData(i);
+    BasisFlow bTransporting = _basisFlowParams->getCpuData(j);
+    return MatTCoeff(bTransported, bTransporting);
 }
 
 
@@ -696,7 +715,7 @@ vec2 AppBasisFluid::matTCoeff(int i, int j) {
 vec2 Application::MatTCoeff(BasisFlow bTransported, BasisFlow bTransporting)
 {
 
-    if (intersectionInteriorEmpty(bTransported.getSupport(), bTransporting.getSupport())) { return vec2(0); }
+    if (IntersectionInteriorEmpty(bTransported.getSupport(), bTransporting.getSupport())) { return vec2(0); }
 
 
     int baseLvl;
@@ -716,18 +735,18 @@ vec2 Application::MatTCoeff(BasisFlow bTransported, BasisFlow bTransporting)
     );
 
     // snap offset to very fine grid to avoid float errors
-    vec2 snappedRelativeOffset(roundToMultiple(relativeOffset.x, coeffSnapSize),
-        roundToMultiple(relativeOffset.y, coeffSnapSize)
+    vec2 snappedRelativeOffset(RoundToMultiple(relativeOffset.x, _coeffSnapSize),
+        RoundToMultiple(relativeOffset.y, _coeffSnapSize)
     );
 
     // return coefficient if already computed, or else compute it and store it.
     KeyTypeT key = make_tuple(normFreqLvlTransported.x, normFreqLvlTransported.y,
         normFreqLvlTransporting.x, normFreqLvlTransporting.y,
         snappedRelativeOffset.x, snappedRelativeOffset.y);
-    auto coeffPair = coeffsT.find(key);
+    auto coeffPair = _coeffsT.find(key);
     vec2 result;
 
-    if (coeffPair != coeffsT.end()) {
+    if (coeffPair != _coeffsT.end()) {
         result = coeffPair->second;
     }
     else {
@@ -739,11 +758,11 @@ vec2 Application::MatTCoeff(BasisFlow bTransported, BasisFlow bTransporting)
 
         coeff = AverageBasisOnSupport(bRelativeTransporting, bRelativeTransported);
 
-        coeffsT.insert(std::pair<KeyTypeT, vec2>(key, coeff));
+        _coeffsT.insert(std::pair<KeyTypeT, vec2>(key, coeff));
         result = coeff;
 
-        if (coeffsT.size() % 1000 == 0) {
-            cout << "coeffs T : " << coeffsT.size() << endl;
+        if (_coeffsT.size() % 1000 == 0) {
+            std::cout << "coeffs T : " << _coeffsT.size() << endl;
         }
 
         _newTCoeffComputed = true;
@@ -764,8 +783,8 @@ vec2 Application::MatTCoeff(BasisFlow bTransported, BasisFlow bTransporting)
 
 //TODO: optimize this using const&
 float Application::MatBBCoeff(int i, int j) {
-    BasisFlow& b1 = _basisFlowParams->getCpuData(i);
-    BasisFlow& b2 = _basisFlowParams->getCpuData(j);
+    BasisFlow b1 = _basisFlowParams->getCpuData(i);
+    BasisFlow b2 = _basisFlowParams->getCpuData(j);
     return MatBBCoeff(b1, b2);
 }
 
@@ -774,7 +793,7 @@ float Application::MatBBCoeff(int i, int j) {
 // compute the integral and store it for future use
 float Application::MatBBCoeff(const BasisFlow& b1, const BasisFlow& b2)
 {
-    if (intersectionInteriorEmpty(b1.getSupport(), b2.getSupport())) { return 0.0; }
+    if (IntersectionInteriorEmpty(b1.getSupport(), b2.getSupport())) { return 0.0; }
 
 #if ENFORCE_EXACT_ORTHOGONALITY
     if (b1.orthoGroup == b2.orthoGroup && b1.center != b2.center) {
@@ -836,7 +855,7 @@ float Application::MatBBCoeff(const BasisFlow& b1, const BasisFlow& b2)
         result = coeff;
 
         if (_coeffsBB.size() % 1000 == 0) {
-            cout << "coeffs BB : " << _coeffsBB.size() << endl;
+            std::cout << "coeffs BB : " << _coeffsBB.size() << endl;
         }
 
         _newBBCoeffComputed = true;
@@ -914,7 +933,7 @@ dvec2 flowBasisHat(dvec2 p, int log2Aniso)
         norm = 0.5618900800300474;
         break;
     default:
-        cout << "unknown basis parameters" << endl;
+        std::cout << "unknown basis parameters" << endl;
         return dvec2(0, 0);
         break;
     }
@@ -995,7 +1014,7 @@ dmat2 flowBasisHatGrad(dvec2 p, int log2Aniso)
         norm = 0.5618900800300474;
         break;
     default:
-        cout << "unknown basis parameters" << endl;
+        std::cout << "unknown basis parameters" << endl;
         return dmat2(0, 0, 0, 0);
         break;
     }
@@ -1162,6 +1181,12 @@ bool BasisFlow::pointIsInSupport(vec2 p) {
         IsInClosedInterval(normalizedPos.y, -0.5f, 0.5f);
 }
 
+
+bool IntersectionInteriorEmpty(BasisSupport& sup1, BasisSupport& sup2)
+{
+    return (glm::max(sup1.left, sup2.left) >= glm::min(sup1.right, sup2.right))
+        || (glm::max(sup1.bottom, sup2.bottom) >= glm::min(sup1.top, sup2.top));
+}
 
 
 

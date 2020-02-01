@@ -59,7 +59,7 @@ void VectorField2D::populateWithFunction(std::function<vec2(float x, float y)> f
     }
 
     _vectors._sourceStorageType = DataBuffer2D<vec2>::StorageType::CPU;
-    _vectors.dirtyData();
+    //_vectors.dirtyData();
 
 }
 
@@ -92,7 +92,7 @@ void VectorField2D::addFunction(std::function<vec2(float, float)> function)
     }
 
     _vectors._sourceStorageType = DataBuffer2D<vec2>::StorageType::CPU;
-    _vectors.dirtyData();
+    //_vectors.dirtyData();
 
 }
 
@@ -423,7 +423,7 @@ vec2 VectorField2D::interp(vec2 pos)
         break;
     }
 
-    _vectors.refreshCpuData();
+    //_vectors.refreshCpuData();
     vec2* _vectorsPointer = _vectors.getCpuDataPointer();
 
     const unsigned int nx = _vectors._nbElementsX;

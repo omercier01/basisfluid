@@ -22,7 +22,7 @@
 #define USE_DECOMPRESSED_COEFFICIENTS   1
 #define INVERSION_INNER_DOUBLE_PRECISION 1
 #define INVERSION_STORAGE_DOUBLE_PRECISION 1
-#define DEF_COEFF_COMPUTE_GPU 1 // compute coefficients (A, BB, T) and forces on GPU
+#define DEF_COEFF_COMPUTE_GPU 0 //1 // compute coefficients (A, BB, T) and forces on GPU
 #define EXPLICIT_ENERGY_TRANSFER 1
 #define EXPLICIT_TRANSPORT_ROTATION 1
 #define USE_PRECISE_BASIS_EVAL 0
@@ -68,7 +68,7 @@ public:
     scalar_inversion_inner InverseBBMatrixMain(
         unsigned int iRow, scalar_inversion_storage* vecX, scalar_inversion_storage* vecB,
         BasisFlow* basisDataPointer, unsigned int basisBitMask, float alpha);
-    
+    glm::vec2 MatTCoeff(int i, int j);
     glm::vec2 MatTCoeff(BasisFlow bTransported, BasisFlow bTransporting);
     
     void InverseBBMatrix(
@@ -82,6 +82,8 @@ public:
     void SaveCoeffsT(std::string filename);
     void LoadCoeffsT(std::string filename);
 
+    float IntegrateBasisBasis(BasisFlow b1, BasisFlow b2);
+    float IntegrateBasisGrid(BasisFlow& b, VectorField2D* velField);
     glm::vec2 TranslatedBasisEval(const glm::vec2 p, const glm::ivec2 freqLvl, const glm::vec2 center);
     glm::dvec2 TranslatedBasisEvalPrecise(const glm::dvec2 p, const glm::ivec2 freqLvl, const glm::dvec2 center);
     glm::mat2 TranslatedBasisGradEval(const glm::vec2 p, const glm::ivec2 freqLvl, const glm::vec2 center);
@@ -178,6 +180,9 @@ public:
 
     MapTypeBB _coeffsBB;
     MapTypeT _coeffsT;
+    std::vector<std::vector<CoeffBBDecompressedIntersectionInfo>> _coeffsBBDecompressedIntersections; // Does not include the basis itself.
+    std::vector<std::vector<CoeffTDecompressedIntersectionInfo>>  _coeffsTDecompressedIntersections;
+            
 
     // Parameters
     bool _seedParticles = true;

@@ -19,7 +19,7 @@ inline float RoundToMultiple(float val, float step)
 template <typename T>
 inline T Sqr(T a) {return a*a;}
 
-unsigned int SizeOfEnumType(GLenum enumType) {
+inline unsigned int SizeOfEnumType(GLenum enumType) {
     switch(enumType) {
     case GL_BYTE:
     case GL_UNSIGNED_BYTE:

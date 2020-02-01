@@ -1,17 +1,20 @@
 #ifndef BASISFLOWS_H
 #define BASISFLOWS_H
 
-#include "Application.h"
+//#include "Application.h"
 
-#include <set>
+#include <glm\glm.hpp>
+
+//#include <set>
 #include <tuple>
 #include <unordered_map>
+#include <functional>
 
 
 // coefficients for BB matrix
 // keys are freqLvlX1, freqLvlY1, freqLvlX2, freqLvlY2, centerDiffX, centerDiffY
 typedef std::tuple<int, int, int, int, float, float> KeyTypeBB;
-struct KeyTypeBB_hash : public std::unary_function<KeyTypeBB, std::size_t>
+struct KeyTypeBB_hash// : public std::unary_function<KeyTypeBB, std::size_t>
 {
     std::size_t operator()(const KeyTypeBB& k) const
     {
@@ -27,7 +30,7 @@ typedef std::unordered_map<KeyTypeBB,float,KeyTypeBB_hash> MapTypeBB;
 // coefficients for T matrix
 // keys are freqLvlX1, freqLvlY1, freqLvlX2, freqLvlY2, centerDiffX, centerDiffY
 typedef std::tuple<int, int, int, int, float, float> KeyTypeT;
-struct KeyTypeT_hash : public std::unary_function<KeyTypeT, std::size_t>
+struct KeyTypeT_hash// : public std::unary_function<KeyTypeT, std::size_t>
 {
     std::size_t operator()(const KeyTypeT& k) const
     {
@@ -38,7 +41,7 @@ struct KeyTypeT_hash : public std::unary_function<KeyTypeT, std::size_t>
             hasher_float(std::get<4>(k)) ^ hasher_float(std::get<5>(k));
     }
 };
-typedef std::unordered_map<KeyTypeT,vec2,KeyTypeT_hash> MapTypeT;
+typedef std::unordered_map<KeyTypeT,glm::vec2,KeyTypeT_hash> MapTypeT;
 
 
 
@@ -103,7 +106,7 @@ struct BasisSupport {
     }
 };
 
-bool intersectionInteriorEmpty(BasisSupport &sup1, BasisSupport &sup2);
+bool IntersectionInteriorEmpty(const BasisSupport &sup1, const BasisSupport &sup2);
 
 
 
@@ -165,7 +168,7 @@ struct BasisFlow {
     glm::vec2 supportHalfSize() const;
     glm::vec2 normalizedPositionInSupport(glm::vec2 p);
     bool pointIsInSupport(glm::vec2 p);
-    bool emptyIntersectionWithBasis(BasisFlow& b) const;
+    bool EmptyIntersectionWithBasis(const BasisFlow& b) const;
 };
 
 glm::dvec2 flowBasisHat(glm::dvec2 p, int log2Aniso);
@@ -175,8 +178,5 @@ glm::dmat2 flowBasisHatGrad(glm::dvec2 p, int log2Aniso);
 // TEST: to see the basis domains more clearly
 glm::vec2 squareFlow(glm::vec2 p, BasisFlow b);
 
-
-float IntegrateBasisGrid(BasisFlow& b, VectorField2D* velField);
-float IntegrateBasisBasis(BasisFlow b1, BasisFlow b2);
 
 #endif // BASISFLOWS_H

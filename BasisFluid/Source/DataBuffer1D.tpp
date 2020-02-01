@@ -1,5 +1,7 @@
 #include "DataBuffer1D.h"
 
+#include "Utils.h"
+
 template<class T>
 DataBuffer1D<T>::DataBuffer1D(unsigned int size) {
     _nbElements = size;
@@ -98,10 +100,10 @@ void DataBuffer1D<T>::createBufferStorage(GLenum dataType, unsigned int nbElemen
     _hasBufferStorage = true;
 
     // metadata
-    metadataBuffer.bufferId = _glidBuffer;
-    metadataBuffer.dataType = dataType;
-    metadataBuffer.nbElements = _nbElements;
-    metadataBuffer.nbElementsPerComponent = nbElementsPerComponent;
+    _metadataBuffer.bufferId = _glidBuffer;
+    _metadataBuffer.dataType = dataType;
+    _metadataBuffer.nbElements = _nbElements;
+    _metadataBuffer.nbElementsPerComponent = nbElementsPerComponent;
 }
 
 template<class T>
@@ -179,7 +181,7 @@ void DataBuffer1D<T>::resize(unsigned int size)
 
     if (size <= _capacity) {
         if (_hasBufferStorage) {
-            metadataBuffer.nbElements = _nbElements;
+            _metadataBuffer.nbElements = _nbElements;
         }
     }
     else {
@@ -204,14 +206,14 @@ void DataBuffer1D<T>::resize(unsigned int size)
             //            }
             delete[] _dataCpu;
             _dataCpu = newData;
-            metadataCpu.dataPointer = _dataCpu;
+            _metadataCpu.dataPointer = _dataCpu;
         }
 
         if (_hasBufferStorage) {
             GLuint newBuffer;
             glCreateBuffers(1, &newBuffer);
             //glNamedBufferStorage(newBuffer, dataCpuSizeInBytes(), NULL,
-            glNamedBufferStorage(newBuffer, _capacity * metadataBuffer.nbElementsPerComponent * sizeOfEnumType(metadataBuffer.dataType), NULL,
+            glNamedBufferStorage(newBuffer, _capacity * _metadataBuffer.nbElementsPerComponent * SizeOfEnumType(_metadataBuffer.dataType), NULL,
                 GL_DYNAMIC_STORAGE_BIT | GL_MAP_READ_BIT |
                 GL_MAP_WRITE_BIT);
             glCopyNamedBufferSubData(_glidBuffer, newBuffer, 0, 0,
@@ -219,9 +221,9 @@ void DataBuffer1D<T>::resize(unsigned int size)
             glDeleteBuffers(1, &_glidBuffer);
             _glidBuffer = newBuffer;
 
-            metadataBuffer.bufferId = newBuffer;
+            _metadataBuffer.bufferId = newBuffer;
             //        metadataBuffer.dataType = dataType;
-            metadataBuffer.nbElements = _nbElements;
+            _metadataBuffer.nbElements = _nbElements;
             //        metadataBuffer.nbElementsPerComponent = nbElementsPerComponent;
 
 
@@ -236,7 +238,7 @@ void DataBuffer1D<T>::resize(unsigned int size)
             nbLevels = 1;
             unsigned int tempSize = _nbElements;
             while (tempSize >>= 1) ++nbLevels;
-            glTextureStorage1D(newTexture, nbLevels, mTexture1DSizedInternalFormat,
+            glTextureStorage1D(newTexture, nbLevels, _texture1DSizedInternalFormat,
                 _nbElements);
             glClearTexImage(newTexture, 0, _texture1DExternalFormat,
                 _texture1DSizedExternalFormat, NULL);

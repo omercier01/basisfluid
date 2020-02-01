@@ -85,7 +85,7 @@ bool Application::Init_DataBuffers() {
     //according to their frequencies. We only need to create one basis template
     //per anisotropy ratio, so here we compute lvlX=0 and lvlY=iRatio.    
     _basisFlowTemplates = new std::unique_ptr<VectorField2D>[_maxAnisoLvl + 1];
-    for (unsigned int iRatio = 0; iRatio < _maxAnisoLvl + 1; iRatio++) {
+    for (unsigned int iRatio = 0; iRatio < uint(_maxAnisoLvl + 1); iRatio++) {
         _basisFlowTemplates[iRatio] = make_unique<VectorField2D>(
             -0.5f, 0.5f,
             -0.5f / float(1 << iRatio), 0.5f / float(1 << iRatio),
