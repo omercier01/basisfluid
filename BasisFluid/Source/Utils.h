@@ -11,8 +11,15 @@ inline bool AtLeastOneBitNotSet(unsigned int bitfield, unsigned int mask) {
     return (~bitfield & mask) != 0;
 }
 
-inline float RoundToMultiple(float val, float step)
-{
+unsigned int SetBits(unsigned int bitfield, unsigned int mask) {
+    return bitfield | mask;
+}
+
+unsigned int UnsetBits(unsigned int bitfield, unsigned int mask) {
+    return bitfield & ~mask;
+}
+
+inline float RoundToMultiple(float val, float step) {
     return round(val/step)*step;
 }
 

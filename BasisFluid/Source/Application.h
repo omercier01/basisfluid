@@ -31,6 +31,8 @@
 #define SAFETY_ASSERTS 0 // useful for debugging, otherwise turn off for performance
 #define INTEGRATION_SUM_DOUBLE_PRECISION 1
 #define INTEGRAL_GPU_GROUP_DIM 32
+#define STRETCH_BAND_RATIO 0.5f
+#define NB_NEWTON_ITERATIONS_INVERSION 3
 
 #if INVERSION_INNER_DOUBLE_PRECISION
 typedef double scalar_inversion_inner;
@@ -62,6 +64,7 @@ public:
 
     void SimulationStep();
     void Draw();
+    void ComputeVelocityGridForDisplay();
 
     float MatBBCoeff(int i, int j);
     float MatBBCoeff(const BasisFlow& b1, const BasisFlow& b2);
@@ -89,6 +92,12 @@ public:
     glm::mat2 TranslatedBasisGradEval(const glm::vec2 p, const glm::ivec2 freqLvl, const glm::vec2 center);
     glm::dmat2 TranslatedBasisGradEvalPrecise(const glm::dvec2 p, const glm::ivec2 freqLvl, const glm::dvec2 center);
     glm::vec2 AverageBasisOnSupport(BasisFlow bVec, BasisFlow bSupport);
+
+    BasisFlow ComputeStretch(BasisFlow b, bool staticObstaclesOnly=false, bool noStretch=false);
+    void ComputeStretches();
+    vec2 QuadCoord(vec2 p, BasisFlow const& b);
+    mat2 QuadCoordInvDeriv(vec2 uv, BasisFlow const& b);
+    vec2 VecObstacle_stretch(vec2 p, BasisFlow const& b);
 
 public:
     static void CallbackWindowClosed(GLFWwindow* pGlfwWindow);
@@ -197,6 +206,7 @@ public:
     float _relaxationAlpha = 1.f;
     #define _bInversionGaussSeidel 1
     const unsigned int _minSizeParallelInverse = 0;
+    uint _nbStretchLoops = 10;
 
     // Status
     bool _readyToQuit = false;
@@ -204,6 +214,7 @@ public:
     bool _newACoeffComputed  = false;
     bool _newTCoeffComputed  = false;
     bool _newRCoeffComputed  = false;
+    unsigned int _frameCount = 0;
 
 };
 
