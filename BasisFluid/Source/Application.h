@@ -46,6 +46,10 @@ typedef double scalar_inversion_storage;
 typedef float scalar_inversion_storage;
 #endif
 
+
+class Obstacle;
+
+
 // Global class to manage program execution
 class Application {
 public:
@@ -55,7 +59,11 @@ public:
     bool Init_Obstacles();
     bool Init_BasisFlows();
 
-    bool Init_ComputeShaders();
+    bool Init_Shaders();
+    bool Init_ObstacleShader();
+    bool Init_ParticleShader();
+    bool Init_VelocityArrowsShader();
+
     bool Init_CSIntegrateAvgBasis();
     bool Init_CSIntegrateBasisBasis();
     bool Init_CSIntegrateBasisGradBasis();
@@ -184,6 +192,8 @@ public:
     std::unique_ptr<DataBuffer1D<std::vector<CoeffBBDecompressedIntersectionInfo>>>
         _intersectingBasesIdsDeformation[_nbExplicitTransferFreqs];
 
+    std::vector<Obstacle*> _obstacles;
+
     std::vector<std::vector<unsigned int>> _orthogonalBasisGroupIds;
     std::vector<std::vector<unsigned int>> _sameBasisTemplateGroupIds;
 
@@ -207,6 +217,10 @@ public:
     #define _bInversionGaussSeidel 1
     const unsigned int _minSizeParallelInverse = 0;
     uint _nbStretchLoops = 10;
+    float _obstacleSpeed = 1.f;
+    float _dt = 0.0325f;
+    float _obstacleRadius = 0.2f;
+    glm::mat4 _viewProjMat = {1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1};
 
     // Status
     bool _readyToQuit = false;
@@ -215,6 +229,7 @@ public:
     bool _newTCoeffComputed  = false;
     bool _newRCoeffComputed  = false;
     unsigned int _frameCount = 0;
+    bool _obstacleDisplayNeedsUpdating = true;
 
 };
 

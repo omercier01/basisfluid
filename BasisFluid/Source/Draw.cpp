@@ -1,5 +1,6 @@
 
 #include "Application.h"
+#include "Obstacles.h"
 
 void Application::Draw()
 {
@@ -7,25 +8,25 @@ void Application::Draw()
     if (_drawObstacles) {
         // update obstacle display
 
-        if (obstacleDisplayNeedsUpdating) {
+        if (_obstacleDisplayNeedsUpdating) {
 
-            obstacleLines->resize(0);
+            _obstacleLines->resize(0);
 
-            for (Obstacle* obs : obstacles) {
+            for (Obstacle* obs : _obstacles) {
 
                 int nbOffsets = 9;
-                float thickness = 0.005;
+                float thickness = 0.005f;
 
                 for (int offset = -nbOffsets; offset <= nbOffsets; offset++) {
 
                     // obstacle boundary with marching square
-                    float dx = (domainRight - domainLeft) / obstacleDisplayRes;
-                    float dy = (domainTop - domainBottom) / obstacleDisplayRes;
-                    for (int i = -2; i <= int(obstacleDisplayRes) + 1; i++) {
-                        for (int j = -2; j <= int(obstacleDisplayRes) + 1; j++) {
+                    float dx = (_domainRight - _domainLeft) / _obstacleDisplayRes;
+                    float dy = (_domainTop - _domainBottom) / _obstacleDisplayRes;
+                    for (int i = -2; i <= int(_obstacleDisplayRes) + 1; i++) {
+                        for (int j = -2; j <= int(_obstacleDisplayRes) + 1; j++) {
 
                             // bl = bottom left, tr = top right.
-                            vec2 blPos = vec2(domainLeft + i * dx, domainBottom + j * dy);
+                            vec2 blPos = vec2(_domainLeft + i * dx, _domainBottom + j * dy);
                             float bl = thickness * float(offset) / float(nbOffsets) + obs->phi(blPos);
                             float br = thickness * float(offset) / float(nbOffsets) + obs->phi(blPos + vec2(dx, 0));
                             float tl = thickness * float(offset) / float(nbOffsets) + obs->phi(blPos + vec2(0, dy));
@@ -38,40 +39,40 @@ void Application::Draw()
                                 break;
                             case 8:
                             case 7:
-                                obstacleLines->appendCpu(blPos + vec2(0, dy*ratioZero(bl, tl)));
-                                obstacleLines->appendCpu(blPos + vec2(dx*ratioZero(bl, br), 0));
+                                _obstacleLines->appendCpu(blPos + vec2(0, dy*RatioZero(bl, tl)));
+                                _obstacleLines->appendCpu(blPos + vec2(dx*RatioZero(bl, br), 0));
                                 break;
                             case 4:
                             case 11:
-                                obstacleLines->appendCpu(blPos + vec2(dx*ratioZero(bl, br), 0));
-                                obstacleLines->appendCpu(blPos + vec2(dx, dy*ratioZero(br, tr)));
+                                _obstacleLines->appendCpu(blPos + vec2(dx*RatioZero(bl, br), 0));
+                                _obstacleLines->appendCpu(blPos + vec2(dx, dy*RatioZero(br, tr)));
                                 break;
                             case 1:
                             case 14:
-                                obstacleLines->appendCpu(blPos + vec2(dx, dy*ratioZero(br, tr)));
-                                obstacleLines->appendCpu(blPos + vec2(dx*ratioZero(tl, tr), dy));
+                                _obstacleLines->appendCpu(blPos + vec2(dx, dy*RatioZero(br, tr)));
+                                _obstacleLines->appendCpu(blPos + vec2(dx*RatioZero(tl, tr), dy));
                                 break;
                             case 2:
                             case 13:
-                                obstacleLines->appendCpu(blPos + vec2(dx*ratioZero(tl, tr), dy));
-                                obstacleLines->appendCpu(blPos + vec2(0, dy*ratioZero(bl, tl)));
+                                _obstacleLines->appendCpu(blPos + vec2(dx*RatioZero(tl, tr), dy));
+                                _obstacleLines->appendCpu(blPos + vec2(0, dy*RatioZero(bl, tl)));
                                 break;
                             case 12:
                             case 3:
-                                obstacleLines->appendCpu(blPos + vec2(0, dy*ratioZero(bl, tl)));
-                                obstacleLines->appendCpu(blPos + vec2(dx, dy*ratioZero(br, tr)));
+                                _obstacleLines->appendCpu(blPos + vec2(0, dy*RatioZero(bl, tl)));
+                                _obstacleLines->appendCpu(blPos + vec2(dx, dy*RatioZero(br, tr)));
                                 break;
                             case 10:
                             case 5:
-                                obstacleLines->appendCpu(blPos + vec2(dx*ratioZero(bl, br), 0));
-                                obstacleLines->appendCpu(blPos + vec2(dx*ratioZero(tl, tr), dy));
+                                _obstacleLines->appendCpu(blPos + vec2(dx*RatioZero(bl, br), 0));
+                                _obstacleLines->appendCpu(blPos + vec2(dx*RatioZero(tl, tr), dy));
                                 break;
                             case 9:
                             case 6: // crossed case, arbitrary choice is made for line orientation.
-                                obstacleLines->appendCpu(blPos + vec2(0, dy*ratioZero(bl, tl)));
-                                obstacleLines->appendCpu(blPos + vec2(dx*ratioZero(bl, br), 0));
-                                obstacleLines->appendCpu(blPos + vec2(dx, dy*ratioZero(br, tr)));
-                                obstacleLines->appendCpu(blPos + vec2(dx*ratioZero(tl, tr), dy));
+                                _obstacleLines->appendCpu(blPos + vec2(0, dy*RatioZero(bl, tl)));
+                                _obstacleLines->appendCpu(blPos + vec2(dx*RatioZero(bl, br), 0));
+                                _obstacleLines->appendCpu(blPos + vec2(dx, dy*RatioZero(br, tr)));
+                                _obstacleLines->appendCpu(blPos + vec2(dx*RatioZero(tl, tr), dy));
                                 break;
                             }
                         }
@@ -79,10 +80,12 @@ void Application::Draw()
                 }
             }
 
-            obstacleDisplayNeedsUpdating = false;
+            _obstacleLines->TransferDataCpuToBuffer();
+
+            _obstacleDisplayNeedsUpdating = false;
         }
 
-        pipelineObstacle->goglu_nbPrimitives.set(obstacleLines->metadataBuffer.nbElements / 2);
+        //pipelineObstacle->goglu_nbPrimitives.set(obstacleLines->metadataBuffer.nbElements / 2);
     }
 
 
@@ -90,26 +93,22 @@ void Application::Draw()
     glClearColor(1, 1, 1, 1);
     glClear(GL_COLOR_BUFFER_BIT);
     glClear(GL_DEPTH_BUFFER_BIT);
-    if (tw->drawGrid.get()) pipelineGrid->execute();
+    if (_drawGrid) {
+        pipelineGrid->execute();
+    }
     pipelineParticles->goglu_nbPrimitives.set(particles->metadataBuffer.nbElements);
-    if (tw->drawBasisContours.get()) pipelineBasisContour->execute();
-    //    pipelineBasisContour->execute();
 
-    if (tw->drawObstacle.get() && obstacleLines->metadataBuffer.nbElements > 0) pipelineObstacle->execute();
+    if (_obstacleLines->_metadataBuffer.nbElements > 0) {
+        pipelineObstacle->_nbPrimitives = _obstacleLines->_metadataBuffer.nbElements;
+        pipelineObstacle->execute();
+    }
 
-
-    if (tw->displayVelocityGrid.get()) {
+    if (_showVelocityGrid) {
         pipelineArrows->execute();
     }
-    if (tw->drawParticles.get()) { pipelineParticles->execute(); }
-
-    // tweak bar
-    controlWindow->makeContextCurrent();
-    glClearColor(0, 0, 0, 1);
-    glClear(GL_COLOR_BUFFER_BIT);
-    tw->draw();
-    mainWindow->makeContextCurrent();
-
+    if (_drawParticles) {
+        pipelineParticles->execute();
+    }
 
 
     glfwSwapBuffers(_glfwWindow);
@@ -120,16 +119,9 @@ void Application::Draw()
 // used for display only
 void Application::ComputeVelocityGridForDisplay()
 {
-
-
     // clear velocity grid
     // TODO: speed this up
     _velocityField->populateWithFunction([](float /*x*/, float /*y*/) {return vec2(0); });
-
-    bool displayVelocityStretched = tw->displayVelocityStretched.get();
-
-
-
 
     for (unsigned int i = 0; i < _basisFlowParams->_nbElements; ++i) {
         BasisFlow b = _basisFlowParams->getCpuData_noRefresh(i);
@@ -142,7 +134,7 @@ void Application::ComputeVelocityGridForDisplay()
 
             vec2 vec(0);
             if (AllBitsSet(b.bitFlags, INTERIOR)) {
-                vec += vecObstacle_stretch(p, b);
+                vec += VecObstacle_stretch(p, b);
             }
             vec += b.coeffBoundary * (vec2)(
                 TranslatedBasisEval(

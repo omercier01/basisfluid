@@ -64,4 +64,13 @@ inline bool IsInClosedInterval(T x, T min, T max) {
     return min <= x && x <= max;
 }
 
+
+// if a linear function has value a at 0 and b at 1, gives the location of the zero. Gives 0.5 if a==b.
+float RatioZero(float a, float b) {
+    if(abs(a-b) < 1e-5) return 0.5;
+    else return a/(a-b);
+}
+
+
+
 #endif // UTILS_H

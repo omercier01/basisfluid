@@ -69,7 +69,7 @@ bool Application::Init() {
         cerr << "Error initializing obstacles." << endl;
         return false;
     }
-    if(!Init_ComputeShaders()) {
+    if(!Init_Shaders()) {
         cerr << "Error initializing compute shaders." << endl;
         return false;
     }
@@ -77,6 +77,20 @@ bool Application::Init() {
         cerr << "Error initializing basis flows." << endl;
         return false;
     }
+
+    return true;
+}
+
+bool Application::Init_Shaders() {
+    if( !Init_ObstacleShader() ) { return false; }
+    if( !Init_ParticleShader() ) { return false; }
+    if( !Init_VelocityArrowsShader() ) { return false; }
+
+    //Init_CSIntegrateAvgBasis();
+    //Init_CSIntegrateBasisBasis();
+    //Init_CSIntegrateBasisGradBasis();
+    //Init_CSIntegrateBasisGrid_onePerDispatch();
+    //Init_CSIntegrateBasisGrid_onePerInvocation();
 
     return true;
 }

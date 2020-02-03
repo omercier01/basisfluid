@@ -1,5 +1,6 @@
 
 #include "Application.h"
+#include "Obstacles.h"
 
 #include <glm/gtc/random.hpp>
 #include <glm/ext.hpp>
@@ -34,7 +35,7 @@ BasisFlow Application::ComputeStretch(BasisFlow b, bool staticObstaclesOnly, boo
     //b.bitFlags = true; 
 
 //    float centerObs = obstacleLevelSet(b.center);
-    for (Obstacle* obs : obstacles)
+    for (Obstacle* obs : _obstacles)
     {
         if (staticObstaclesOnly && obs->dynamic) { continue; }
 
@@ -62,7 +63,7 @@ BasisFlow Application::ComputeStretch(BasisFlow b, bool staticObstaclesOnly, boo
 
     // set basis flags and do first push and stretch
 
-    for (Obstacle* obs : obstacles)
+    for (Obstacle* obs : _obstacles)
     {
         if (staticObstaclesOnly && obs->dynamic) { continue; }
 
@@ -190,7 +191,7 @@ BasisFlow Application::ComputeStretch(BasisFlow b, bool staticObstaclesOnly, boo
         {
 
             // push
-            for (Obstacle* obs : obstacles)
+            for (Obstacle* obs : _obstacles)
             {
                 if (staticObstaclesOnly && obs->dynamic) { continue; }
 
