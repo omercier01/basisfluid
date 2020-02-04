@@ -1,7 +1,6 @@
 
 #include "GridData2D.h"
 
-using namespace goglu;
 using namespace glm;
 
 template <class T>

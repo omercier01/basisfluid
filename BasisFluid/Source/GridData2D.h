@@ -8,8 +8,6 @@
 
 
 
-namespace goglu {
-
 template <class T>
 class GridData2D
 {
@@ -38,8 +36,6 @@ public:
     glm::uvec2 pointToClosestIndex(glm::vec2 point);
     glm::vec2 indexToPosition(glm::uvec2 index);
 };
-
-} // namespace goglu.
 
 // include definitions because the class is templated.
 #include "GridData2D.tpp"

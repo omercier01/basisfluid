@@ -97,7 +97,7 @@ public:
             GL_FALSE,
             bufferLineSegmentsVertices_offset);
 
-        glm::vec4 lineColor = { 0,1,0,1 };
+        glm::vec4 lineColor = { 1,0,0,1 };
         glProgramUniform4fv(GetShader(lineColor_shaderType)->_glidShaderProgram, lineColor_loc, 1, &lineColor[0]);
         //glProgramUniform4f(GetShader(lineColor_shaderType)->_glidShaderProgram, lineColor_loc,  
         //    lineColor.x, lineColor.y, lineColor.z, lineColor.w);

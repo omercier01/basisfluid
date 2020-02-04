@@ -80,6 +80,7 @@ template<class T>
 class DataBuffer1D
 {
 
+
 public:
 //private:
 
