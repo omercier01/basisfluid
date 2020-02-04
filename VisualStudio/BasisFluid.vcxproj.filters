@@ -9,6 +9,7 @@
     <ClInclude Include="..\BasisFluid\Source\BasisFlows.h" />
     <ClInclude Include="..\BasisFluid\Source\Utils.h" />
     <ClInclude Include="..\BasisFluid\Source\ShaderPipeline.h" />
+    <ClInclude Include="..\BasisFluid\Source\ObstacleShader.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\BasisFluid\Source\Main.cpp" />
@@ -28,6 +29,5 @@
     <ClCompile Include="..\BasisFluid\Source\BoundaryFlows.cpp" />
     <ClCompile Include="..\BasisFluid\Source\Obstacles.h" />
     <ClCompile Include="..\BasisFluid\Source\ShaderPipeline.cpp" />
-    <ClCompile Include="..\BasisFluid\Source\ObstacleShader.h" />
   </ItemGroup>
 </Project>

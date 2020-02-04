@@ -267,3 +267,18 @@ void DataBuffer1D<T>::appendCpu(T elem)
         setCpuData(_nbElements - 1, elem);
     }
 }
+
+
+template<class T>
+void DataBuffer1D<T>::TransferDataCpuToBuffer()
+{
+    //if(mbHasTexture1DStorage) {
+    //    glTextureSubImage1D(mGlidTexture1D, 0, 0, mNbDataElements,
+    //                        mTexture1DExternalFormat,
+    //                        mTexture1DSizedExternalFormat, mpData);
+    //    glGenerateTextureMipmap(mGlidTexture1D);
+    //}
+    if(_hasBufferStorage||_hasTextureBufferStorage) {
+        glNamedBufferSubData(_glidBuffer, 0, dataCpuSizeInBytes(), _dataCpu);
+    }
+}

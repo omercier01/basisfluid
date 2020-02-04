@@ -6,6 +6,7 @@
 #include "GridData2D.h"
 #include "BasisFlows.h"
 
+#define GLM_FORCE_RADIANS
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
@@ -48,6 +49,7 @@ typedef float scalar_inversion_storage;
 
 
 class Obstacle;
+class ObstacleShaderPipeline;
 
 
 // Global class to manage program execution
@@ -111,6 +113,7 @@ public:
     static void CallbackWindowClosed(GLFWwindow* pGlfwWindow);
     static void CallbackKey(GLFWwindow* pGlfwWindow, int key, int scancode, int action, int mods);
     static void CallbackMouseScroll(GLFWwindow* pGlfwWindow, double xOffset, double yOffset);
+    static void DebugCallback(GLenum source, GLenum /*type*/, GLuint /*id*/, GLenum severity, std::string message);
 
 public:
 
@@ -202,6 +205,8 @@ public:
     std::vector<std::vector<CoeffBBDecompressedIntersectionInfo>> _coeffsBBDecompressedIntersections; // Does not include the basis itself.
     std::vector<std::vector<CoeffTDecompressedIntersectionInfo>>  _coeffsTDecompressedIntersections;
             
+    // shader pipelines
+    ObstacleShaderPipeline* _pipelineObstacle;
 
     // Parameters
     bool _seedParticles = true;

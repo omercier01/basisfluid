@@ -5,6 +5,7 @@
 #ifndef SHADERPIPELINE_H
 #define SHADERPIPELINE_H
 
+#define GLM_FORCE_RADIANS
 #include "GL/glew.h"
 #include "glm/gtc/type_ptr.hpp"
 

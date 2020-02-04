@@ -6,12 +6,13 @@
 #include <glm/glm.hpp>
 
 class ObstacleShaderPipeline : public ShaderPipeline {
+public:
     ObstacleShaderPipeline() {
 
         const char* vertexSource = R"(
             #version 430 core
 
-            in layout(location=0) FVECD pos;
+            in layout(location=0) vec2 pos;
             
             uniform mat4 vpMat;
             
@@ -88,7 +89,7 @@ class ObstacleShaderPipeline : public ShaderPipeline {
             app->_obstacleLines->_metadataBuffer.bufferId,
             0,
             app->_obstacleLines->_metadataBuffer.nbElementsPerComponent *
-                SizeOfEnumType(app->_obstacleLines->_metadataBuffer.dataType));
+            SizeOfEnumType(app->_obstacleLines->_metadataBuffer.dataType));
         glVertexArrayAttribFormat(
             _glidVao, bufferLineSegmentsVertices_loc,
             bufferLineSegmentsVertices_nbComponents,
@@ -96,8 +97,10 @@ class ObstacleShaderPipeline : public ShaderPipeline {
             GL_FALSE,
             bufferLineSegmentsVertices_offset);
 
-        glm::vec4 lineColor = { 0,0,0,1 };
-        glProgramUniform4fv(GetShader(lineColor_shaderType)->_glidShaderProgram, lineColor_loc, 4, &lineColor[0]);
+        glm::vec4 lineColor = { 0,1,0,1 };
+        glProgramUniform4fv(GetShader(lineColor_shaderType)->_glidShaderProgram, lineColor_loc, 1, &lineColor[0]);
+        //glProgramUniform4f(GetShader(lineColor_shaderType)->_glidShaderProgram, lineColor_loc,  
+        //    lineColor.x, lineColor.y, lineColor.z, lineColor.w);
 
         glm::mat4 temp = app->_viewProjMat;
         glProgramUniformMatrix4fv(GetShader(vpMat_shaderType)->_glidShaderProgram, vpMat_loc, 1, GL_FALSE, glm::value_ptr(temp));
@@ -105,7 +108,7 @@ class ObstacleShaderPipeline : public ShaderPipeline {
         glEnable(GL_DEPTH_TEST);
 
         //_nbPrimitives = app->_obstacleLines->_metadataBuffer.nbElements;
-        _nbPrimitives = app->_obstacleLines->_metadataBuffer.nbElements/2;
+        _nbPrimitives = app->_obstacleLines->_metadataBuffer.nbElements / 2;
 
         glDrawArrays(_primitiveType, 0, _nbPrimitives * _nbVerticesPerPrimitive);
 
@@ -125,9 +128,9 @@ class ObstacleShaderPipeline : public ShaderPipeline {
 
 
 
-bool Application::Init_ObstacleShader() {
-
-
-
-    return true;
-}
+//bool Application::Init_ObstacleShader() {
+//
+//
+//
+//    return true;
+//}

@@ -35,7 +35,6 @@
     </ClCompile>
     <ClCompile Include="..\BasisFluid\Source\Init.cpp" />
     <ClCompile Include="..\BasisFluid\Source\Init_BasisFlows.cpp" />
-    <ClCompile Include="..\BasisFluid\Source\ObstacleShader.h" />
     <ClCompile Include="..\BasisFluid\Source\Init_DataBuffers.cpp" />
     <ClCompile Include="..\BasisFluid\Source\Init_Obstacles.cpp" />
     <ClCompile Include="..\BasisFluid\Source\Obstacles.h" />
@@ -53,6 +52,7 @@
     <ClInclude Include="..\BasisFluid\Source\DataBuffer1D.h" />
     <ClInclude Include="..\BasisFluid\Source\DataBuffer2D.h" />
     <ClInclude Include="..\BasisFluid\Source\GridData2D.h" />
+    <ClInclude Include="..\BasisFluid\Source\ObstacleShader.h" />
     <ClInclude Include="..\BasisFluid\Source\ShaderPipeline.h" />
     <ClInclude Include="..\BasisFluid\Source\Utils.h" />
     <ClInclude Include="..\BasisFluid\Source\VectorField2D.h" />

@@ -140,6 +140,7 @@ public:
     void setCpuData(unsigned int i, T data);
     void setCpuData_noDirty(unsigned int i, T data);
     void dirtyData();
+    void TransferDataCpuToBuffer();
     
     // TODO:
     //void copyFrom(DataBuffer* src);

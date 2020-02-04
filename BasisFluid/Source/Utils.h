@@ -11,11 +11,11 @@ inline bool AtLeastOneBitNotSet(unsigned int bitfield, unsigned int mask) {
     return (~bitfield & mask) != 0;
 }
 
-unsigned int SetBits(unsigned int bitfield, unsigned int mask) {
+inline unsigned int SetBits(unsigned int bitfield, unsigned int mask) {
     return bitfield | mask;
 }
 
-unsigned int UnsetBits(unsigned int bitfield, unsigned int mask) {
+inline unsigned int UnsetBits(unsigned int bitfield, unsigned int mask) {
     return bitfield & ~mask;
 }
 
@@ -66,7 +66,7 @@ inline bool IsInClosedInterval(T x, T min, T max) {
 
 
 // if a linear function has value a at 0 and b at 1, gives the location of the zero. Gives 0.5 if a==b.
-float RatioZero(float a, float b) {
+inline float RatioZero(float a, float b) {
     if(abs(a-b) < 1e-5) return 0.5;
     else return a/(a-b);
 }

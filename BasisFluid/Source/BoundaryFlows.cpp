@@ -96,6 +96,8 @@ BasisFlow Application::ComputeStretch(BasisFlow b, bool staticObstaclesOnly, boo
             case 3:
                 stretchedCorner = &b.stretchedCornerRT;
                 originalCorner = vec2(s.right, s.top); break;
+            default:
+                stretchedCorner = nullptr; break;
             }
 
 
@@ -219,6 +221,8 @@ BasisFlow Application::ComputeStretch(BasisFlow b, bool staticObstaclesOnly, boo
                         stretchedCorner = &b.stretchedCornerRB; break;
                     case 3:
                         stretchedCorner = &b.stretchedCornerRT; break;
+                    default:
+                        stretchedCorner = nullptr; break;
                     }
 
 

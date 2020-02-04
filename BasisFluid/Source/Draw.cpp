@@ -1,6 +1,7 @@
 
 #include "Application.h"
 #include "Obstacles.h"
+#include "ObstacleShader.h"
 
 void Application::Draw()
 {
@@ -93,22 +94,21 @@ void Application::Draw()
     glClearColor(1, 1, 1, 1);
     glClear(GL_COLOR_BUFFER_BIT);
     glClear(GL_DEPTH_BUFFER_BIT);
-    if (_drawGrid) {
-        pipelineGrid->execute();
-    }
-    pipelineParticles->goglu_nbPrimitives.set(particles->metadataBuffer.nbElements);
+    //if (_drawGrid) {
+        //pipelineGrid->execute();
+    //}
+    //pipelineParticles->goglu_nbPrimitives.set(particles->metadataBuffer.nbElements);
 
     if (_obstacleLines->_metadataBuffer.nbElements > 0) {
-        pipelineObstacle->_nbPrimitives = _obstacleLines->_metadataBuffer.nbElements;
-        pipelineObstacle->execute();
+        _pipelineObstacle->Execute();
     }
 
-    if (_showVelocityGrid) {
-        pipelineArrows->execute();
-    }
-    if (_drawParticles) {
-        pipelineParticles->execute();
-    }
+    //if (_showVelocityGrid) {
+    //    pipelineArrows->execute();
+    //}
+    //if (_drawParticles) {
+    //    pipelineParticles->execute();
+    //}
 
 
     glfwSwapBuffers(_glfwWindow);

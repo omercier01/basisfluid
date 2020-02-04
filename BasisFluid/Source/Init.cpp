@@ -1,5 +1,6 @@
 
 #include "Application.h"
+#include "ObstacleShader.h"
 
 #include "glm/glm.hpp"
 #include <GL/glew.h>
@@ -53,6 +54,7 @@ bool Application::Init() {
     // OpenGL
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glDebugMessageCallback(GLDEBUGPROC(Application::DebugCallback), (void*) this);
    
     // Random
     srand((unsigned int)(time(0)));
@@ -82,9 +84,11 @@ bool Application::Init() {
 }
 
 bool Application::Init_Shaders() {
-    if( !Init_ObstacleShader() ) { return false; }
-    if( !Init_ParticleShader() ) { return false; }
-    if( !Init_VelocityArrowsShader() ) { return false; }
+
+    _pipelineObstacle = new ObstacleShaderPipeline();
+    //if( !Init_ObstacleShader() ) { return false; }
+    //if( !Init_ParticleShader() ) { return false; }
+    //if( !Init_VelocityArrowsShader() ) { return false; }
 
     //Init_CSIntegrateAvgBasis();
     //Init_CSIntegrateBasisBasis();

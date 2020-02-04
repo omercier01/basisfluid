@@ -1,7 +1,10 @@
 
 #include "Application.h"
+
 #include <GLFW\glfw3.h>
+
 #include <iostream>
+#include <string>
 
 using namespace std;
 
@@ -63,4 +66,13 @@ void Application::CallbackMouseScroll(GLFWwindow* /*pGlfwWindow*/, double /*xOff
     }
     cout << "Velocity arrow length = " << app->_velocityArrowFactor << "." << endl;
     //pipelineArrows->in_arrowLengthFactor.receive(factor);
+}
+
+
+void Application::DebugCallback(GLenum source, GLenum /*type*/, GLuint /*id*/, GLenum severity, string message)
+{
+    if(severity == GL_DEBUG_SEVERITY_HIGH &&
+       source != GL_DEBUG_SOURCE_APPLICATION){
+        cout << message << endl;
+    }
 }
