@@ -6,6 +6,8 @@
 
 //#include "../Application.h"
 
+using namespace glm;
+
 template<class T>
 DataBuffer2D<T>::DataBuffer2D(unsigned int sizeX, unsigned int sizeY)
     //dataCpu(*this),
@@ -31,26 +33,26 @@ void DataBuffer2D<T>::createCpuStorage()
 template<class T>
 void DataBuffer2D<T>::deleteCpuStorage()
 {
-    delete[] mpData;
+    delete[] _dataCpu;
     _hasCpuStorage = false;
 }
 
-template<class T>
-void DataBuffer2D<T>::createBufferStorage()
-{
-    glCreateBuffers(1, &_glidBuffer);
-    glNamedBufferStorage(_glidBuffer, dataSizeInBytes(), NULL,
-                            GL_DYNAMIC_STORAGE_BIT | GL_MAP_READ_BIT |
-                            GL_MAP_WRITE_BIT);
-    _hasBufferStorage = true;
-}
-
-template<class T>
-void DataBuffer2D<T>::deleteBufferStorage()
-{
-    glDeleteBuffers(1, &_glidBuffer);
-    mbHasBufferStorage = false;
-}
+//template<class T>
+//void DataBuffer2D<T>::createBufferStorage()
+//{
+//    glCreateBuffers(1, &_glidBuffer);
+//    glNamedBufferStorage(_glidBuffer, dataSizeInBytes(), NULL,
+//                            GL_DYNAMIC_STORAGE_BIT | GL_MAP_READ_BIT |
+//                            GL_MAP_WRITE_BIT);
+//    _hasBufferStorage = true;
+//}
+//
+//template<class T>
+//void DataBuffer2D<T>::deleteBufferStorage()
+//{
+//    glDeleteBuffers(1, &_glidBuffer);
+//    _hasBufferStorage = false;
+//}
 
 template<class T>
 void DataBuffer2D<T>::createTexture2DStorage(
@@ -122,7 +124,7 @@ template<class T>
 void DataBuffer2D<T>::deleteTexture2DStorage()
 {
     glDeleteTextures(1, &_glidTexture2D);
-    _hasTexture1DStorage = false;
+    _hasTexture2DStorage = false;
 }
 
 //template<class T>
@@ -246,8 +248,8 @@ T DataBuffer2D<T>::interp(glm::vec2 pos)
     int mNbCellsX = _nbElementsX;
     int mNbCellsY = _nbElementsY;
 
-    float normalizedX = (x - mBoundXMin)/(mBoundXMax - mBoundXMin)*mNbCellsX;
-    float normalizedY = (y - mBoundYMin)/(mBoundYMax - mBoundYMin)*mNbCellsY;
+    float normalizedX = (x - _boundXMin)/(_boundXMax - _boundXMin)*mNbCellsX;
+    float normalizedY = (y - _boundYMin)/(_boundYMax - _boundYMin)*mNbCellsX;
 
 
 
@@ -352,11 +354,11 @@ void DataBuffer2D<T>::resize(unsigned int newSizeX, unsigned int newSizeY)
     _nbElementsY = newSizeY;
 }
 
-template<class T>
-void DataBuffer2D<T>::bindBufferToTarget(GLenum target)
-{
-    glBindBuffer(target, _glidBuffer);
-}
+//template<class T>
+//void DataBuffer2D<T>::bindBufferToTarget(GLenum target)
+//{
+//    glBindBuffer(target, _glidBuffer);
+//}
 
 
 template <class T>

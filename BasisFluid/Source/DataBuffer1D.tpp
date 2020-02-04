@@ -87,7 +87,7 @@ void DataBuffer1D<T>::createCpuStorage()
 template<class T>
 void DataBuffer1D<T>::deleteCpuStorage()
 {
-    delete[] dataCpu;
+    delete[] _dataCpu;
     _hasCpuStorage = false;
 }
 

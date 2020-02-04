@@ -15,11 +15,11 @@ public:
     enum class GridNodeLocation{ CENTER, CORNER };
 public:
 //private:
-    DataBuffer2D<T> mData;
+    DataBuffer2D<T> _data;
 //    DataBuffer2D<glm::vec2> mNodePositions;
-    float mBoundXMin, mBoundXMax, mBoundYMin, mBoundYMax;
-    unsigned int mNbCellsX, mNbCellsY;
-    GridNodeLocation mGridNodeLocation;
+    float _boundXMin, _boundXMax, _boundYMin, _boundYMax;
+    unsigned int _nbCellsX, _nbCellsY;
+    GridNodeLocation _gridNodeLocation;
 public:
     GridData2D(float boundXMin, float boundXMax, float boundYMin,
              float boundYMax, unsigned int nbCellsX, unsigned int nbCellsY,

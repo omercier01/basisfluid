@@ -1,7 +1,8 @@
 
+#include "ObstacleShader.h"
 #include "Application.h"
 #include "Obstacles.h"
-#include "ObstacleShader.h"
+
 
 void Application::Draw()
 {

@@ -235,6 +235,7 @@ public:
     bool _newRCoeffComputed  = false;
     unsigned int _frameCount = 0;
     bool _obstacleDisplayNeedsUpdating = true;
+    bool _basisStretchedUpdateRequired = true;
 
 };
 

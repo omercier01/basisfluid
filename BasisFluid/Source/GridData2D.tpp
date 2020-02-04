@@ -8,23 +8,23 @@ GridData2D<T>::GridData2D(float parBoundXMin, float parBoundXMax, float parBound
                           float parBoundYMax, unsigned int nbCellsX,
                           unsigned int nbCellsY,
                           GridNodeLocation gridNodeLocation) :
-    mNbCellsX(nbCellsX),
-    mNbCellsY(nbCellsY),
-    mData(1, 1),
-    mGridNodeLocation(gridNodeLocation)
+    _nbCellsX(nbCellsX),
+    _nbCellsY(nbCellsY),
+    _data(1, 1),
+    _gridNodeLocation(gridNodeLocation)
 {
-    mBoundXMin = parBoundXMin;
-    mBoundXMax = parBoundXMax;
-    mBoundYMin = parBoundYMin;
-    mBoundYMax = parBoundYMax;
+    _boundXMin = parBoundXMin;
+    _boundXMax = parBoundXMax;
+    _boundYMin = parBoundYMin;
+    _boundYMax = parBoundYMax;
 
     // resizes, but does not necessarily allocate the data.
     switch(gridNodeLocation) {
     case GridNodeLocation::CENTER:
-        mData.resize(nbCellsX, nbCellsY);
+        _data.resize(nbCellsX, nbCellsY);
         break;
     case GridNodeLocation::CORNER:
-        mData.resize(nbCellsX+1, nbCellsY+1);
+        _data.resize(nbCellsX+1, nbCellsY+1);
         break;
     }
 
@@ -34,36 +34,36 @@ GridData2D<T>::GridData2D(float parBoundXMin, float parBoundXMax, float parBound
 template <class T>
 void GridData2D<T>::setCpuData(unsigned int i, unsigned int j, T data)
 {
-    mData.setCpuData(i, j, data);
+    _data.setCpuData(i, j, data);
 }
 
 template <class T>
 T GridData2D<T>::getCpuData(unsigned int i, unsigned int j)
 {
-    return mData.getCpuData(i, j);
+    return _data.getCpuData(i, j);
 }
 
 template <class T>
 T GridData2D<T>::getCpuData_noRefresh(unsigned int i, unsigned int j)
 {
-    return mData.getCpuData_noRefresh(i, j);
+    return _data.getCpuData_noRefresh(i, j);
 }
 
 template <class T>
 void GridData2D<T>::createCpuStorage()
 {
-    mData.createCpuStorage();
+    _data.createCpuStorage();
 }
 
 template <class T>
 unsigned int GridData2D<T>::nbElementsX()
 {
-    switch(mGridNodeLocation) {
+    switch(_gridNodeLocation) {
     case GridNodeLocation::CENTER:
-        return mNbCellsX;
+        return _nbCellsX;
         break;
     case GridNodeLocation::CORNER:
-        return mNbCellsX + 1;
+        return _nbCellsX + 1;
         break;
     default:
         // TODO: error, unknows grid location type.
@@ -74,12 +74,12 @@ unsigned int GridData2D<T>::nbElementsX()
 template <class T>
 unsigned int GridData2D<T>::nbElementsY()
 {
-    switch(mGridNodeLocation) {
+    switch(_gridNodeLocation) {
     case GridNodeLocation::CENTER:
-        return mNbCellsY;
+        return _nbCellsY;
         break;
     case GridNodeLocation::CORNER:
-        return mNbCellsY + 1;
+        return _nbCellsY + 1;
         break;
     default:
         // TODO: error, unknows grid location type.
@@ -92,41 +92,41 @@ uvec2 GridData2D<T>::pointToClosestIndex(vec2 point)
 {
     uvec2 index;
 
-    float normalizedX = (point.x - mBoundXMin)/(mBoundXMax - mBoundXMin)*mNbCellsX;
-    float normalizedY = (point.y - mBoundYMin)/(mBoundYMax - mBoundYMin)*mNbCellsY;
+    float normalizedX = (point.x - _boundXMin)/(_boundXMax - _boundXMin)*_nbCellsX;
+    float normalizedY = (point.y - _boundYMin)/(_boundYMax - _boundYMin)*_nbCellsY;
 
 
-    switch(mGridNodeLocation) {
+    switch(_gridNodeLocation) {
     case GridNodeLocation::CENTER :
         if(normalizedX < 0) {
             index.x = 0;
-        } else if(normalizedX >= mNbCellsX) {
-            index.x = mNbCellsX-1;
+        } else if(normalizedX >= _nbCellsX) {
+            index.x = _nbCellsX-1;
         } else {
-            index.x = clamp<unsigned int>((unsigned int)(std::floor(normalizedX)), 0, mNbCellsX-1);
+            index.x = clamp<unsigned int>((unsigned int)(std::floor(normalizedX)), 0, _nbCellsX-1);
         }
         if(normalizedY < 0) {
             index.y = 0;
-        } else if(normalizedY >= mNbCellsY) {
-            index.y = mNbCellsY-1;
+        } else if(normalizedY >= _nbCellsY) {
+            index.y = _nbCellsY-1;
         } else {
-            index.y = clamp<unsigned int>((unsigned int)(std::floor(normalizedY)), 0, mNbCellsY-1);
+            index.y = clamp<unsigned int>((unsigned int)(std::floor(normalizedY)), 0, _nbCellsY-1);
         }
         break;
     case GridNodeLocation::CORNER :
         if(normalizedX < 0) {
             index.x = 0;
-        } else if(normalizedX >= mNbCellsX) {
-            index.x = mNbCellsX;
+        } else if(normalizedX >= _nbCellsX) {
+            index.x = _nbCellsX;
         } else {
-            index.x = clamp<int>(int(floor(normalizedX + 0.5)), 0, mNbCellsX);
+            index.x = clamp<int>(int(floor(normalizedX + 0.5)), 0, _nbCellsX);
         }
         if(normalizedY < 0) {
             index.y = 0;
-        } else if(normalizedY >= mNbCellsY) {
-            index.y = mNbCellsY;
+        } else if(normalizedY >= _nbCellsY) {
+            index.y = _nbCellsY;
         } else {
-            index.y = clamp<int>(int(floor(normalizedY + 0.5)), 0, mNbCellsY);
+            index.y = clamp<int>(int(floor(normalizedY + 0.5)), 0, _nbCellsY);
         }
         break;
     }
@@ -140,14 +140,14 @@ vec2 GridData2D<T>::indexToPosition(uvec2 index)
 {
     vec2 pos;
 
-    switch(mGridNodeLocation) {
+    switch(_gridNodeLocation) {
     case GridNodeLocation::CENTER :
-        pos.x = boundXMin.get() + (index.x + 0.5f)*(boundXMax.get()-boundXMin.get())/mNbCellsX;
-        pos.y = boundYMin.get() + (index.y + 0.5f)*(boundYMax.get()-boundYMin.get())/mNbCellsY;
+        pos.x = _boundXMin + (index.x + 0.5f)*(_boundXMax-_boundXMin)/_nbCellsX;
+        pos.y = _boundYMin + (index.y + 0.5f)*(_boundYMax-_boundYMin)/_nbCellsY;
         break;
     case GridNodeLocation::CORNER :
-        pos.x = boundXMin.get() + (index.x)*(boundXMax.get()-boundXMin.get())/mNbCellsX;
-        pos.y = boundYMin.get() + (index.y)*(boundYMax.get()-boundYMin.get())/mNbCellsY;
+        pos.x = _boundXMin + (index.x)*(_boundXMax-_boundXMin)/_nbCellsX;
+        pos.y = _boundYMin + (index.y)*(_boundYMax-_boundYMin)/_nbCellsY;
         break;
     }
 

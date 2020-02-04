@@ -76,8 +76,8 @@ public:
 //    T& operator()(unsigned int x, unsigned int y);
     void createCpuStorage();
     void deleteCpuStorage();
-    void createBufferStorage();
-    void deleteBufferStorage();
+    //void createBufferStorage();
+    //void deleteBufferStorage();
     void createTexture2DStorage(GLenum internalFormat, GLenum sizedInternalFormat,
                                 GLenum externalFormat, GLenum sizedExternalFormat,
                                 unsigned int nbMipmapLevels);
