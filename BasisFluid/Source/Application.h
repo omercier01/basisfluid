@@ -34,6 +34,7 @@
 #define INTEGRAL_GPU_GROUP_DIM 32
 #define STRETCH_BAND_RATIO 0.5f
 #define NB_NEWTON_ITERATIONS_INVERSION 3
+#define USE_LINEAR_COEFFS_TRANSPORT 1
 
 #define PARTICLE_CIRCULAR_BUFFER        1
 #define NB_PARTICLES_TO_SEED_PER_DIM    10
@@ -92,7 +93,10 @@ public:
     void InverseBBMatrix(
         DataBuffer1D<scalar_inversion_storage>* vecX,
         DataBuffer1D<scalar_inversion_storage>* vecB,
-        float tol, unsigned int basisBitMask, unsigned int minFreq);
+        float tol = 1e-5f,
+        unsigned int basisBitMask = 0,
+        unsigned int minFreq = 0);
+
 
 
     void SaveCoeffsBB(std::string filename);
@@ -117,6 +121,15 @@ public:
     void SetParticlesInAccelGrid();
     void ComputeParticleAdvection();
     void SeedParticles();
+
+    void AddParticleForcesToBasisFlows();
+    float ComputeNewCenterProportions(vec2& newCenter, BasisFlow& bi, BasisFlow& bj, vec2& interBasisDist);
+    void ComputeBasisAdvection();
+    
+    inline float WavenumberBasis(BasisFlow& b)
+    {
+        return powf(2.f,0.5f*(b.freqLvl.x+b.freqLvl.y)) ;
+    }
 
 public:
     static void CallbackWindowClosed(GLFWwindow* pGlfwWindow);
@@ -192,16 +205,23 @@ public:
 
     // integration buffers
     //DataBuffer2D<std::vector<unsigned int>*> _accelBasisCentersIds = nullptr;
-    std::unique_ptr<DataBuffer2D<std::vector<unsigned int>>> _accelBasisCentersIds = nullptr;
+    //std::unique_ptr<DataBuffer2D<std::vector<unsigned int>>> _accelBasisCentersIds = nullptr;
+    std::unique_ptr<DataBuffer2D<std::vector<unsigned int>*>> _accelBasisCentersIds = nullptr;
     std::unique_ptr<DataBuffer2D<vec4>> _integrationGridGpu = nullptr;
     std::unique_ptr<DataBuffer1D<vec4>> _integrationTransferBufferGpu = nullptr;
     std::unique_ptr<DataBuffer1D<float>> _integrationMultipleTransferBufferGpu = nullptr;
     std::unique_ptr<DataBuffer1D<vec2>> _integrationBasisCentersBufferGpu = nullptr;
-    std::unique_ptr<DataBuffer1D<std::vector<unsigned int>>> _intersectingBasesIds = nullptr;
-    std::unique_ptr<DataBuffer1D<std::vector<unsigned int>>> _intersectingBasesSignificantBBIds = nullptr;
-    std::unique_ptr<DataBuffer1D<std::vector<unsigned int>>> _intersectingBasesIdsTransport = nullptr;
-    std::unique_ptr<DataBuffer1D<std::vector<CoeffBBDecompressedIntersectionInfo>>>
+    std::unique_ptr<DataBuffer1D<std::vector<unsigned int>*>> _intersectingBasesIds = nullptr;
+    std::unique_ptr<DataBuffer1D<std::vector<unsigned int>*>> _intersectingBasesSignificantBBIds = nullptr;
+    std::unique_ptr<DataBuffer1D<std::vector<unsigned int>*>> _intersectingBasesIdsTransport = nullptr;
+    std::unique_ptr<DataBuffer1D<std::vector<CoeffBBDecompressedIntersectionInfo>*>>
         _intersectingBasesIdsDeformation[_nbExplicitTransferFreqs];
+
+    struct ExplicitTransferCoeffs {
+        float coeffs[_nbExplicitTransferFreqs];
+    };
+    std::vector<ExplicitTransferCoeffs> _coeffBBExplicitTransferSum_abs;
+    std::vector<ExplicitTransferCoeffs> _coeffBBExplicitTransferSum_sqr;
 
     std::vector<Obstacle*> _obstacles;
 
@@ -233,12 +253,30 @@ public:
     uint _nbStretchLoops = 10;
     float _obstacleSpeed = 1.f;
     float _dt = 0.0325f;
+    float _buoyancyPerParticle = 0.0125f;
     float _obstacleRadius = 0.2f;
     glm::mat4 _viewProjMat = {1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1};
     uint _substepsParticles = 1;
     float _seedCenterX = 0.f;
     float _seedCenterY = -0.75f;
     float _seedRadius = 0.1f;
+    const float _densityMultiplierBasisHalfSize = 1.f/2.f;
+    float _forceDecayRatioWithAge = 1.f;
+    uint _substepsDeformation = 1;
+    float _explicitTransferSpeed = 0.1f;
+    float _explicitTransferExponent = -1.66f;
+    bool _explicitDissipateHighFreqs = false;
+    bool _convertTransportLeakToDeformation = true;
+    bool _allowTransportLeak = true;
+    float _factorDeformation = 0.5f;
+    float _obstacleBoundaryFactorTransferOnly = 1.5f;
+
+    float _explicitTransfer_10 = 0.f;
+    float _explicitTransfer_01 = 0.f;
+    float _explicitTransfer_11 = 1.f;
+    float _explicitTransfer_m10 = 0.f;
+    float _explicitTransfer_0m1 = 0.f;
+    float _explicitTransfer_m1m1 = 0.f;
 
     // Status
     bool _readyToQuit = false;

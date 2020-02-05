@@ -189,10 +189,10 @@ bool Application::Init_DataBuffers() {
     _vecB->createCpuStorage();
 
 
-    /*_accelBasisCentersIds = new DataBuffer2D<std::vector<unsigned int>*>(accelBasisRes, accelBasisRes);
-    _accelBasisCentersIds->sourceStorageType = DataBuffer2D<std::vector<unsigned int>*>::StorageType::CPU;*/
-    _accelBasisCentersIds = make_unique<DataBuffer2D<std::vector<unsigned int>>>(_accelBasisRes, _accelBasisRes);
-    _accelBasisCentersIds->_sourceStorageType = DataBuffer2D<std::vector<unsigned int>>::StorageType::CPU;
+    _accelBasisCentersIds = make_unique<DataBuffer2D<std::vector<unsigned int>*>>(_accelBasisRes, _accelBasisRes);
+    _accelBasisCentersIds->_sourceStorageType = DataBuffer2D<std::vector<unsigned int>*>::StorageType::CPU;
+    //_accelBasisCentersIds = make_unique<DataBuffer2D<std::vector<unsigned int>>>(_accelBasisRes, _accelBasisRes);
+    //_accelBasisCentersIds->_sourceStorageType = DataBuffer2D<std::vector<unsigned int>>::StorageType::CPU;
     _accelBasisCentersIds->createCpuStorage();
     /*for (uint i = 0; i < accelBasisRes; i++) {
         for (uint j = 0; j < accelBasisRes; j++) {
@@ -230,30 +230,30 @@ bool Application::Init_DataBuffers() {
     _integrationBasisCentersBufferGpu->_sourceStorageType = DataBuffer1D<vec2>::StorageType::BUFFER;
 
 
-    //_intersectingBasesIds = make_unique<DataBuffer1D<std::vector<unsigned int>*>>(0);
-    _intersectingBasesIds = make_unique<DataBuffer1D<vector<unsigned int>>>(0);
+    _intersectingBasesIds = make_unique<DataBuffer1D<vector<unsigned int>*>>(0);
+    //_intersectingBasesIds = make_unique<DataBuffer1D<vector<unsigned int>>>(0);
     _intersectingBasesIds->createCpuStorage();
-    //_intersectingBasesIds->_sourceStorageType = DataBuffer1D<vector<unsigned int>*>::StorageType::CPU;
-    _intersectingBasesIds->_sourceStorageType = DataBuffer1D<vector<unsigned int>>::StorageType::CPU;
+    _intersectingBasesIds->_sourceStorageType = DataBuffer1D<vector<unsigned int>*>::StorageType::CPU;
+    //_intersectingBasesIds->_sourceStorageType = DataBuffer1D<vector<unsigned int>>::StorageType::CPU;
 
-    //_intersectingBasesSignificantBBIds = make_unique<DataBuffer1D<std::vector<unsigned int>*>>(0);
-    _intersectingBasesSignificantBBIds = make_unique<DataBuffer1D<vector<unsigned int>>>(0);
+    _intersectingBasesSignificantBBIds = make_unique<DataBuffer1D<std::vector<unsigned int>*>>(0);
+    //_intersectingBasesSignificantBBIds = make_unique<DataBuffer1D<vector<unsigned int>>>(0);
     _intersectingBasesSignificantBBIds->createCpuStorage();
-    //_intersectingBasesSignificantBBIds->sourceStorageType = DataBuffer1D<std::vector<unsigned int>*>::StorageType::CPU;
-    _intersectingBasesSignificantBBIds->_sourceStorageType = DataBuffer1D<vector<unsigned int>>::StorageType::CPU;
+    _intersectingBasesSignificantBBIds->_sourceStorageType = DataBuffer1D<std::vector<unsigned int>*>::StorageType::CPU;
+    //_intersectingBasesSignificantBBIds->_sourceStorageType = DataBuffer1D<vector<unsigned int>>::StorageType::CPU;
 
-    //_intersectingBasesIdsTransport = make_unique<DataBuffer1D<std::vector<unsigned int>*>>(0);
-    _intersectingBasesIdsTransport = make_unique<DataBuffer1D<vector<unsigned int>>>(0);
+    _intersectingBasesIdsTransport = make_unique<DataBuffer1D<std::vector<unsigned int>*>>(0);
+    //_intersectingBasesIdsTransport = make_unique<DataBuffer1D<vector<unsigned int>>>(0);
     _intersectingBasesIdsTransport->createCpuStorage();
-    //_intersectingBasesIdsTransport->sourceStorageType = DataBuffer1D<std::vector<unsigned int>*>::StorageType::CPU;
-    _intersectingBasesIdsTransport->_sourceStorageType = DataBuffer1D<vector<unsigned int>>::StorageType::CPU;
+    _intersectingBasesIdsTransport->_sourceStorageType = DataBuffer1D<std::vector<unsigned int>*>::StorageType::CPU;
+    //_intersectingBasesIdsTransport->_sourceStorageType = DataBuffer1D<vector<unsigned int>>::StorageType::CPU;
 
     for (int iRelFreq = 0; iRelFreq < _nbExplicitTransferFreqs; iRelFreq++) {
-        //_intersectingBasesIdsDeformation[iRelFreq] = make_unique<DataBuffer1D<std::vector<CoeffBBDecompressedIntersectionInfo>*>>(0);
-        _intersectingBasesIdsDeformation[iRelFreq] = make_unique<DataBuffer1D<vector<CoeffBBDecompressedIntersectionInfo>>>(0);
+        _intersectingBasesIdsDeformation[iRelFreq] = make_unique<DataBuffer1D<std::vector<CoeffBBDecompressedIntersectionInfo>*>>(0);
+        //_intersectingBasesIdsDeformation[iRelFreq] = make_unique<DataBuffer1D<vector<CoeffBBDecompressedIntersectionInfo>>>(0);
         _intersectingBasesIdsDeformation[iRelFreq]->createCpuStorage();
-        //_intersectingBasesIdsDeformation[iRelFreq]->sourceStorageType = DataBuffer1D<std::vector<CoeffBBDecompressedIntersectionInfo>*>::StorageType::CPU;
-        _intersectingBasesIdsDeformation[iRelFreq]->_sourceStorageType = DataBuffer1D<vector<CoeffBBDecompressedIntersectionInfo>>::StorageType::CPU;
+        _intersectingBasesIdsDeformation[iRelFreq]->_sourceStorageType = DataBuffer1D<std::vector<CoeffBBDecompressedIntersectionInfo>*>::StorageType::CPU;
+        //_intersectingBasesIdsDeformation[iRelFreq]->_sourceStorageType = DataBuffer1D<vector<CoeffBBDecompressedIntersectionInfo>>::StorageType::CPU;
     }
 
 
