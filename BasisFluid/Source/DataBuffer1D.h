@@ -137,10 +137,10 @@ public:
     T getCpuData(unsigned int i);
     T getCpuData_noRefresh(unsigned int i) const;
     T* getCpuDataPointer();
-    void refreshCpuData();
+    //void refreshCpuData();
     void setCpuData(unsigned int i, T data);
     void setCpuData_noDirty(unsigned int i, T data);
-    void dirtyData();
+    //void dirtyData();
     void TransferDataCpuToBuffer();
     
     // TODO:

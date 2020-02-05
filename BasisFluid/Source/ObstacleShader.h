@@ -37,14 +37,6 @@ public:
             }
         )";
 
-        ShaderProgram* vertexShaderObstacle =
-            new ShaderPipeline::ShaderProgram(GL_VERTEX_SHADER,
-                { vertexSource }, true);
-
-        ShaderProgram* fragmentShaderObstacle =
-            new ShaderPipeline::ShaderProgram(GL_FRAGMENT_SHADER,
-                { fragmentSource }, true);
-
         UseShaders({
             new ShaderPipeline::ShaderProgram(GL_VERTEX_SHADER  , {vertexSource  }, true),
             new ShaderPipeline::ShaderProgram(GL_FRAGMENT_SHADER, {fragmentSource}, true)
@@ -85,13 +77,15 @@ public:
         glBindProgramPipeline(_glidProgramPipeline);
         glBindVertexArray(_glidVao);
         glVertexArrayVertexBuffer(
-            _glidVao, bufferLineSegmentsVertices_loc,
+            _glidVao,
+            bufferLineSegmentsVertices_loc,
             app->_obstacleLines->_metadataBuffer.bufferId,
             0,
             app->_obstacleLines->_metadataBuffer.nbElementsPerComponent *
-            SizeOfEnumType(app->_obstacleLines->_metadataBuffer.dataType));
+                SizeOfEnumType(app->_obstacleLines->_metadataBuffer.dataType));
         glVertexArrayAttribFormat(
-            _glidVao, bufferLineSegmentsVertices_loc,
+            _glidVao,
+            bufferLineSegmentsVertices_loc,
             bufferLineSegmentsVertices_nbComponents,
             app->_obstacleLines->_metadataBuffer.dataType,
             GL_FALSE,

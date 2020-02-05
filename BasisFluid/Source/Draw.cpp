@@ -1,5 +1,6 @@
 
 #include "ObstacleShader.h"
+#include "ParticleShader.h"
 #include "Application.h"
 #include "Obstacles.h"
 
@@ -107,9 +108,11 @@ void Application::Draw()
     //if (_showVelocityGrid) {
     //    pipelineArrows->execute();
     //}
-    //if (_drawParticles) {
-    //    pipelineParticles->execute();
-    //}
+
+    if (_drawParticles) {
+        _partPos->TransferDataCpuToBuffer();
+        _pipelineParticle->Execute();
+    }
 
 
     glfwSwapBuffers(_glfwWindow);

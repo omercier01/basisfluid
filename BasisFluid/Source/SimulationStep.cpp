@@ -23,4 +23,154 @@ void Application::SimulationStep()
             }
         }
     }
+
+    // set prevBitFlags
+    BasisFlow* basisFlowParamsPointer = _basisFlowParams->getCpuDataPointer();
+    for(unsigned int iBasis = 0; iBasis < _basisFlowParams->_nbElements; ++iBasis) {
+        BasisFlow& b = basisFlowParamsPointer[iBasis];
+        b.prevBitFlags = b.bitFlags;
+        b.coeffBoundary = 0;
+    }
+
+
+
+    // compute stretch ratio, "valid" bool, and stretchedCorners
+    if (_basisStretchedUpdateRequired)
+    {
+    
+        // Reset flags
+        BasisFlow* basisFlowParamsPointer = _basisFlowParams->getCpuDataPointer();
+        for(unsigned int i=0; i<_basisFlowParams->_nbElements; ++i) {
+            basisFlowParamsPointer[i].bitFlags = 0;
+            //basisFlowParamsPointer[i].coeffBoundary = 0;
+        }
+    
+        ComputeStretches();
+        _basisStretchedUpdateRequired = false;
+        
+        _basisFlowParams->_sourceStorageType = DataBuffer1D<BasisFlow>::StorageType::CPU;
+        
+        // save stretch flags
+        for(unsigned int i=0; i<_basisFlowParams->_nbElements; ++i) {
+            basisFlowParamsPointer[i].stretchBitFlags = basisFlowParamsPointer[i].bitFlags;
+        }
+    }
+    
+    for(unsigned int i=0; i<_basisFlowParams->_nbElements; ++i) {
+        basisFlowParamsPointer[i].bitFlags = basisFlowParamsPointer[i].stretchBitFlags;
+    }
+
+
+
+
+    if(_stepSimulation && _seedParticles)
+    {
+        SetParticlesInAccelGrid();
+    }
+
+
+//
+//    if(tw->dynamicObstaclesMoveVelocities.get())
+//    {
+//        // project dynamic obstacle boundary on bases (reusing forces grid)
+//    
+//        cout << "Dynamic obstacles..." << endl;
+//    
+//        float dt = tw->dt.get();
+//        float boundaryPhiBandDecrease = tw->boundaryPhiBandDecrease.get();
+//        float obstacleBoundaryFactor = tw->obstacleBoundaryFactor.get();
+//        float obstacleBoundaryFactorTransferOnly = tw->obstacleBoundaryFactorTransferOnly.get();
+//    
+//        time1 = elapsedTime();
+//        
+//        // clear forces
+//        #if SIM3D
+//            forces->populateWithFunction([=](float /*x*/, float /*y*/, float /*z*/){ return vec3(0); });
+//        #else
+//            forces->populateWithFunction([=](float /*x*/, float /*y*/){ return vec2(0); });
+//        #endif
+//        
+//        
+//        for(Obstacle* obs : obstacles)
+//        {
+//            if(obs->dynamic)
+//            {
+//                #if SIM3D
+//                    forces->addFunction([=](float x, float y, float z){
+//                        float phi = obs->phi(vec3(x,y,z));
+//                        return 
+////                            phi > 0.0 ?
+////                            vec3(0) :
+//                            -( obstacleBoundaryFactor * (phi - obs->prevPhi(vec3(x,y,z))) / dt * obs->gradPhi(vec3(x,y,z)) )
+//                        ;
+//                    });
+//                #else
+//                    forces->addFunction([=](float x, float y){
+//                        float phi = obs->phi(vec2(x,y));
+//                        return 
+////                            phi > 0.0 ?
+////                            vec2(0) :
+//                            -( obstacleBoundaryFactor * (phi - obs->prevPhi(vec2(x,y))) / dt * obs->gradPhi(vec2(x,y)) ) * glm::max<float>(1.f - abs(phi)/boundaryPhiBandDecrease, 0.f)
+//                        ;
+//                    });
+//                #endif
+//                    //( (obstacleCenter-oldObstacleCenter)/dt.get() );
+//            }
+//        }
+//        forces->mVectors.sourceStorageType = DATABUFFERD<FVECD>::StorageType::CPU;
+//        forces->mVectors.dirtyData();
+//
+//
+//        BasisFlow* basisFlowParamsPointer = basisFlowParams->getCpuDataPointer();
+//                
+//        #if DEF_COEFF_COMPUTE_GPU && INTEGRATE_BASIS_ONE_BASIS_PER_INVOCATION    
+//         
+//            integrateBasisGrid_onePerInvocation();
+//            
+//        #else   
+//            scalar_inversion_storage* vecBPointer = vecB->getCpuDataPointer();
+//            for(unsigned int iBasis=0; iBasis<basisFlowParams->mNbElements; ++iBasis)
+//            {
+//                BasisFlow& b = basisFlowParamsPointer[iBasis];
+//                vecBPointer[iBasis] = integrateBasisGrid(b, forces);
+//            }
+//        #endif
+//    
+//        //inverseBBMatrix(vecX,vecB,inversionPrecision);
+//        inverseBBMatrix(vecXBoundaryForces,vecB,inversionPrecision, BASIS_FLAGS::DYNAMIC_BOUNDARY_PROJECTION);
+//        
+//        scalar_inversion_storage* vecXBoundaryForcesPointer = vecXBoundaryForces->getCpuDataPointer();    
+//        for(unsigned int i=0; i<basisFlowParams->mNbElements; ++i) {
+////            cout << vecXBoundaryForcesPointer[i] << endl;
+//            
+////            basisFlowParamsPointer[i].coeffBoundary = float(vecXBoundaryForcesPointer[i]);
+////            basisFlowParamsPointer[i].coeff += obstacleBoundaryFactorTransferOnly*basisFlowParamsPointer[i].coeffBoundary;
+//            
+//              basisFlowParamsPointer[i].coeffBoundary = float(vecXBoundaryForcesPointer[i]);
+//            
+////            basisFlowParamsPointer[i].coeffBoundary = float(vecXBoundaryForcesPointer[i]);
+////            basisFlowParamsPointer[i].coeff = basisFlowParamsPointer[i].coeffBoundary;
+//        }
+//        
+//        time2 = elapsedTime();
+//        if(tw->outputProfileText.get()) {cout << "time project object velocity on boundary: " << time2-time1 << endl;}
+//    }
+//
+//
+//
+//    ComputeBasisAdvection();
+//
+//
+//    AddParticleForcesToBases();
+
+
+    ComputeParticleAdvection();
+
+
+    if(_seedParticles)
+    {
+        SeedParticles();
+    }
+
+
 }

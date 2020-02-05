@@ -35,6 +35,10 @@
 #define STRETCH_BAND_RATIO 0.5f
 #define NB_NEWTON_ITERATIONS_INVERSION 3
 
+#define PARTICLE_CIRCULAR_BUFFER        1
+#define NB_PARTICLES_TO_SEED_PER_DIM    10
+#define MAX_NB_PARTICLE_SEED_GROUPS     1000
+
 #if INVERSION_INNER_DOUBLE_PRECISION
 typedef double scalar_inversion_inner;
 #else
@@ -50,6 +54,7 @@ typedef float scalar_inversion_storage;
 
 class Obstacle;
 class ObstacleShaderPipeline;
+class ParticleShaderPipeline;
 
 
 // Global class to manage program execution
@@ -109,6 +114,10 @@ public:
     mat2 QuadCoordInvDeriv(vec2 uv, BasisFlow const& b);
     vec2 VecObstacle_stretch(vec2 p, BasisFlow const& b);
 
+    void SetParticlesInAccelGrid();
+    void ComputeParticleAdvection();
+    void SeedParticles();
+
 public:
     static void CallbackWindowClosed(GLFWwindow* pGlfwWindow);
     static void CallbackKey(GLFWwindow* pGlfwWindow, int key, int scancode, int action, int mods);
@@ -167,8 +176,7 @@ public:
     std::unique_ptr<DataBuffer1D<vec2>> _partPos = nullptr;
     std::unique_ptr<DataBuffer1D<vec2>> _partVecs = nullptr;
     std::unique_ptr<DataBuffer1D<float>> _partAges = nullptr;
-    //std::unique_ptr<GridData2D<std::vector<unsigned int>*>> _accelParticles = nullptr;
-    std::unique_ptr<GridData2D<std::vector<unsigned int>>> _accelParticles = nullptr;
+    std::unique_ptr<GridData2D<std::vector<unsigned int>*>> _accelParticles = nullptr;
 
     // draw buffers
     std::unique_ptr<DataBuffer1D<vec2>> _bufferGridPoints = nullptr;
@@ -207,6 +215,7 @@ public:
             
     // shader pipelines
     ObstacleShaderPipeline* _pipelineObstacle;
+    ParticleShaderPipeline* _pipelineParticle;
 
     // Parameters
     bool _seedParticles = true;
@@ -226,6 +235,10 @@ public:
     float _dt = 0.0325f;
     float _obstacleRadius = 0.2f;
     glm::mat4 _viewProjMat = {1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1};
+    uint _substepsParticles = 1;
+    float _seedCenterX = 0.f;
+    float _seedCenterY = -0.75f;
+    float _seedRadius = 0.1f;
 
     // Status
     bool _readyToQuit = false;
@@ -236,6 +249,8 @@ public:
     unsigned int _frameCount = 0;
     bool _obstacleDisplayNeedsUpdating = true;
     bool _basisStretchedUpdateRequired = true;
+    unsigned int _particleCircularSeedId = 0;
+    bool _particleSeedBufferLooped = false;
 
 };
 

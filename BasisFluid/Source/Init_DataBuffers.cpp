@@ -124,17 +124,17 @@ bool Application::Init_DataBuffers() {
 
     // acceleration grid for particles
     //_accelParticles = make_unique<GridData2D<vector<unsigned int>*>>(
-    _accelParticles = make_unique<GridData2D<vector<unsigned int>>>(
+    _accelParticles = make_unique<GridData2D<vector<unsigned int>*>>(
         _domainLeft, _domainRight,
         _domainBottom, _domainTop,
         _accelParticlesRes, _accelParticlesRes
         );
     _accelParticles->createCpuStorage();
-    //for (uint i = 0; i < _accelParticlesRes; i++) {
-    //    for (uint j = 0; j < _accelParticlesRes; j++) {
-    //        _accelParticles->setCpuData(i, j, new vector<unsigned int>);
-    //    }
-    //}
+    for (uint i = 0; i < _accelParticlesRes; i++) {
+        for (uint j = 0; j < _accelParticlesRes; j++) {
+            _accelParticles->setCpuData(i, j, new vector<unsigned int>);
+        }
+    }
 
 
 
