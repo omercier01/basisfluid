@@ -78,20 +78,20 @@ void Application::SimulationStep()
 
 
     // clear forces
-    _forceField->populateWithFunction([=](float /*x*/, float /*y*/) { return vec2(0); });
+        _forceField->populateWithFunction([=](float /*x*/, float /*y*/) { return vec2(0); });
 
-    for (Obstacle* obs : _obstacles)
-    {
-        if (obs->dynamic)
+        for (Obstacle* obs : _obstacles)
         {
-            _forceField->addFunction([=](float x, float y) {
-                float phi = obs->phi(vec2(x, y));
-                return
-                    -(obstacleBoundaryFactor * (phi - obs->prevPhi(vec2(x, y))) / _dt * obs->gradPhi(vec2(x, y))) * glm::max<float>(1.f - abs(phi) / boundaryPhiBandDecrease, 0.f)
-                    ;
-        });
-    }
-}
+            if (obs->dynamic)
+            {
+                _forceField->addFunction([=](float x, float y) {
+                    float phi = obs->phi(vec2(x, y));
+                    return
+                        -(obstacleBoundaryFactor * (phi - obs->prevPhi(vec2(x, y))) / _dt * obs->gradPhi(vec2(x, y))) * glm::max<float>(1.f - abs(phi) / boundaryPhiBandDecrease, 0.f)
+                        ;
+                });
+            }
+        }
     _forceField->_vectors._sourceStorageType = DataBuffer2D<vec2>::StorageType::CPU;
     //_forceField->mVectors.dirtyData();
 

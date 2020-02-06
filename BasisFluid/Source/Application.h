@@ -20,7 +20,6 @@
 #define INTEGRAL_GRID_SIZE 32
 
 #define INVERSION_OPENMP 1
-#define USE_DECOMPRESSED_COEFFICIENTS   1
 #define INVERSION_INNER_DOUBLE_PRECISION 1
 #define INVERSION_STORAGE_DOUBLE_PRECISION 1
 #define DEF_COEFF_COMPUTE_GPU 0 //1 // compute coefficients (A, BB, T) and forces on GPU
@@ -37,8 +36,8 @@
 #define USE_LINEAR_COEFFS_TRANSPORT 1
 
 #define PARTICLE_CIRCULAR_BUFFER        1
-#define NB_PARTICLES_TO_SEED_PER_DIM    10
-#define MAX_NB_PARTICLE_SEED_GROUPS     1000
+#define NB_PARTICLES_TO_SEED_PER_DIM    200
+#define MAX_NB_PARTICLE_SEED_GROUPS     300
 
 #if INVERSION_INNER_DOUBLE_PRECISION
 typedef double scalar_inversion_inner;
@@ -158,8 +157,8 @@ public:
     glm::uint _accelParticlesRes = _accelBasisRes;//32; // stored at cell center, so 32 grid points == 32 cells
     glm::uint _forcesGridRes = BASE_GRID_SIZE - 1;//32-1; // 32 grid points, 31 cells
 
-    const int _minFreqLvl = 1;
-    const int _maxFreqLvl = 1;
+    const int _minFreqLvl = 0;
+    const int _maxFreqLvl = 2;
     const int _minAnisoLvl = 0;
     const int _maxAnisoLvl = 1; //  MAXIMUM 2, OTHER BASES ARE NOT DEFINED
     //const int _maxFreqLvlFileToUse =  maxFreqLvl;

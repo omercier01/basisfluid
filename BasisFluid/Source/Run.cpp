@@ -15,7 +15,9 @@ bool Application::Run() {
     glfwSwapInterval(0);
     while(!app->_readyToQuit) {
         glfwPollEvents();
-        SimulationStep();
+        if(_stepSimulation) {
+            SimulationStep();
+        }
         Draw();
     }
 

@@ -45,7 +45,6 @@ scalar_inversion_inner Application::InverseBBMatrixMain(
     scalar_inversion_inner xSquaredDiff = 0;
     scalar_inversion_inner tempX = scalar_inversion_inner(vecB[iRow]);
 
-#if USE_DECOMPRESSED_COEFFICIENTS
     vector<CoeffBBDecompressedIntersectionInfo>& intersectionInfos = _coeffsBBDecompressedIntersections[iRow];
     for (const CoeffBBDecompressedIntersectionInfo& inter : intersectionInfos) {
         //            if( atLeastOneBitNotSet(basisDataPointer[inter.j].bitFlags, basisBitMask) ) {
@@ -64,22 +63,6 @@ scalar_inversion_inner Application::InverseBBMatrixMain(
 
     xSquaredDiff = Sqr(scalar_inversion_inner(newX - oldX));
     vecX[iRow] = (1 - alpha)*oldX + alpha * newX;
-#else
-    vector<uint>* localIntersectingBasesIds = intersectingBasesSignificantBBIds->getCpuData_noRefresh(iRow);
-    for (auto it = localIntersectingBasesIds->begin(); it != localIntersectingBasesIds->end(); ++it) {
-        if (*it == iRow) { continue; }
-        if (atLeastOneBitNotSet(basisDataPointer[*it].bitFlags, basisBitMask)) {
-            continue;
-        }
-        tempX -= matBBCoeff(iRow, (*it)) * scalar_inversion_inner(vecX[*it]);
-    }
-    // TODO: make all bases normalized in 3D so we can save a fetch + division here
-    scalar_inversion_storage newX = scalar_inversion_storage(tempX / scalar_inversion_inner(matBBCoeff(iRow, iRow)));
-    scalar_inversion_storage oldX = vecX[iRow];
-
-    xSquaredDiff = sqr(scalar_inversion_inner(newX - oldX));
-    vecX[iRow] = (1 - alpha)*oldX + alpha * newX;
-#endif
     return scalar_inversion_inner(xSquaredDiff);
 }
 
@@ -228,7 +211,6 @@ void Application::InverseBBMatrix(
                 }
                 scalar_inversion_inner tempX = scalar_inversion_inner(vecBPointer[iRow]);
 
-#if USE_DECOMPRESSED_COEFFICIENTS
                 vector<CoeffBBDecompressedIntersectionInfo>& intersectionInfos = _coeffsBBDecompressedIntersections[iRow];
                 for (CoeffBBDecompressedIntersectionInfo& inter : intersectionInfos) {
                     if (AllBitsSet(basisFlowParamsPointer[inter.j].bitFlags, basisBitMask)) {
@@ -240,19 +222,6 @@ void Application::InverseBBMatrix(
                 scalar_inversion_storage newX = scalar_inversion_storage(tempX / scalar_inversion_inner(bi.normSquared));
                 xSquaredDiff += Sqr(scalar_inversion_inner(newX - vecXPointer[iRow]));
                 vecTempPointer[iRow] = newX;
-#else
-                vector<uint>* localIntersectingBasesIds = intersectingBasesSignificantBBIds->getCpuData_noRefresh(iRow);
-                for (auto it = localIntersectingBasesIds->begin(); it != localIntersectingBasesIds->end(); ++it) {
-                    if (*it == iRow) { continue; }
-                    if (allBitsSet(basisFlowParamsPointer[*it].bitFlags, basisBitMask)) {
-                        tempX -= matBBCoeff(iRow, (*it)) * scalar_inversion_inner(vecXPointer[*it]);
-                    }
-                }
-                // TODO: remove division once 3D bases have norm 1
-                scalar_inversion_storage newX = scalar_inversion_storage(tempX / scalar_inversion_inner(matBBCoeff(iRow, iRow)));
-                xSquaredDiff += sqr(scalar_inversion_inner(newX - vecXPointer[iRow]));
-                vecTempPointer[iRow] = newX;
-#endif
 
             }
             for (uint i = 0; i < n; i++) {

@@ -224,7 +224,6 @@ bool Application::Init_BasisFlows() {
     basisSupports.clear();
 
 
-#if USE_DECOMPRESSED_COEFFICIENTS
 
     // precompute decompressed T coefficients
 
@@ -313,47 +312,6 @@ bool Application::Init_BasisFlows() {
         maxNbBases = glm::max(maxNbBases, (unsigned int)_coeffsBBDecompressedIntersections[i].size());
     }
 
-#else
-
-
-#if EXPLICIT_ENERGY_TRANSFER
-    coeffBBExplicitTransferSum_abs.clear();
-    coeffBBExplicitTransferSum_abs.resize(N);
-    coeffBBExplicitTransferSum_sqr.clear();
-    coeffBBExplicitTransferSum_sqr.resize(N);
-
-    for (unsigned int i = 0; i < N; i++) {
-        vector<uint>* localIntersectingBasesIds = intersectingBasesSignificantBBIds->getCpuData(i);
-        float explicitTransferTotalWeight_abs[nbExplicitTransferFreqs] = { 0 };
-        float explicitTransferTotalWeight_sqr[nbExplicitTransferFreqs] = { 0 };
-
-
-        ivec2 freqI = basisFlowParams->getCpuData(i).freqLvl;
-        for (auto it = localIntersectingBasesIds->begin(); it != localIntersectingBasesIds->end(); ++it) {
-            if (*it == i) { continue; }
-            float coeff = matBBCoeff(i, (*it));
-            if (abs(coeff) > toleranceBBCoeff) {
-
-                ivec2 freqJ = basisFlowParams->getCpuData(*it).freqLvl;
-                for (int iRelFreq = 0; iRelFreq < nbExplicitTransferFreqs; iRelFreq++) {
-                    if (freqJ - freqI == explicitTransferFreqs[iRelFreq]) {
-
-                        explicitTransferTotalWeight_abs[iRelFreq] += abs(coeff);
-                        explicitTransferTotalWeight_sqr[iRelFreq] += sqr(coeff);
-                    }
-                    }
-                }
-            }
-
-        for (int iRelFreq = 0; iRelFreq < nbExplicitTransferFreqs; iRelFreq++) {
-            coeffBBExplicitTransferSum_abs[i].coeffs[iRelFreq] = explicitTransferTotalWeight_abs[iRelFreq];
-            coeffBBExplicitTransferSum_sqr[i].coeffs[iRelFreq] = sqrt(explicitTransferTotalWeight_sqr[iRelFreq]);
-            //            coeffBBExplicitTransferSum_sqr[i].coeffs[iRelFreq] = explicitTransferTotalWeight_sqr[iRelFreq];
-        }
-        }
-#endif
-
-#endif
 
 
 

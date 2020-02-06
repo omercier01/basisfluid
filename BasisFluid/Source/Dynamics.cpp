@@ -137,19 +137,10 @@ void Application::ComputeBasisAdvection()
         if (!AllBitsSet(bi.bitFlags, INTERIOR) && !AllBitsSet(bi.bitFlags, DYNAMIC_BOUNDARY_PROJECTION)) { continue; }
 
         // compute displacement (I is transported by J)
-#if USE_DECOMPRESSED_COEFFICIENTS
         vector<CoeffTDecompressedIntersectionInfo>& intersectionInfos = _coeffsTDecompressedIntersections[i];
         for (CoeffTDecompressedIntersectionInfo& inter : intersectionInfos) {
             avgDisplacement += inter.coeff * (basisFlowParamsPointer[inter.j].coeff + _obstacleBoundaryFactorTransferOnly * basisFlowParamsPointer[inter.j].coeffBoundary);
         }
-#else
-        vector<uint>* localIntersectingBasesIds = intersectingBasesIds->getCpuData_noRefresh(i);
-        for (auto itJ = localIntersectingBasesIds->begin(); itJ != localIntersectingBasesIds->end(); ++itJ) {
-            //BasisFlow bj = basisFlowParams->getCpuData(*itJ);
-            //avgDisplacement += matTCoeff(i,*itJ) * bj.coeff;
-            avgDisplacement += matTCoeff(i, *itJ) * basisFlowParamsPointer[*itJ].coeff;
-        }
-#endif
 
 
         // compute new center
@@ -310,7 +301,6 @@ void Application::ComputeBasisAdvection()
             }
 
 
-#if USE_DECOMPRESSED_COEFFICIENTS
 
             for (uint iRelFreq = 0; iRelFreq < _nbExplicitTransferFreqs; iRelFreq++)
             {
@@ -337,33 +327,6 @@ void Application::ComputeBasisAdvection()
                     }
                 }
             }
-#else
-            vector<uint>* localIntersectingBasesIds = intersectingBasesSignificantBBIds->getCpuData(i);
-            for (auto it = localIntersectingBasesIds->begin(); it != localIntersectingBasesIds->end(); ++it)
-            {
-                BasisFlow& bj = basisFlowParamsPointer[*it];
-                for (uint iRelFreq = 0; iRelFreq < nbExplicitTransferFreqs; iRelFreq++)
-                {
-                    if (bj.freqLvl - bi.freqLvl == explicitTransferFreqs[iRelFreq]) {
-                        float alphaBiCoeff;
-                        if (allowTransportLeak && convertTransportLeakToDeformation) {
-                            alphaBiCoeff = alpha * bi.coeff + bi.coeffLostInTransport;
-                        }
-                        else {
-                            alphaBiCoeff = alpha * bi.coeff;
-                        }
-
-                        bj.newCoeff += alphaBiCoeff * transferCoeffs[iRelFreq] * matBBCoeff(i, (*it)) / coeffBBExplicitTransferSum_abs[i].coeffs[iRelFreq];
-
-                        if (!_explicitDissipateHighFreqs)
-                        {
-                            bi.newCoeff -= alpha * bi.coeff * transferCoeffs[iRelFreq] * abs(matBBCoeff(i, (*it))) / coeffBBExplicitTransferSum_abs[i].coeffs[iRelFreq];
-                        }
-                    }
-                }
-
-            }
-#endif
 
         }
 
