@@ -194,11 +194,11 @@ bool Application::Init_DataBuffers() {
     //_accelBasisCentersIds = make_unique<DataBuffer2D<std::vector<unsigned int>>>(_accelBasisRes, _accelBasisRes);
     //_accelBasisCentersIds->_sourceStorageType = DataBuffer2D<std::vector<unsigned int>>::StorageType::CPU;
     _accelBasisCentersIds->createCpuStorage();
-    /*for (uint i = 0; i < accelBasisRes; i++) {
-        for (uint j = 0; j < accelBasisRes; j++) {
+    for (uint i = 0; i < _accelBasisRes; i++) {
+        for (uint j = 0; j < _accelBasisRes; j++) {
             _accelBasisCentersIds->setCpuData(i, j, new vector<unsigned int>);
         }
-    }*/
+    }
 
 
     _integrationGridGpu = make_unique<DataBuffer2D<vec4>>(((_integralGridRes + 1) - 1) / INTEGRAL_GPU_GROUP_DIM + 1, ((_integralGridRes + 1) - 1) / INTEGRAL_GPU_GROUP_DIM + 1);

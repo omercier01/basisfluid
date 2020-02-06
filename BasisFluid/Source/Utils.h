@@ -71,6 +71,15 @@ inline float RatioZero(float a, float b) {
     else return a/(a-b);
 }
 
+inline float VecNorm( glm::vec2 vec ) {
+    return std::sqrt(vec.x*vec.x + vec.y*vec.y);
+}
+
+
+inline float VecNorm( glm::vec3 vec ) {
+    return std::sqrt(vec.x*vec.x + vec.y*vec.y + vec.z*vec.z);
+}
+
 
 
 #endif // UTILS_H

@@ -184,6 +184,7 @@ public:
     std::unique_ptr<VectorField2D> _forceField = nullptr;
     std::unique_ptr<VectorField2D>* _basisFlowTemplates = nullptr;
     std::unique_ptr<DataBuffer1D<BasisFlow>> _basisFlowParams = nullptr;
+    std::vector<ivec2> _freqLvls;
 
     // particles buffers
     std::unique_ptr<DataBuffer1D<vec2>> _partPos = nullptr;
@@ -253,7 +254,7 @@ public:
     uint _nbStretchLoops = 10;
     float _obstacleSpeed = 1.f;
     float _dt = 0.0325f;
-    float _buoyancyPerParticle = 0.0125f;
+    float _buoyancyPerParticle = 0.1f;//0.0125f;
     float _obstacleRadius = 0.2f;
     glm::mat4 _viewProjMat = {1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1};
     uint _substepsParticles = 1;
@@ -270,6 +271,7 @@ public:
     bool _allowTransportLeak = true;
     float _factorDeformation = 0.5f;
     float _obstacleBoundaryFactorTransferOnly = 1.5f;
+    float _toleranceBBCoeff = 1e-6f;
 
     float _explicitTransfer_10 = 0.f;
     float _explicitTransfer_01 = 0.f;
