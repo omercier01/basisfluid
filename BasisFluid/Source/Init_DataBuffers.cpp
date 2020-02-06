@@ -18,9 +18,10 @@ bool Application::Init_DataBuffers() {
     _velocityField->createVectorCpuStorage();
     _velocityField->createVectorTexture2DStorage(
         GL_RG, GL_RG32F, GL_RG, GL_FLOAT, 1);
-    _velocityField->populateWithFunction( [=](float /*x*/, float /*y*/) {
+    _velocityField->populateWithFunction([=](float /*x*/, float /*y*/) {
         return vec2(0);
     });
+
 
 
     _prevVelocityField = make_unique<VectorField2D>(_domainLeft, _domainRight, _domainBottom, _domainTop,
@@ -145,6 +146,12 @@ bool Application::Init_DataBuffers() {
     _bufferGridPoints->createCpuStorage();
     _bufferGridPoints->createBufferStorage(GL_FLOAT, 2);
     _bufferGridPoints->_sourceStorageType = DataBuffer1D<vec2>::StorageType::CPU;
+
+    Metadata1DCpu gridNodes = _velocityField->GenerateGridNodeLocations();
+    memcpy(
+        _bufferGridPoints->getCpuDataPointer(),
+        gridNodes.dataPointer,
+        _velocityField->nbElementsX()*_velocityField->nbElementsY() * sizeof(vec2));
 
     _bufferArrows = make_unique<DataBuffer1D<vec2>>(
         _velocityField->nbElementsX() * _velocityField->nbElementsY());

@@ -20,7 +20,7 @@
 #define INTEGRAL_GRID_SIZE 32
 
 #define INVERSION_OPENMP 1
-#define INVERSION_INNER_DOUBLE_PRECISION 1
+#define INVERSION_INNER_DOUBLE_PRECISION 0;//1
 #define INVERSION_STORAGE_DOUBLE_PRECISION 1
 #define DEF_COEFF_COMPUTE_GPU 0 //1 // compute coefficients (A, BB, T) and forces on GPU
 #define EXPLICIT_ENERGY_TRANSFER 1
@@ -55,6 +55,7 @@ typedef float scalar_inversion_storage;
 class Obstacle;
 class ObstacleShaderPipeline;
 class ParticleShaderPipeline;
+class VelocityArrowShaderPipeline;
 
 
 // Global class to manage program execution
@@ -157,7 +158,9 @@ public:
     glm::uint _accelParticlesRes = _accelBasisRes;//32; // stored at cell center, so 32 grid points == 32 cells
     glm::uint _forcesGridRes = BASE_GRID_SIZE - 1;//32-1; // 32 grid points, 31 cells
 
-    const int _minFreqLvl = 0;
+    // Note: Pick maximum basis flows sizes that are not too large compared to domain features,
+    // otherwise basis stretch can sometimes fail
+    const int _minFreqLvl = 1;
     const int _maxFreqLvl = 2;
     const int _minAnisoLvl = 0;
     const int _maxAnisoLvl = 1; //  MAXIMUM 2, OTHER BASES ARE NOT DEFINED
@@ -236,14 +239,16 @@ public:
     // shader pipelines
     ObstacleShaderPipeline* _pipelineObstacle;
     ParticleShaderPipeline* _pipelineParticle;
+    VelocityArrowShaderPipeline* _pipelineVelocityArrow;
 
     // Parameters
     bool _seedParticles = true;
-    bool _showVelocityGrid = false;
+    bool _showVelocity = true;
     bool _useForcesFromParticles = true;
     bool _drawParticles = true;
     bool _drawGrid = true;
     bool _drawObstacles = true;
+    bool _moveObstacles = true;
     bool _stepSimulation = true;
     float _velocityArrowFactor = 0.1f;
     uint _maxNbItMatBBInversion = 10;
@@ -285,7 +290,6 @@ public:
     bool _newACoeffComputed  = false;
     bool _newTCoeffComputed  = false;
     bool _newRCoeffComputed  = false;
-    unsigned int _frameCount = 0;
     bool _obstacleDisplayNeedsUpdating = true;
     bool _basisStretchedUpdateRequired = true;
     unsigned int _particleCircularSeedId = 0;

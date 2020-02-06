@@ -57,6 +57,8 @@ public:
     glm::uvec2 pointToClosestIndex(glm::vec2 point);
     glm::uvec2 pointToFlooredIndex(glm::vec2 point);
     glm::vec2 indexToPosition(glm::uvec2 index);
+
+    Metadata1DCpu GenerateGridNodeLocations();
 };
 
 #endif // VECTORFIELD2D_H

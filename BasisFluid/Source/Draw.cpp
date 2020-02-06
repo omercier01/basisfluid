@@ -1,9 +1,12 @@
 
 #include "ObstacleShader.h"
 #include "ParticleShader.h"
+#include "VelocityArrowShader.h"
 #include "Application.h"
 #include "Obstacles.h"
 
+// TODO: remove
+#include <iostream>
 
 void Application::Draw()
 {
@@ -83,8 +86,6 @@ void Application::Draw()
                 }
             }
 
-            _obstacleLines->TransferDataCpuToBuffer();
-
             _obstacleDisplayNeedsUpdating = false;
         }
 
@@ -102,12 +103,32 @@ void Application::Draw()
     //pipelineParticles->goglu_nbPrimitives.set(particles->metadataBuffer.nbElements);
 
     if (_obstacleLines->_metadataBuffer.nbElements > 0) {
+        _obstacleLines->TransferDataCpuToBuffer();
         _pipelineObstacle->Execute();
     }
 
-    //if (_showVelocityGrid) {
-    //    pipelineArrows->execute();
-    //}
+     if (_showVelocity) {
+
+        ComputeVelocityGridForDisplay();
+
+        /*Metadata1DCpu gridNodes = _velocityField->GenerateGridNodeLocations();
+        memcpy ( 
+            _bufferGridPoints->getCpuDataPointer(),
+            gridNodes.dataPointer,
+            _velocityField->nbElementsX()*_velocityField->nbElementsY()*sizeof(vec2));*/
+        
+        memcpy ( 
+            _bufferArrows->getCpuDataPointer(),
+            _velocityField->_vectors.getCpuDataPointer(),
+            _velocityField->nbElementsX()*_velocityField->nbElementsY()*sizeof(vec2));
+
+        //std::cout << _velocityField->_vectors.getCpuData(32,32).x << std::endl;
+
+        _bufferGridPoints->TransferDataCpuToBuffer();
+        _bufferArrows->TransferDataCpuToBuffer();
+
+        _pipelineVelocityArrow->Execute();
+    }
 
     if (_drawParticles) {
         _partPos->TransferDataCpuToBuffer();
@@ -130,7 +151,6 @@ void Application::ComputeVelocityGridForDisplay()
     for (unsigned int i = 0; i < _basisFlowParams->_nbElements; ++i) {
         BasisFlow b = _basisFlowParams->getCpuData_noRefresh(i);
 
-
         //TODO: Use the decompressed intersection per grid node instead, should be much faster.
         _velocityField->addFunction(
             [&](float x, float y) {
@@ -140,12 +160,14 @@ void Application::ComputeVelocityGridForDisplay()
             if (AllBitsSet(b.bitFlags, INTERIOR)) {
                 vec += VecObstacle_stretch(p, b);
             }
+
             vec += b.coeffBoundary * (vec2)(
                 TranslatedBasisEval(
                     p, b.freqLvl, b.center
                 )
                 )
                 ;
+
             return vec;
         }
         );

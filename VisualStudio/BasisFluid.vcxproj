@@ -59,6 +59,7 @@
     <ClInclude Include="..\BasisFluid\Source\ShaderPipeline.h" />
     <ClInclude Include="..\BasisFluid\Source\Utils.h" />
     <ClInclude Include="..\BasisFluid\Source\VectorField2D.h" />
+    <ClInclude Include="..\BasisFluid\Source\VelocityArrowShader.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>

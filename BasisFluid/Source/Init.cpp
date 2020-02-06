@@ -2,6 +2,7 @@
 #include "Application.h"
 #include "ObstacleShader.h"
 #include "ParticleShader.h"
+#include "VelocityArrowShader.h"
 
 #include "glm/glm.hpp"
 #include <GL/glew.h>
@@ -88,6 +89,7 @@ bool Application::Init_Shaders() {
 
     _pipelineObstacle = new ObstacleShaderPipeline();
     _pipelineParticle = new ParticleShaderPipeline();
+    _pipelineVelocityArrow = new VelocityArrowShaderPipeline();
     //if( !Init_ObstacleShader() ) { return false; }
     //if( !Init_ParticleShader() ) { return false; }
     //if( !Init_VelocityArrowsShader() ) { return false; }

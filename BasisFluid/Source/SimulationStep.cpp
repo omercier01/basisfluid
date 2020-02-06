@@ -4,23 +4,19 @@
 
 void Application::SimulationStep()
 {
-    if (_stepSimulation) {
-        ++_frameCount;
-    }
-
-    if (_stepSimulation) {
-        // update dynamic obstacles
-        for (Obstacle* obs : _obstacles)
+    // update dynamic obstacles
+    for (Obstacle* obs : _obstacles)
+    {
+        if (obs->dynamic)
         {
-            if (obs->dynamic)
-            {
-                obs->prevPhi = obs->phi;
-                obs->prevGradPhi = obs->gradPhi;
+            obs->prevPhi = obs->phi;
+            obs->prevGradPhi = obs->gradPhi;
+            if(_moveObstacles) {
                 obs->updatePhi();
-
-                _obstacleDisplayNeedsUpdating = true;
-                _basisStretchedUpdateRequired = true;
             }
+
+            _obstacleDisplayNeedsUpdating = true;
+            _basisStretchedUpdateRequired = true;
         }
     }
 
@@ -63,10 +59,7 @@ void Application::SimulationStep()
 
 
 
-    if (_stepSimulation && _seedParticles)
-    {
-        SetParticlesInAccelGrid();
-    }
+    SetParticlesInAccelGrid();
 
 
 
@@ -78,20 +71,20 @@ void Application::SimulationStep()
 
 
     // clear forces
-        _forceField->populateWithFunction([=](float /*x*/, float /*y*/) { return vec2(0); });
+    _forceField->populateWithFunction([=](float /*x*/, float /*y*/) { return vec2(0); });
 
-        for (Obstacle* obs : _obstacles)
+    for (Obstacle* obs : _obstacles)
+    {
+        if (obs->dynamic)
         {
-            if (obs->dynamic)
-            {
-                _forceField->addFunction([=](float x, float y) {
-                    float phi = obs->phi(vec2(x, y));
-                    return
-                        -(obstacleBoundaryFactor * (phi - obs->prevPhi(vec2(x, y))) / _dt * obs->gradPhi(vec2(x, y))) * glm::max<float>(1.f - abs(phi) / boundaryPhiBandDecrease, 0.f)
-                        ;
-                });
-            }
+            _forceField->addFunction([=](float x, float y) {
+                float phi = obs->phi(vec2(x, y));
+                return
+                    -(obstacleBoundaryFactor * (phi - obs->prevPhi(vec2(x, y))) / _dt * obs->gradPhi(vec2(x, y))) * glm::max<float>(1.f - abs(phi) / boundaryPhiBandDecrease, 0.f)
+                    ;
+            });
         }
+    }
     _forceField->_vectors._sourceStorageType = DataBuffer2D<vec2>::StorageType::CPU;
     //_forceField->mVectors.dirtyData();
 
@@ -118,8 +111,9 @@ void Application::SimulationStep()
 
     ComputeBasisAdvection();
 
-
-    AddParticleForcesToBasisFlows();
+    if (_useForcesFromParticles) {
+        AddParticleForcesToBasisFlows();
+    }
 
 
     ComputeParticleAdvection();

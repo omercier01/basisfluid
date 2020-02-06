@@ -120,11 +120,3 @@ public:
     GLenum vpMat_shaderType;
 };
 
-
-
-//bool Application::Init_ObstacleShader() {
-//
-//
-//
-//    return true;
-//}

@@ -697,6 +697,45 @@ vec2 VectorField2D::indexToPosition(uvec2 index)
 
 
 
+// copies and returns a linear buffer containing the grid positions.
+Metadata1DCpu VectorField2D::GenerateGridNodeLocations() {
+
+    //_vectors._dataCpu.refresh();
+
+    Metadata1DCpu metadata;
+    vec2* data = nullptr;
+    float cellWidthX = (_boundXMax - _boundXMin) / _nbCellsX;
+    float cellWidthY = (_boundYMax - _boundYMin) / _nbCellsY;
+
+    switch (_gridNodeLocation) {
+    case GridNodeLocation::CENTER:
+        data = new vec2[_nbCellsX*_nbCellsY];
+        for (unsigned int i = 0; i < _nbCellsX; i++) {
+            for (unsigned int j = 0; j < _nbCellsY; j++) {
+                data[_nbCellsY*j + i] = vec2(_boundXMin + (i + 0.5f)*cellWidthX,
+                    _boundYMin + (j + 0.5f)*cellWidthY);
+            }
+        }
+        break;
+    case GridNodeLocation::CORNER:
+        data = new vec2[(_nbCellsX + 1)*(_nbCellsY + 1)];
+        for (unsigned int i = 0; i <= _nbCellsX; i++) {
+            for (unsigned int j = 0; j <= _nbCellsY; j++) {
+                data[(_nbCellsY + 1)*j + i] = vec2(_boundXMin + i * cellWidthX,
+                    _boundYMin + j * cellWidthY);
+            }
+        }
+        break;
+    }
+
+    metadata.dataPointer = data;
+    return metadata;
+}
+
+
+
+
+
 //
 ////==============================================================================
 //// PLUGS ACTIONS

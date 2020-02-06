@@ -5,6 +5,9 @@
 #include <glm/gtc/random.hpp>
 #include <glm/ext.hpp>
 
+// TODO: remove
+#include <iostream>
+
 using namespace glm;
 
 //------------------------------------------------------------------------------
@@ -298,7 +301,6 @@ void Application::ComputeStretches()
 {
     // TODO: speed this up.
     for (unsigned int iBasis = 0; iBasis < _basisFlowParams->_nbElements; ++iBasis) {
-
         BasisFlow b = _basisFlowParams->getCpuData(iBasis);
         b = ComputeStretch(b);
         _basisFlowParams->setCpuData(iBasis, b);

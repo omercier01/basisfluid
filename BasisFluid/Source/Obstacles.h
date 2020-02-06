@@ -44,8 +44,11 @@ public:
     }
 
     void updatePhi() override {
-        glm::vec2 center = 0.25f*glm::vec2(sin(app->_obstacleSpeed*app->_dt*app->_frameCount),
-            cos(app->_obstacleSpeed*app->_dt*app->_frameCount));
+
+        _frameCount++;
+
+        glm::vec2 center = 0.25f*glm::vec2(sin(app->_obstacleSpeed*app->_dt*_frameCount),
+            cos(app->_obstacleSpeed*app->_dt*_frameCount));
         phi = [=](glm::vec2 p) {
             float r = app->_obstacleRadius;
             glm::vec2 diff = p - center;
@@ -56,5 +59,7 @@ public:
             return glm::length(diff) < 0.0001 ? glm::vec2(0) : glm::normalize(diff);
         };
     }
+
+    unsigned int _frameCount = 0;
 
 };

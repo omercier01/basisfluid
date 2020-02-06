@@ -27,8 +27,8 @@ void Application::CallbackKey(GLFWwindow* /*pGlfwWindow*/, int key, int /*scanco
         cout << "Seed particles = " << TrueFalseMessage(app->_seedParticles) << endl;
         break;
     case 'V':
-        app->_showVelocityGrid = !app->_showVelocityGrid;
-        cout << "Show velocity = " << TrueFalseMessage(app->_showVelocityGrid) << endl;
+        app->_showVelocity = !app->_showVelocity;
+        cout << "Show velocity = " << TrueFalseMessage(app->_showVelocity) << endl;
         break;
     case 'F':
         app->_useForcesFromParticles = !app->_useForcesFromParticles;
@@ -45,6 +45,10 @@ void Application::CallbackKey(GLFWwindow* /*pGlfwWindow*/, int key, int /*scanco
     case 'O':
         app->_drawObstacles = !app->_drawObstacles;
         cout << "Draw obstacles = " << TrueFalseMessage(app->_drawObstacles) << endl;
+        break;
+    case 'M':
+        app->_moveObstacles = !app->_moveObstacles;
+        cout << "Move obstacles = " << TrueFalseMessage(app->_moveObstacles) << endl;
         break;
     //case '0':
     //    resetSimulation();
