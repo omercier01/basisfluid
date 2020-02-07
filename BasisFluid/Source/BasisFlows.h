@@ -129,7 +129,6 @@ struct BasisFlow {
     float coeff;
     float newCoeff;
     float coeffBoundary; // stores the coeficient not parallel to the boundary, necessary to represent object movement flow.
-    float coeffLostInTransport;
     unsigned int orthoGroup;
     glm::vec2 stretchedCornerLB; // left-bottom
     glm::vec2 stretchedCornerLT; // left-top
@@ -143,7 +142,6 @@ struct BasisFlow {
         coeff = 0;
         newCoeff = 0;
         coeffBoundary = 0;
-        coeffLostInTransport = 0;
         orthoGroup = orthogonalityGroup;
         bitFlags = 0;
         this->freqLvl = freq;
@@ -156,7 +154,6 @@ struct BasisFlow {
         coeff = 0;
         newCoeff = 0;
         coeffBoundary = 0;
-        coeffLostInTransport = 0;
         orthoGroup = -1;
         bitFlags = 0;
         this->freqLvl = glm::vec2(0);

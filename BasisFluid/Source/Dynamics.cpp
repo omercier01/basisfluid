@@ -203,10 +203,6 @@ void Application::ComputeBasisAdvection()
 
         }
 
-        // save coefficient proportion lost in transport so we can add it as energy deformation later if we want.
-        bi.coeffLostInTransport = bi.coeff * (1.f - totalTempCoeffs);
-
-
         // TODO: don't compute if not printing
         if (totalTempCoeffs < minTotalTempCoeffs) {
             minTotalTempCoeffsId = i;
@@ -228,12 +224,7 @@ void Application::ComputeBasisAdvection()
 
         if (!AllBitsSet(bi.bitFlags, INTERIOR) && !AllBitsSet(bi.bitFlags, DYNAMIC_BOUNDARY_PROJECTION)) { continue; }
 
-        if (_allowTransportLeak) {
             bi.coeff = bi.newCoeff;
-        }
-        else {
-            bi.coeff = bi.newCoeff + bi.coeffLostInTransport;
-        }
         bi.newCoeff = 0;
     }
 
@@ -310,12 +301,7 @@ void Application::ComputeBasisAdvection()
                     BasisFlow& bj = basisFlowParamsPointer[inter.j];
 
                     float alphaBiCoeff;
-                    if (_allowTransportLeak && _convertTransportLeakToDeformation) {
-                        alphaBiCoeff = alpha * (bi.coeff + _obstacleBoundaryFactorTransferOnly * bi.coeffBoundary) + bi.coeffLostInTransport;
-                    }
-                    else {
-                        alphaBiCoeff = alpha * (bi.coeff + _obstacleBoundaryFactorTransferOnly * bi.coeffBoundary);
-                    }
+                    alphaBiCoeff = alpha * (bi.coeff + _obstacleBoundaryFactorTransferOnly * bi.coeffBoundary);
 
                     bj.newCoeff += alphaBiCoeff * transferCoeffs[iRelFreq] * inter.coeff / _coeffBBExplicitTransferSum_abs[i].coeffs[iRelFreq];
                     //                                bj.newCoeff += alphaBiCoeff * transferCoeffs[iRelFreq] * (bj.coeff >= 0 ? 1 : -1)*abs(inter.coeff)/coeffBBExplicitTransferSum_abs[i].coeffs[iRelFreq];
