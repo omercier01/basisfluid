@@ -38,21 +38,10 @@ void Application::CallbackKey(GLFWwindow* /*pGlfwWindow*/, int key, int /*scanco
         app->_drawParticles = !app->_drawParticles;
         cout << "Draw particles = " << TrueFalseMessage(app->_drawParticles) << endl;
         break;
-    case 'G':
-        app->_drawGrid = !app->_drawGrid;
-        cout << "Draw grid = " << TrueFalseMessage(app->_drawGrid) << endl;
-        break;
-    case 'O':
-        app->_drawObstacles = !app->_drawObstacles;
-        cout << "Draw obstacles = " << TrueFalseMessage(app->_drawObstacles) << endl;
-        break;
     case 'M':
         app->_moveObstacles = !app->_moveObstacles;
         cout << "Move obstacles = " << TrueFalseMessage(app->_moveObstacles) << endl;
         break;
-    //case '0':
-    //    resetSimulation();
-    //    break;
     case GLFW_KEY_SPACE:
         app->_stepSimulation = !app->_stepSimulation;
         cout << "Step simulation = " << TrueFalseMessage(app->_stepSimulation) << endl;

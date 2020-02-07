@@ -20,16 +20,14 @@
 #define INTEGRAL_GRID_SIZE 32
 
 #define INVERSION_OPENMP 1
-#define INVERSION_INNER_DOUBLE_PRECISION 0;//1
 #define INVERSION_STORAGE_DOUBLE_PRECISION 1
-#define DEF_COEFF_COMPUTE_GPU 0 //1 // compute coefficients (A, BB, T) and forces on GPU
 #define EXPLICIT_ENERGY_TRANSFER 1
 #define EXPLICIT_TRANSPORT_ROTATION 1
 #define USE_PRECISE_BASIS_EVAL 0
 #define INTEGRATE_BASIS_ONE_BASIS_PER_DISPATCH   0
 #define INTEGRATE_BASIS_ONE_BASIS_PER_INVOCATION 1
 #define SAFETY_ASSERTS 0 // useful for debugging, otherwise turn off for performance
-#define INTEGRATION_SUM_DOUBLE_PRECISION 1
+#define INTEGRATION_SUM_DOUBLE_PRECISION 0
 #define INTEGRAL_GPU_GROUP_DIM 32
 #define STRETCH_BAND_RATIO 0.5f
 #define NB_NEWTON_ITERATIONS_INVERSION 3
@@ -39,11 +37,7 @@
 #define NB_PARTICLES_TO_SEED_PER_DIM    200
 #define MAX_NB_PARTICLE_SEED_GROUPS     300
 
-#if INVERSION_INNER_DOUBLE_PRECISION
-typedef double scalar_inversion_inner;
-#else
 typedef float scalar_inversion_inner;
-#endif
 
 #if INVERSION_STORAGE_DOUBLE_PRECISION
 typedef double scalar_inversion_storage;
@@ -164,10 +158,6 @@ public:
     const int _maxFreqLvl = 2;
     const int _minAnisoLvl = 0;
     const int _maxAnisoLvl = 1; //  MAXIMUM 2, OTHER BASES ARE NOT DEFINED
-    //const int _maxFreqLvlFileToUse =  maxFreqLvl;
-    //const int _maxAnisoLvlFileToUse = maxAnisoLvl;
-    //const float _diffusionRatioLastFrequency = 0.1f*float(1<<maxFreqLvl);
-    //const float _lengthLvl0 = 1.0f; // WARNING: not used everywhere, better to set it to 1 for now.
     #define _lengthLvl0 1.0f
 
     const float _coeffSnapSize = _lengthLvl0/float(1<<_maxFreqLvl)/32.0f;
@@ -243,11 +233,9 @@ public:
 
     // Parameters
     bool _seedParticles = true;
-    bool _showVelocity = true;
+    bool _showVelocity = false;
     bool _useForcesFromParticles = true;
     bool _drawParticles = true;
-    bool _drawGrid = true;
-    bool _drawObstacles = true;
     bool _moveObstacles = true;
     bool _stepSimulation = true;
     float _velocityArrowFactor = 0.1f;
@@ -258,7 +246,7 @@ public:
     uint _nbStretchLoops = 10;
     float _obstacleSpeed = 1.f;
     float _dt = 0.0325f;
-    float _buoyancyPerParticle = 0.1f;//0.0125f;
+    float _buoyancyPerParticle = 0.1f;
     float _obstacleRadius = 0.2f;
     glm::mat4 _viewProjMat = {1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1};
     uint _substepsParticles = 1;
@@ -271,7 +259,7 @@ public:
     float _explicitTransferSpeed = 0.1f;
     float _explicitTransferExponent = -1.66f;
     bool _explicitDissipateHighFreqs = false;
-    bool _convertTransportLeakToDeformation = true;
+    bool _convertTransportLeakToDeformation = false;//true;
     bool _allowTransportLeak = true;
     float _factorDeformation = 0.5f;
     float _obstacleBoundaryFactorTransferOnly = 1.5f;

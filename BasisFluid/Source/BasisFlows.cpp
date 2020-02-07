@@ -121,8 +121,6 @@ void Application::InverseBBMatrix(
             while (xSquaredDiff > tol && iIt < maxNbItMatBBInversion) {
                 xSquaredDiff = 0;
 
-#if INVERSION_OPENMP
-
                 for (int iBasisGroup = 0; iBasisGroup < _orthogonalBasisGroupIds.size(); iBasisGroup++)
                 {
                     vector<unsigned int> ids = _orthogonalBasisGroupIds[iBasisGroup];
@@ -154,39 +152,8 @@ void Application::InverseBBMatrix(
                     }
                 }
 
-#else
-
-
-                //                    for(uint iRow=0; iRow < n; iRow++) {
-                //                        cout << iRow << " - " << vecXPointer[iRow] << endl;
-                //                    }
-
-
-                for (uint iRow = 0; iRow < n; iRow++) {
-
-                    //                        if(iRow == 6858) {
-                    //                            cout << "QWEQWEQWE" << endl;
-                    //                        }
-
-                    if (atLeastOneBitNotSet(basisFlowParamsPointer[iRow].bitFlags, basisBitMask)) {
-                        continue;
-                    }
-
-                    //if( allBitsSet(basisFlowParamsPointer[iRow].bitFlags, basisBitMask) ) {
-                    xSquaredDiff += inverseBBMatrixMain(iRow, vecXPointer, vecBPointer, basisFlowParamsPointer, basisBitMask, alpha);
-                    //}
-                }
-
-#endif
-
-#if INVERSION_INNER_DOUBLE_PRECISION
-                xSquaredDiff = std::sqrt(xSquaredDiff / n);
-#else
                 xSquaredDiff = std::sqrtf(xSquaredDiff / n);
-#endif
-
                 iIt++;
-
             }
         }
     }
@@ -228,11 +195,7 @@ void Application::InverseBBMatrix(
                 vecXPointer[i] = (1 - alpha)*vecXPointer[i] + alpha * vecTempPointer[i];
             }
 
-#if INVERSION_INNER_DOUBLE_PRECISION
-            xSquaredDiff = std::sqrt(xSquaredDiff / n);
-#else
             xSquaredDiff = std::sqrtf(xSquaredDiff / n);
-#endif
 
             iIt++;
         }
@@ -302,86 +265,6 @@ float Application::IntegrateBasisGrid(BasisFlow& b, VectorField2D* velField)
 #endif
 
 
-
-
-#if DEF_COEFF_COMPUTE_GPU
-
-#if INTEGRATE_BASIS_ONE_BASIS_PER_DISPATCH
-
-    // data basis
-    auto connBasis = createPullConnection(
-        &basisFlowTemplates[abs(b.freqLvl.x - b.freqLvl.y)]->out_vectorsMetadataTexture2D,
-        &pipelineIntegrateBasisGrid_onePerDispatch->in_texBasis);
-    connBasis->activate();
-    int minLvl = glm::min<int>(b.freqLvl.x, b.freqLvl.y);
-    pipelineIntegrateBasisGrid_onePerDispatch->in_postScalingBasis.receive(float(1 << minLvl));
-    pipelineIntegrateBasisGrid_onePerDispatch->in_centerBasis.receive(b.center);
-    pipelineIntegrateBasisGrid_onePerDispatch->in_halfWidthsBasis.receive(0.5f*vec2(supportBasis.right - supportBasis.left, supportBasis.top - supportBasis.bottom));
-    if (b.freqLvl.x <= b.freqLvl.y) {
-        pipelineIntegrateBasisGrid_onePerDispatch->in_forwardRotBasis.receive(mat2(1, 0, 0, 1));
-        pipelineIntegrateBasisGrid_onePerDispatch->in_backwardRotBasis.receive(mat2(1, 0, 0, 1));
-    }
-    else {
-        pipelineIntegrateBasisGrid_onePerDispatch->in_forwardRotBasis.receive(mat2(0, 1, -1, 0));
-        pipelineIntegrateBasisGrid_onePerDispatch->in_backwardRotBasis.receive(mat2(0, -1, 1, 0));
-    }
-
-    // data field
-    auto connField = createPullConnection(
-        &velField->out_vectorsMetadataTexture2D,
-        &pipelineIntegrateBasisGrid_onePerDispatch->in_texField);
-    connField->activate();
-    pipelineIntegrateBasisGrid_onePerDispatch->in_centerField.receive(domainCenter);
-    pipelineIntegrateBasisGrid_onePerDispatch->in_halfWidthsField.receive(0.5f*vec2(supportField.right - supportField.left, supportField.top - supportField.bottom));
-
-    // other data
-    auto connTransfer = createPushConnection(
-        &pipelineIntegrateBasisGrid_onePerDispatch->out_transferBuffer,
-        &integrationTransferBufferGpu->in_metadataBuffer);
-    connTransfer->activate();
-    pipelineIntegrateBasisGrid_onePerDispatch->in_integralGridRes.receive(integralGridRes);
-    pipelineIntegrateBasisGrid_onePerDispatch->in_supportInterLeftBottom.receive(vec2(supLeft, supBottom));
-    pipelineIntegrateBasisGrid_onePerDispatch->in_supportInterRightTop.receive(vec2(supRight, supTop));
-
-    unsigned int nbGroupDiv = 1;
-    unsigned int it = 0;
-    uvec2 nbGroups;
-    do
-    {
-        nbGroups = uvec2(((integralGridRes + 1) - 1) / nbGroupDiv / INTEGRAL_GPU_GROUP_DIM + 1,
-            ((integralGridRes + 1) - 1) / nbGroupDiv / INTEGRAL_GPU_GROUP_DIM + 1);
-
-        pipelineIntegrateBasisGrid_onePerDispatch->in_globalIteration.receive(it++);
-        pipelineIntegrateBasisGrid_onePerDispatch->goglu_nbWorkGroups.set(glm::uvec3(nbGroups.x, nbGroups.y, 1));
-        pipelineIntegrateBasisGrid_onePerDispatch->execute();
-        glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-
-        nbGroupDiv *= INTEGRAL_GPU_GROUP_DIM;
-
-    } while (nbGroups.x > 1 && nbGroups.y > 1);
-
-    sum = integrationTransferBufferGpu->getCpuData(0).x;
-
-    connBasis->deactivate(); delete connBasis;
-    connField->deactivate(); delete connField;
-    connTransfer->deactivate(); delete connTransfer;
-
-#elif INTEGRATE_BASIS_ONE_BASIS_PER_INVOCATION
-    // SHOULD NEVER REACH THIS
-    velField; // to remove warning
-    cout << "********" << endl;
-    cout << "********" << endl;
-    cout << "********" << endl;
-    cout << "********" << endl;
-    cout << "SHOULD NOT REACH THIS" << endl;
-    cout << "********" << endl;
-    cout << "********" << endl;
-    cout << "********" << endl;
-    cout << "********" << endl;
-#endif
-
-#else
-
     for (uint i = 0; i <= _integralGridRes; i++) {
         for (uint j = 0; j <= _integralGridRes; j++) {
 
@@ -394,8 +277,6 @@ float Application::IntegrateBasisGrid(BasisFlow& b, VectorField2D* velField)
 
         }
     }
-
-#endif
 
     return float(sum) * (supRight - supLeft)*(supTop - supBottom) / Sqr(_integralGridRes);
 }
