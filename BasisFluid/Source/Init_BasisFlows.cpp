@@ -45,7 +45,8 @@ bool Application::Init_BasisFlows() {
         ivec2 freqLvl = _freqLvls[iFreqLvl];
         ivec2 freq = ivec2(powf(2.f, float(freqLvl.x)), powf(2.f, float(freqLvl.y)));
 
-        vec2 origin = vec2(0, 0);
+        //vec2 origin = vec2(0, 0);
+        vec2 origin = _lengthLvl0*vec2( (1.f/4.f)/2.f*(1.f-1.f/freq.x), (1.f/4.f)/2.f*(1.f-1.f/freq.y) );
         vec2 stride = 0.5f*vec2(1.f / freq.x, 1.f / freq.y);
         vec2 extraOffsets[4] = { vec2(0,0), vec2(0.5,0), vec2(0,0.5), vec2(0.5,0.5) };
 

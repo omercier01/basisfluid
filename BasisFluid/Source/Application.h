@@ -243,7 +243,7 @@ public:
     float _relaxationAlpha = 1.f;
     #define _bInversionGaussSeidel 1
     const unsigned int _minSizeParallelInverse = 0;
-    uint _nbStretchLoops = 10;
+    uint _nbStretchLoops = 2;
     float _obstacleSpeed = 1.f;
     float _dt = 0.0325f;
     float _buoyancyPerParticle = 0.1f;
@@ -265,8 +265,8 @@ public:
     float _obstacleBoundaryFactorTransferOnly = 1.5f;
     float _toleranceBBCoeff = 1e-6f;
 
-    float _explicitTransfer_10 = 0.f;
-    float _explicitTransfer_01 = 0.f;
+    float _explicitTransfer_10 = 1.f;//0.f;
+    float _explicitTransfer_01 = 1.f;//0.f;
     float _explicitTransfer_11 = 1.f;
     float _explicitTransfer_m10 = 0.f;
     float _explicitTransfer_0m1 = 0.f;
