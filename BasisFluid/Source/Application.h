@@ -20,7 +20,6 @@
 #define INTEGRAL_GRID_SIZE 32
 
 #define INVERSION_OPENMP 1
-#define INVERSION_STORAGE_DOUBLE_PRECISION 1
 #define EXPLICIT_ENERGY_TRANSFER 1
 #define EXPLICIT_TRANSPORT_ROTATION 1
 #define USE_PRECISE_BASIS_EVAL 0
@@ -37,19 +36,12 @@
 #define NB_PARTICLES_TO_SEED_PER_DIM    200
 #define MAX_NB_PARTICLE_SEED_GROUPS     300
 
-typedef float scalar_inversion_inner;
-
-#if INVERSION_STORAGE_DOUBLE_PRECISION
-typedef double scalar_inversion_storage;
-#else
-typedef float scalar_inversion_storage;
-#endif
-
-
 class Obstacle;
 class ObstacleShaderPipeline;
 class ParticleShaderPipeline;
 class VelocityArrowShaderPipeline;
+
+enum class ObstacleType {None, Circle, Bar};
 
 
 // Global class to manage program execution
@@ -74,11 +66,11 @@ public:
     glm::vec2 MatTCoeff(BasisFlow bTransported, BasisFlow bTransporting);
 
     void InverseBBMatrix(
-        DataBuffer1D<scalar_inversion_storage>* vecX,
-        DataBuffer1D<scalar_inversion_storage>* vecB,
+        DataBuffer1D<double>* vecX,
+        DataBuffer1D<double>* vecB,
         unsigned int basisBitMask);
     void InverseBBMatrixMain(
-        unsigned int iRow, scalar_inversion_storage* vecX, scalar_inversion_storage* vecB,
+        unsigned int iRow, double* vecX, double* vecB,
         BasisFlow* basisDataPointer, unsigned int basisBitMask);
 
 
@@ -136,7 +128,7 @@ public:
     const int _nbCellsYTotal = nbCells;
     const int _nbCellsYBasis = nbCells;
 
-    glm::uint _obstacleDisplayRes = BASE_GRID_SIZE;
+    glm::uint _obstacleDisplayRes = 4 * BASE_GRID_SIZE;
     glm::uint _integralGridRes = INTEGRAL_GRID_SIZE - 1;//32-1; // e.g. 32 grid points, 31 cells
     glm::uint _accelBasisRes = ACCEL_GRID_SIZE;//32; // raw data, so 32 cells
     glm::uint _accelParticlesRes = _accelBasisRes;//32; // stored at cell center, so 32 grid points == 32 cells
@@ -180,11 +172,11 @@ public:
     std::unique_ptr<DataBuffer1D<vec2>> _obstacleLines = nullptr;
 
     // force projection buffers
-    std::unique_ptr<DataBuffer1D<scalar_inversion_storage>> _vecX = nullptr;
-    std::unique_ptr<DataBuffer1D<scalar_inversion_storage>> _vecTemp = nullptr;
-    std::unique_ptr<DataBuffer1D<scalar_inversion_storage>> _vecXForces = nullptr;
-    std::unique_ptr<DataBuffer1D<scalar_inversion_storage>> _vecXBoundaryForces = nullptr;
-    std::unique_ptr<DataBuffer1D<scalar_inversion_storage>> _vecB = nullptr;
+    std::unique_ptr<DataBuffer1D<double>> _vecX = nullptr;
+    std::unique_ptr<DataBuffer1D<double>> _vecTemp = nullptr;
+    std::unique_ptr<DataBuffer1D<double>> _vecXForces = nullptr;
+    std::unique_ptr<DataBuffer1D<double>> _vecXBoundaryForces = nullptr;
+    std::unique_ptr<DataBuffer1D<double>> _vecB = nullptr;
 
     // integration buffers
     //DataBuffer2D<std::vector<unsigned int>*> _accelBasisCentersIds = nullptr;
@@ -224,10 +216,8 @@ public:
     // Parameters
     uint _maxNbItMatBBInversion = 10;
     uint _nbStretchLoops = 2;
-    float _obstacleSpeed = 1.f;
     float _dt = 0.0325f;
     float _buoyancyPerParticle = 0.1f;
-    float _obstacleRadius = 0.2f;
     glm::mat4 _viewProjMat = { 1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1 };
     uint _substepsParticles = 1;
     float _seedCenterX = 0.f;
@@ -240,6 +230,21 @@ public:
     float _explicitTransferExponent = -1.66f;
     float _factorDeformation = 0.5f;
     float _obstacleBoundaryFactorTransferOnly = 1.5f;
+
+    
+    //ObstacleType _obstacleType = ObstacleType::None;
+    ObstacleType _obstacleType = ObstacleType::Circle;
+    //ObstacleType _obstacleType = ObstacleType::Bar;
+
+    float _obstacleCircleRadius = 0.2f;
+    float _obstacleCircleMotionSpeed = 1.f;
+    float _obstacleCircleMotionRadius = 0.25f;
+
+    float _obstacleBarWidth = 0.2f;
+    float _obstacleBarHeight = 0.1f;
+    float _obstacleBarRotationSpeed = 0.789f;
+    float _obstacleBarMotionSpeed = 0.75f;
+    float _obstacleBarMotionAmplitude = 0.25f;
 
     float _explicitTransfer_10 = 1.f;//0.f;
     float _explicitTransfer_01 = 1.f;//0.f;

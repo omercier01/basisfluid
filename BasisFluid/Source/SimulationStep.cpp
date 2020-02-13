@@ -92,7 +92,7 @@ void Application::SimulationStep()
     //BasisFlow* basisFlowParamsPointer = _basisFlowParams->getCpuDataPointer();
     basisFlowParamsPointer = _basisFlowParams->getCpuDataPointer();
 
-    scalar_inversion_storage* vecBPointer = _vecB->getCpuDataPointer();
+    double* vecBPointer = _vecB->getCpuDataPointer();
     for (unsigned int iBasis = 0; iBasis < _basisFlowParams->_nbElements; ++iBasis)
     {
         BasisFlow& b = basisFlowParamsPointer[iBasis];
@@ -102,7 +102,7 @@ void Application::SimulationStep()
     //inverseBBMatrix(vecX,vecB,inversionPrecision);
     InverseBBMatrix(_vecXBoundaryForces.get(), _vecB.get(), BASIS_FLAGS::DYNAMIC_BOUNDARY_PROJECTION);
 
-    scalar_inversion_storage* vecXBoundaryForcesPointer = _vecXBoundaryForces->getCpuDataPointer();
+    double* vecXBoundaryForcesPointer = _vecXBoundaryForces->getCpuDataPointer();
     for (unsigned int i = 0; i < _basisFlowParams->_nbElements; ++i) {
         basisFlowParamsPointer[i].coeffBoundary = float(vecXBoundaryForcesPointer[i]);
     }

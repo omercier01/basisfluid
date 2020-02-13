@@ -175,24 +175,24 @@ bool Application::Init_DataBuffers() {
 
 
 
-    _vecX = make_unique<DataBuffer1D<scalar_inversion_storage>>(0);
-    _vecX->_sourceStorageType = DataBuffer1D<scalar_inversion_storage>::StorageType::CPU;
+    _vecX = make_unique<DataBuffer1D<double>>(0);
+    _vecX->_sourceStorageType = DataBuffer1D<double>::StorageType::CPU;
     _vecX->createCpuStorage();
 
-    _vecTemp = make_unique<DataBuffer1D<scalar_inversion_storage>>(0);
-    _vecTemp->_sourceStorageType = DataBuffer1D<scalar_inversion_storage>::StorageType::CPU;
+    _vecTemp = make_unique<DataBuffer1D<double>>(0);
+    _vecTemp->_sourceStorageType = DataBuffer1D<double>::StorageType::CPU;
     _vecTemp->createCpuStorage();
 
-    _vecXForces = make_unique<DataBuffer1D<scalar_inversion_storage>>(0);
-    _vecXForces->_sourceStorageType = DataBuffer1D<scalar_inversion_storage>::StorageType::CPU;
+    _vecXForces = make_unique<DataBuffer1D<double>>(0);
+    _vecXForces->_sourceStorageType = DataBuffer1D<double>::StorageType::CPU;
     _vecXForces->createCpuStorage();
 
-    _vecXBoundaryForces = make_unique<DataBuffer1D<scalar_inversion_storage>>(0);
-    _vecXBoundaryForces->_sourceStorageType = DataBuffer1D<scalar_inversion_storage>::StorageType::CPU;
+    _vecXBoundaryForces = make_unique<DataBuffer1D<double>>(0);
+    _vecXBoundaryForces->_sourceStorageType = DataBuffer1D<double>::StorageType::CPU;
     _vecXBoundaryForces->createCpuStorage();
 
-    _vecB = make_unique<DataBuffer1D<scalar_inversion_storage>>(0);
-    _vecB->_sourceStorageType = DataBuffer1D<scalar_inversion_storage>::StorageType::CPU;
+    _vecB = make_unique<DataBuffer1D<double>>(0);
+    _vecB->_sourceStorageType = DataBuffer1D<double>::StorageType::CPU;
     _vecB->createCpuStorage();
 
 

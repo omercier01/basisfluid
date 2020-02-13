@@ -53,7 +53,7 @@ void Application::AddParticleForcesToBasisFlows()
 
 
     // project forces into basis space  
-    scalar_inversion_storage* vecBPointer = _vecB->getCpuDataPointer();
+    double* vecBPointer = _vecB->getCpuDataPointer();
     for (unsigned int iBasis = 0; iBasis < _basisFlowParams->_nbElements; ++iBasis) {
         if (AllBitsSet(basisFlowParamsPointer[iBasis].bitFlags, BASIS_FLAGS::FORCE_PROJECTION)) {
             vecBPointer[iBasis] = IntegrateBasisGrid(basisFlowParamsPointer[iBasis], _forceField.get());
@@ -62,7 +62,7 @@ void Application::AddParticleForcesToBasisFlows()
             vecBPointer[iBasis] = 0;
         }
     }
-    _vecB->_sourceStorageType = DataBuffer1D<scalar_inversion_storage>::StorageType::CPU;
+    _vecB->_sourceStorageType = DataBuffer1D<double>::StorageType::CPU;
     //_vecB->dirtyData();
 
 
@@ -74,11 +74,11 @@ void Application::AddParticleForcesToBasisFlows()
 
     // add force weights to current basis weights
     //_vecXForces->refreshCpuData();
-    scalar_inversion_storage* vecXForcesPointer = _vecXForces->getCpuDataPointer();
+    double* vecXForcesPointer = _vecXForces->getCpuDataPointer();
     for (unsigned int i = 0; i < _basisFlowParams->_nbElements; ++i) {
         basisFlowParamsPointer[i].coeff += _dt * float(vecXForcesPointer[i]);
     }
-    _vecXForces->_sourceStorageType = DataBuffer1D<scalar_inversion_storage>::StorageType::CPU;
+    _vecXForces->_sourceStorageType = DataBuffer1D<double>::StorageType::CPU;
     //vecXForces->dirtyData();
 
 }

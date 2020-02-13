@@ -39,19 +39,19 @@ bool BasisFlow::EmptyIntersectionWithBasis(const BasisFlow& b) const {
 
 
 void Application::InverseBBMatrixMain(
-    unsigned int iRow, scalar_inversion_storage* vecX, scalar_inversion_storage* vecB,
+    unsigned int iRow, double* vecX, double* vecB,
     BasisFlow* basisDataPointer, unsigned int basisBitMask)
 {
-    scalar_inversion_inner tempX = scalar_inversion_inner(vecB[iRow]);
+    float tempX = float(vecB[iRow]);
 
     vector<CoeffBBDecompressedIntersectionInfo>& intersectionInfos = _coeffsBBDecompressedIntersections[iRow];
     for (const CoeffBBDecompressedIntersectionInfo& inter : intersectionInfos) {
         if (AllBitsSet(basisDataPointer[inter.j].bitFlags, basisBitMask)) {
-            tempX -= inter.coeff * scalar_inversion_inner(vecX[inter.j]);
+            tempX -= inter.coeff * float(vecX[inter.j]);
         }
     }
 
-    vecX[iRow] = scalar_inversion_storage(tempX / scalar_inversion_inner(basisDataPointer[iRow].normSquared));
+    vecX[iRow] = double(tempX / float(basisDataPointer[iRow].normSquared));
 }
 
 
@@ -60,8 +60,8 @@ void Application::InverseBBMatrixMain(
 // Since bases are ordered by wavenumber, doing only one step of GS is equivalent to projection by frequency layer.
 // The bitMask indicates the bits that must be set for the basis to be used in the inversion.
 void Application::InverseBBMatrix(
-    DataBuffer1D<scalar_inversion_storage>* vecX,
-    DataBuffer1D<scalar_inversion_storage>* vecB,
+    DataBuffer1D<double>* vecX,
+    DataBuffer1D<double>* vecB,
     unsigned int basisBitMask)
 {
 
@@ -72,11 +72,11 @@ void Application::InverseBBMatrix(
 
     // get references
     //vecX->refreshCpuData();
-    scalar_inversion_storage* vecXPointer = vecX->getCpuDataPointer();
+    double* vecXPointer = vecX->getCpuDataPointer();
     //_vecTemp->refreshCpuData();
-    scalar_inversion_storage* vecTempPointer = _vecTemp->getCpuDataPointer();
+    double* vecTempPointer = _vecTemp->getCpuDataPointer();
     //vecB->refreshCpuData();
-    scalar_inversion_storage* vecBPointer = vecB->getCpuDataPointer();
+    double* vecBPointer = vecB->getCpuDataPointer();
     //_basisFlowParams->refreshCpuData();
     BasisFlow* basisFlowParamsPointer = _basisFlowParams->getCpuDataPointer();
     //_intersectingBasesSignificantBBIds->refreshCpuData();
@@ -111,9 +111,9 @@ void Application::InverseBBMatrix(
 
 
 
-    vecX->_sourceStorageType = DataBuffer1D<scalar_inversion_storage>::StorageType::CPU;
-    _vecTemp->_sourceStorageType = DataBuffer1D<scalar_inversion_storage>::StorageType::CPU;
-    vecB->_sourceStorageType = DataBuffer1D<scalar_inversion_storage>::StorageType::CPU;
+    vecX->_sourceStorageType = DataBuffer1D<double>::StorageType::CPU;
+    _vecTemp->_sourceStorageType = DataBuffer1D<double>::StorageType::CPU;
+    vecB->_sourceStorageType = DataBuffer1D<double>::StorageType::CPU;
     _basisFlowParams->_sourceStorageType = DataBuffer1D<BasisFlow>::StorageType::CPU;
 }
 

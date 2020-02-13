@@ -6,7 +6,7 @@ using namespace std;
 using namespace glm;
 
 bool Application::Init_Obstacles() {
-    
+
     // domain boundaries
     _obstacles.push_back(new Obstacle(
         [=](vec2 p) {return p.x - _domainLeft; },
@@ -25,8 +25,12 @@ bool Application::Init_Obstacles() {
         [=](vec2 /*p*/) {return vec2(0, -1); }
     ));
 
-    // rotating circle
-    _obstacles.push_back(new ObstacleCircle());
+    if (_obstacleType == ObstacleType::Circle) {
+        _obstacles.push_back(new ObstacleCircle());
+    }
+    if (_obstacleType == ObstacleType::Bar) {
+        _obstacles.push_back(new ObstacleBar());
+    }
 
 
     for (Obstacle* obs : _obstacles)
