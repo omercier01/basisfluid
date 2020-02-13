@@ -38,32 +38,20 @@ bool BasisFlow::EmptyIntersectionWithBasis(const BasisFlow& b) const {
 }
 
 
-scalar_inversion_inner Application::InverseBBMatrixMain(
+void Application::InverseBBMatrixMain(
     unsigned int iRow, scalar_inversion_storage* vecX, scalar_inversion_storage* vecB,
     BasisFlow* basisDataPointer, unsigned int basisBitMask)
 {
-    scalar_inversion_inner xSquaredDiff = 0;
     scalar_inversion_inner tempX = scalar_inversion_inner(vecB[iRow]);
 
     vector<CoeffBBDecompressedIntersectionInfo>& intersectionInfos = _coeffsBBDecompressedIntersections[iRow];
     for (const CoeffBBDecompressedIntersectionInfo& inter : intersectionInfos) {
-        //            if( atLeastOneBitNotSet(basisDataPointer[inter.j].bitFlags, basisBitMask) ) {
-        //                continue;
-        //            }
-        //            tempX -= inter.coeff * scalar_inversion_inner(vecX[inter.j]);
         if (AllBitsSet(basisDataPointer[inter.j].bitFlags, basisBitMask)) {
             tempX -= inter.coeff * scalar_inversion_inner(vecX[inter.j]);
         }
-
     }
 
-    // TODO: make all bases normalized in 3D so we can save a fetch + division here
-    scalar_inversion_storage newX = scalar_inversion_storage(tempX / scalar_inversion_inner(basisDataPointer[iRow].normSquared));
-    scalar_inversion_storage oldX = vecX[iRow];
-
-    xSquaredDiff = Sqr(scalar_inversion_inner(newX - oldX));
-    vecX[iRow] = newX;
-    return scalar_inversion_inner(xSquaredDiff);
+    vecX[iRow] = scalar_inversion_storage(tempX / scalar_inversion_inner(basisDataPointer[iRow].normSquared));
 }
 
 
@@ -74,7 +62,7 @@ scalar_inversion_inner Application::InverseBBMatrixMain(
 void Application::InverseBBMatrix(
     DataBuffer1D<scalar_inversion_storage>* vecX,
     DataBuffer1D<scalar_inversion_storage>* vecB,
-    float tol, unsigned int basisBitMask, unsigned int minFreq)
+    unsigned int basisBitMask)
 {
 
 
@@ -100,28 +88,23 @@ void Application::InverseBBMatrix(
         vecXPointer[i] = 0.;
     }
 
-    scalar_inversion_inner xSquaredDiff = 999999;
     uint iIt = 0;
-    while (xSquaredDiff > tol && iIt < maxNbItMatBBInversion) {
-        xSquaredDiff = 0;
+    while (iIt < maxNbItMatBBInversion) {
 
         for (int iBasisGroup = 0; iBasisGroup < _orthogonalBasisGroupIds.size(); iBasisGroup++)
         {
             vector<unsigned int> ids = _orthogonalBasisGroupIds[iBasisGroup];
-#pragma omp parallel for num_threads(7) reduction(+:xSquaredDiff) shared(vecXPointer,vecBPointer,ids,basisFlowParamsPointer) firstprivate(basisBitMask,alpha,minFreq) default(none)
+#pragma omp parallel for num_threads(7) shared(vecXPointer,vecBPointer,ids,basisFlowParamsPointer) firstprivate(basisBitMask,minFreq) default(none)
             for (int idid = 0; idid < ids.size(); idid++) {
                 int iRow = ids[idid];
                 if (
-                    AllBitsSet(basisFlowParamsPointer[iRow].bitFlags, basisBitMask) &&
-                    uint(basisFlowParamsPointer[iRow].freqLvl.x) >= minFreq
-                    && uint(basisFlowParamsPointer[iRow].freqLvl.y) >= minFreq
+                    AllBitsSet(basisFlowParamsPointer[iRow].bitFlags, basisBitMask)
                     ) {
-                    xSquaredDiff += InverseBBMatrixMain(iRow, vecXPointer, vecBPointer, basisFlowParamsPointer, basisBitMask);
+                    InverseBBMatrixMain(iRow, vecXPointer, vecBPointer, basisFlowParamsPointer, basisBitMask);
                 }
             }
         }
 
-        xSquaredDiff = std::sqrtf(xSquaredDiff / n);
         iIt++;
     }
 

@@ -69,18 +69,17 @@ public:
 
     float MatBBCoeff(int i, int j);
     float MatBBCoeff(const BasisFlow& b1, const BasisFlow& b2);
-    scalar_inversion_inner InverseBBMatrixMain(
-        unsigned int iRow, scalar_inversion_storage* vecX, scalar_inversion_storage* vecB,
-        BasisFlow* basisDataPointer, unsigned int basisBitMask);
+
     glm::vec2 MatTCoeff(int i, int j);
     glm::vec2 MatTCoeff(BasisFlow bTransported, BasisFlow bTransporting);
-    
+
     void InverseBBMatrix(
         DataBuffer1D<scalar_inversion_storage>* vecX,
         DataBuffer1D<scalar_inversion_storage>* vecB,
-        float tol = 1e-5f,
-        unsigned int basisBitMask = 0,
-        unsigned int minFreq = 0);
+        unsigned int basisBitMask);
+    void InverseBBMatrixMain(
+        unsigned int iRow, scalar_inversion_storage* vecX, scalar_inversion_storage* vecB,
+        BasisFlow* basisDataPointer, unsigned int basisBitMask);
 
 
 
@@ -97,7 +96,7 @@ public:
     glm::dmat2 TranslatedBasisGradEvalPrecise(const glm::dvec2 p, const glm::ivec2 freqLvl, const glm::dvec2 center);
     glm::vec2 AverageBasisOnSupport(BasisFlow bVec, BasisFlow bSupport);
 
-    BasisFlow ComputeStretch(BasisFlow b, bool staticObstaclesOnly=false, bool noStretch=false);
+    BasisFlow ComputeStretch(BasisFlow b, bool staticObstaclesOnly = false, bool noStretch = false);
     void ComputeStretches();
     vec2 QuadCoord(vec2 p, BasisFlow const& b);
     mat2 QuadCoordInvDeriv(vec2 uv, BasisFlow const& b);
@@ -110,10 +109,10 @@ public:
     void AddParticleForcesToBasisFlows();
     float ComputeNewCenterProportions(vec2& newCenter, BasisFlow& bi, BasisFlow& bj, vec2& interBasisDist);
     void ComputeBasisAdvection();
-    
+
     inline float WavenumberBasis(BasisFlow& b)
     {
-        return powf(2.f,0.5f*(b.freqLvl.x+b.freqLvl.y)) ;
+        return powf(2.f, 0.5f*(b.freqLvl.x + b.freqLvl.y));
     }
 
 public:
@@ -149,9 +148,9 @@ public:
     const int _maxFreqLvl = 2;
     const int _minAnisoLvl = 0;
     const int _maxAnisoLvl = 1; //  MAXIMUM 2, OTHER BASES ARE NOT DEFINED
-    #define _lengthLvl0 1.0f
+#define _lengthLvl0 1.0f
 
-    const float _coeffSnapSize = _lengthLvl0/float(1<<_maxFreqLvl)/32.0f;
+    const float _coeffSnapSize = _lengthLvl0 / float(1 << _maxFreqLvl) / 32.0f;
 
 public:
 
@@ -216,7 +215,7 @@ public:
     MapTypeT _coeffsT;
     std::vector<std::vector<CoeffBBDecompressedIntersectionInfo>> _coeffsBBDecompressedIntersections; // Does not include the basis itself.
     std::vector<std::vector<CoeffTDecompressedIntersectionInfo>>  _coeffsTDecompressedIntersections;
-            
+
     // shader pipelines
     ObstacleShaderPipeline* _pipelineObstacle;
     ParticleShaderPipeline* _pipelineParticle;
@@ -229,19 +228,18 @@ public:
     float _dt = 0.0325f;
     float _buoyancyPerParticle = 0.1f;
     float _obstacleRadius = 0.2f;
-    glm::mat4 _viewProjMat = {1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1};
+    glm::mat4 _viewProjMat = { 1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1 };
     uint _substepsParticles = 1;
     float _seedCenterX = 0.f;
     float _seedCenterY = -0.75f;
     float _seedRadius = 0.1f;
-    const float _densityMultiplierBasisHalfSize = 1.f/2.f;
+    const float _densityMultiplierBasisHalfSize = 1.f / 2.f;
     float _buoyancyDecayRatioWithAge = 1.f;
     uint _substepsDeformation = 1;
     float _explicitTransferSpeed = 0.1f;
     float _explicitTransferExponent = -1.66f;
     float _factorDeformation = 0.5f;
     float _obstacleBoundaryFactorTransferOnly = 1.5f;
-    float _toleranceBBCoeff = 1e-6f;
 
     float _explicitTransfer_10 = 1.f;//0.f;
     float _explicitTransfer_01 = 1.f;//0.f;
@@ -262,9 +260,9 @@ public:
     // Status
     bool _readyToQuit = false;
     bool _newBBCoeffComputed = false;
-    bool _newACoeffComputed  = false;
-    bool _newTCoeffComputed  = false;
-    bool _newRCoeffComputed  = false;
+    bool _newACoeffComputed = false;
+    bool _newTCoeffComputed = false;
+    bool _newRCoeffComputed = false;
     bool _obstacleDisplayNeedsUpdating = true;
     bool _basisStretchedUpdateRequired = true;
     unsigned int _particleCircularSeedId = 0;

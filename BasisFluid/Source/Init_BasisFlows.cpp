@@ -46,7 +46,7 @@ bool Application::Init_BasisFlows() {
         ivec2 freq = ivec2(powf(2.f, float(freqLvl.x)), powf(2.f, float(freqLvl.y)));
 
         //vec2 origin = vec2(0, 0);
-        vec2 origin = _lengthLvl0*vec2( (1.f/4.f)/2.f*(1.f-1.f/freq.x), (1.f/4.f)/2.f*(1.f-1.f/freq.y) );
+        vec2 origin = _lengthLvl0 * vec2((1.f / 4.f) / 2.f*(1.f - 1.f / freq.x), (1.f / 4.f) / 2.f*(1.f - 1.f / freq.y));
         vec2 stride = 0.5f*vec2(1.f / freq.x, 1.f / freq.y);
         vec2 extraOffsets[4] = { vec2(0,0), vec2(0.5,0), vec2(0,0.5), vec2(0.5,0.5) };
 
@@ -186,12 +186,8 @@ bool Application::Init_BasisFlows() {
                 _intersectingBasesIds->getCpuData_noRefresh(iBasis1)->push_back(iBasis2);
                 _intersectingBasesIds->getCpuData_noRefresh(iBasis2)->push_back(iBasis1);
 
-
-                // significant BB
-                if (abs(MatBBCoeff(b1, b2)) >= _toleranceBBCoeff) {
-                    _intersectingBasesSignificantBBIds->getCpuData_noRefresh(iBasis1)->push_back(iBasis2);
-                    _intersectingBasesSignificantBBIds->getCpuData_noRefresh(iBasis2)->push_back(iBasis1);
-                }
+                _intersectingBasesSignificantBBIds->getCpuData_noRefresh(iBasis1)->push_back(iBasis2);
+                _intersectingBasesSignificantBBIds->getCpuData_noRefresh(iBasis2)->push_back(iBasis1);
 
 
                 // transport
@@ -276,18 +272,16 @@ bool Application::Init_BasisFlows() {
         for (auto it = localIntersectingBasesIds->begin(); it != localIntersectingBasesIds->end(); ++it) {
             if (*it == i) { continue; }
             float coeff = float(MatBBCoeff(i, (*it)));
-            if (abs(coeff) > _toleranceBBCoeff) {
-                intersectionInfos.push_back(CoeffBBDecompressedIntersectionInfo((*it), coeff));
+            intersectionInfos.push_back(CoeffBBDecompressedIntersectionInfo((*it), coeff));
 
-                ivec2 freqJ = _basisFlowParams->getCpuData(*it).freqLvl;
-                for (int iRelFreq = 0; iRelFreq < _nbExplicitTransferFreqs; iRelFreq++) {
-                    if (freqJ - freqI == _explicitTransferFreqs[iRelFreq]) {
+            ivec2 freqJ = _basisFlowParams->getCpuData(*it).freqLvl;
+            for (int iRelFreq = 0; iRelFreq < _nbExplicitTransferFreqs; iRelFreq++) {
+                if (freqJ - freqI == _explicitTransferFreqs[iRelFreq]) {
 
-                        explicitTransferTotalWeight_abs[iRelFreq] += abs(coeff);
-                        explicitTransferTotalWeight_sqr[iRelFreq] += Sqr(coeff);
+                    explicitTransferTotalWeight_abs[iRelFreq] += abs(coeff);
+                    explicitTransferTotalWeight_sqr[iRelFreq] += Sqr(coeff);
 
-                        _intersectingBasesIdsDeformation[iRelFreq]->getCpuData(i)->push_back(CoeffBBDecompressedIntersectionInfo((*it), coeff));
-                    }
+                    _intersectingBasesIdsDeformation[iRelFreq]->getCpuData(i)->push_back(CoeffBBDecompressedIntersectionInfo((*it), coeff));
                 }
             }
         }

@@ -67,7 +67,7 @@ void Application::AddParticleForcesToBasisFlows()
 
 
     // inverse to obtain base weights
-    InverseBBMatrix(_vecXForces.get(), _vecB.get(), 0, BASIS_FLAGS::FORCE_PROJECTION);
+    InverseBBMatrix(_vecXForces.get(), _vecB.get(), BASIS_FLAGS::FORCE_PROJECTION);
 
 
 

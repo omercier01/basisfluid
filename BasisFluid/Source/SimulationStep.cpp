@@ -100,7 +100,7 @@ void Application::SimulationStep()
     }
 
     //inverseBBMatrix(vecX,vecB,inversionPrecision);
-    InverseBBMatrix(_vecXBoundaryForces.get(), _vecB.get(), 0, BASIS_FLAGS::DYNAMIC_BOUNDARY_PROJECTION);
+    InverseBBMatrix(_vecXBoundaryForces.get(), _vecB.get(), BASIS_FLAGS::DYNAMIC_BOUNDARY_PROJECTION);
 
     scalar_inversion_storage* vecXBoundaryForcesPointer = _vecXBoundaryForces->getCpuDataPointer();
     for (unsigned int i = 0; i < _basisFlowParams->_nbElements; ++i) {
