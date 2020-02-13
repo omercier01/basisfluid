@@ -62,15 +62,6 @@ public:
     bool Init_BasisFlows();
 
     bool Init_Shaders();
-    bool Init_ObstacleShader();
-    bool Init_ParticleShader();
-    bool Init_VelocityArrowsShader();
-
-    bool Init_CSIntegrateAvgBasis();
-    bool Init_CSIntegrateBasisBasis();
-    bool Init_CSIntegrateBasisGradBasis();
-    bool Init_CSIntegrateBasisGrid_onePerDispatch();
-    bool Init_CSIntegrateBasisGrid_onePerInvocation();
 
     void SimulationStep();
     void Draw();
@@ -80,7 +71,7 @@ public:
     float MatBBCoeff(const BasisFlow& b1, const BasisFlow& b2);
     scalar_inversion_inner InverseBBMatrixMain(
         unsigned int iRow, scalar_inversion_storage* vecX, scalar_inversion_storage* vecB,
-        BasisFlow* basisDataPointer, unsigned int basisBitMask, float alpha);
+        BasisFlow* basisDataPointer, unsigned int basisBitMask);
     glm::vec2 MatTCoeff(int i, int j);
     glm::vec2 MatTCoeff(BasisFlow bTransported, BasisFlow bTransporting);
     
@@ -232,17 +223,7 @@ public:
     VelocityArrowShaderPipeline* _pipelineVelocityArrow;
 
     // Parameters
-    bool _seedParticles = true;
-    bool _showVelocity = false;
-    bool _useForcesFromParticles = true;
-    bool _drawParticles = true;
-    bool _moveObstacles = true;
-    bool _stepSimulation = true;
-    float _velocityArrowFactor = 0.1f;
     uint _maxNbItMatBBInversion = 10;
-    float _relaxationAlpha = 1.f;
-    #define _bInversionGaussSeidel 1
-    const unsigned int _minSizeParallelInverse = 0;
     uint _nbStretchLoops = 2;
     float _obstacleSpeed = 1.f;
     float _dt = 0.0325f;
@@ -254,13 +235,10 @@ public:
     float _seedCenterY = -0.75f;
     float _seedRadius = 0.1f;
     const float _densityMultiplierBasisHalfSize = 1.f/2.f;
-    float _forceDecayRatioWithAge = 1.f;
+    float _buoyancyDecayRatioWithAge = 1.f;
     uint _substepsDeformation = 1;
     float _explicitTransferSpeed = 0.1f;
     float _explicitTransferExponent = -1.66f;
-    bool _explicitDissipateHighFreqs = false;
-    bool _convertTransportLeakToDeformation = false;//true;
-    bool _allowTransportLeak = true;
     float _factorDeformation = 0.5f;
     float _obstacleBoundaryFactorTransferOnly = 1.5f;
     float _toleranceBBCoeff = 1e-6f;
@@ -271,6 +249,15 @@ public:
     float _explicitTransfer_m10 = 0.f;
     float _explicitTransfer_0m1 = 0.f;
     float _explicitTransfer_m1m1 = 0.f;
+
+    // Controls status
+    bool _seedParticles = true;
+    bool _showVelocity = false;
+    bool _useForcesFromParticles = true;
+    bool _drawParticles = true;
+    bool _moveObstacles = true;
+    bool _stepSimulation = true;
+    float _velocityArrowFactor = 0.1f;
 
     // Status
     bool _readyToQuit = false;

@@ -40,7 +40,7 @@ bool BasisFlow::EmptyIntersectionWithBasis(const BasisFlow& b) const {
 
 scalar_inversion_inner Application::InverseBBMatrixMain(
     unsigned int iRow, scalar_inversion_storage* vecX, scalar_inversion_storage* vecB,
-    BasisFlow* basisDataPointer, unsigned int basisBitMask, float alpha)
+    BasisFlow* basisDataPointer, unsigned int basisBitMask)
 {
     scalar_inversion_inner xSquaredDiff = 0;
     scalar_inversion_inner tempX = scalar_inversion_inner(vecB[iRow]);
@@ -62,7 +62,7 @@ scalar_inversion_inner Application::InverseBBMatrixMain(
     scalar_inversion_storage oldX = vecX[iRow];
 
     xSquaredDiff = Sqr(scalar_inversion_inner(newX - oldX));
-    vecX[iRow] = (1 - alpha)*oldX + alpha * newX;
+    vecX[iRow] = newX;
     return scalar_inversion_inner(xSquaredDiff);
 }
 
@@ -81,7 +81,6 @@ void Application::InverseBBMatrix(
 
     uint maxNbItMatBBInversion = _maxNbItMatBBInversion;
     uint n = vecX->_nbElements;
-    float alpha = _relaxationAlpha;
 
     // get references
     //vecX->refreshCpuData();
@@ -94,125 +93,45 @@ void Application::InverseBBMatrix(
     BasisFlow* basisFlowParamsPointer = _basisFlowParams->getCpuDataPointer();
     //_intersectingBasesSignificantBBIds->refreshCpuData();
 
-    if (_bInversionGaussSeidel)
-    {
 
         // zero x
         //#pragma omp parallel for
-        for (int i = 0; i < int(n); i++) {
-            vecXPointer[i] = 0.;
-        }
+    for (int i = 0; i < int(n); i++) {
+        vecXPointer[i] = 0.;
+    }
 
-        scalar_inversion_inner xSquaredDiff = 999999;
-        uint iIt = 0;
-        if (maxNbItMatBBInversion == 0)
+    scalar_inversion_inner xSquaredDiff = 999999;
+    uint iIt = 0;
+    while (xSquaredDiff > tol && iIt < maxNbItMatBBInversion) {
+        xSquaredDiff = 0;
+
+        for (int iBasisGroup = 0; iBasisGroup < _orthogonalBasisGroupIds.size(); iBasisGroup++)
         {
-            for (uint iRow = 0; iRow < n; iRow++) {
+            vector<unsigned int> ids = _orthogonalBasisGroupIds[iBasisGroup];
+#pragma omp parallel for num_threads(7) reduction(+:xSquaredDiff) shared(vecXPointer,vecBPointer,ids,basisFlowParamsPointer) firstprivate(basisBitMask,alpha,minFreq) default(none)
+            for (int idid = 0; idid < ids.size(); idid++) {
+                int iRow = ids[idid];
                 if (
                     AllBitsSet(basisFlowParamsPointer[iRow].bitFlags, basisBitMask) &&
                     uint(basisFlowParamsPointer[iRow].freqLvl.x) >= minFreq
                     && uint(basisFlowParamsPointer[iRow].freqLvl.y) >= minFreq
                     ) {
-                    vecXPointer[iRow] = vecBPointer[iRow];
+                    xSquaredDiff += InverseBBMatrixMain(iRow, vecXPointer, vecBPointer, basisFlowParamsPointer, basisBitMask);
                 }
             }
         }
-        else {
-            while (xSquaredDiff > tol && iIt < maxNbItMatBBInversion) {
-                xSquaredDiff = 0;
 
-                for (int iBasisGroup = 0; iBasisGroup < _orthogonalBasisGroupIds.size(); iBasisGroup++)
-                {
-                    vector<unsigned int> ids = _orthogonalBasisGroupIds[iBasisGroup];
-                    if (ids.size() >= _minSizeParallelInverse)
-                    {
-#pragma omp parallel for num_threads(7) reduction(+:xSquaredDiff) shared(vecXPointer,vecBPointer,ids,basisFlowParamsPointer) firstprivate(basisBitMask,alpha,minFreq) default(none)
-                        for (int idid = 0; idid < ids.size(); idid++) {
-                            int iRow = ids[idid];
-                            if (
-                                AllBitsSet(basisFlowParamsPointer[iRow].bitFlags, basisBitMask) &&
-                                uint(basisFlowParamsPointer[iRow].freqLvl.x) >= minFreq
-                                && uint(basisFlowParamsPointer[iRow].freqLvl.y) >= minFreq
-                                ) {
-                                xSquaredDiff += InverseBBMatrixMain(iRow, vecXPointer, vecBPointer, basisFlowParamsPointer, basisBitMask, alpha);
-                            }
-                        }
-                    }
-                    else {
-                        for (int idid = 0; idid < ids.size(); idid++) {
-                            int iRow = ids[idid];
-                            if (
-                                AllBitsSet(basisFlowParamsPointer[iRow].bitFlags, basisBitMask) &&
-                                uint(basisFlowParamsPointer[iRow].freqLvl.x) >= minFreq
-                                && uint(basisFlowParamsPointer[iRow].freqLvl.y) >= minFreq
-                                ) {
-                                xSquaredDiff += InverseBBMatrixMain(iRow, vecXPointer, vecBPointer, basisFlowParamsPointer, basisBitMask, alpha);
-                            }
-                        }
-                    }
-                }
-
-                xSquaredDiff = std::sqrtf(xSquaredDiff / n);
-                iIt++;
-            }
-        }
-    }
-    else {
-
-        //Invert with Jacobi
-        // TODO: make this paralll and as fast as Gauss-Seidel if we want to compare them fairly.
-
-        // zero x
-        for (uint i = 0; i < n; i++) {
-            vecXPointer[i] = 0.f;
-        }
-
-        scalar_inversion_inner xSquaredDiff = 999999;
-        uint iIt = 0;
-        while (xSquaredDiff > tol && iIt < maxNbItMatBBInversion) {
-            xSquaredDiff = 0;
-            for (uint iRow = 0; iRow < n; iRow++) {
-
-                if (AtLeastOneBitNotSet(basisFlowParamsPointer[iRow].bitFlags, basisBitMask)) {
-                    continue;
-                }
-                scalar_inversion_inner tempX = scalar_inversion_inner(vecBPointer[iRow]);
-
-                vector<CoeffBBDecompressedIntersectionInfo>& intersectionInfos = _coeffsBBDecompressedIntersections[iRow];
-                for (CoeffBBDecompressedIntersectionInfo& inter : intersectionInfos) {
-                    if (AllBitsSet(basisFlowParamsPointer[inter.j].bitFlags, basisBitMask)) {
-                        tempX -= inter.coeff * scalar_inversion_inner(vecXPointer[inter.j]);
-                    }
-                }
-                // TODO: remove division once 3D bases have norm 1
-                BasisFlow bi = basisFlowParamsPointer[iRow];
-                scalar_inversion_storage newX = scalar_inversion_storage(tempX / scalar_inversion_inner(bi.normSquared));
-                xSquaredDiff += Sqr(scalar_inversion_inner(newX - vecXPointer[iRow]));
-                vecTempPointer[iRow] = newX;
-
-            }
-            for (uint i = 0; i < n; i++) {
-                vecXPointer[i] = (1 - alpha)*vecXPointer[i] + alpha * vecTempPointer[i];
-            }
-
-            xSquaredDiff = std::sqrtf(xSquaredDiff / n);
-
-            iIt++;
-        }
-
+        xSquaredDiff = std::sqrtf(xSquaredDiff / n);
+        iIt++;
     }
 
 
 
 
     vecX->_sourceStorageType = DataBuffer1D<scalar_inversion_storage>::StorageType::CPU;
-    //vecX->dirtyData();
     _vecTemp->_sourceStorageType = DataBuffer1D<scalar_inversion_storage>::StorageType::CPU;
-    //vecTemp->dirtyData();
     vecB->_sourceStorageType = DataBuffer1D<scalar_inversion_storage>::StorageType::CPU;
-    //vecB->dirtyData();
     _basisFlowParams->_sourceStorageType = DataBuffer1D<BasisFlow>::StorageType::CPU;
-    //basisFlowParams->dirtyData();
 }
 
 
@@ -320,13 +239,13 @@ float Application::IntegrateBasisBasis(BasisFlow b1, BasisFlow b2) {
                 glm::dot(TranslatedBasisEval(p, b1.freqLvl, b1.center),
                     TranslatedBasisEval(p, b2.freqLvl, b2.center));
         }
-    }
+        }
 
 
     return float(sum) * (supRight - supLeft)*(supTop - supBottom) / Sqr(_integralGridRes);
 
 
-}
+    }
 
 
 
@@ -432,7 +351,7 @@ vec2 Application::AverageBasisOnSupport(BasisFlow bVec, BasisFlow bSupport) {
     // divide by domain size to get averaged value
     return vec2(sum) * (supRight - supLeft)*(supTop - supBottom) / float(Sqr(_integralGridRes)) / ((1.f / float(1 << bSupport.freqLvl.x))*(1.f / float(1 << bSupport.freqLvl.y)));
 
-}
+    }
 
 #endif
 
@@ -786,7 +705,7 @@ dvec2 flowBasisHat(dvec2 p, int log2Aniso)
         std::cout << "unknown basis parameters" << endl;
         return dvec2(0, 0);
         break;
-    }
+}
 
 
     dvec2 p2(p.x + 0.5 / kx, p.y + 0.5 / ky);
@@ -867,7 +786,7 @@ dmat2 flowBasisHatGrad(dvec2 p, int log2Aniso)
         std::cout << "unknown basis parameters" << endl;
         return dmat2(0, 0, 0, 0);
         break;
-    }
+}
 
     dvec2 p2(p.x + 0.5 / kx, p.y + 0.5 / ky);
 

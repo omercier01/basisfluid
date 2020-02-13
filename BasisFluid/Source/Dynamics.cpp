@@ -25,7 +25,7 @@ void Application::AddParticleForcesToBasisFlows()
         index = glm::clamp(index, uvec2(0), uvec2(_nbParticlesPerCell->_nbElementsX - 1,
             _nbParticlesPerCell->_nbElementsY - 1));
         // TODO: speed up addVectorCpuData
-        _forceField->addVectorCpuData(index.x, index.y, _dt * powf(_forceDecayRatioWithAge, agesPointer[i]) * _buoyancyPerParticle*vec2(0, 1));
+        _forceField->addVectorCpuData(index.x, index.y, _dt * powf(_buoyancyDecayRatioWithAge, agesPointer[i]) * _buoyancyPerParticle*vec2(0, 1));
     }
 
 
@@ -224,7 +224,7 @@ void Application::ComputeBasisAdvection()
 
         if (!AllBitsSet(bi.bitFlags, INTERIOR) && !AllBitsSet(bi.bitFlags, DYNAMIC_BOUNDARY_PROJECTION)) { continue; }
 
-            bi.coeff = bi.newCoeff;
+        bi.coeff = bi.newCoeff;
         bi.newCoeff = 0;
     }
 
@@ -286,12 +286,6 @@ void Application::ComputeBasisAdvection()
             maxAlpha = glm::max<float>(maxAlpha, alpha); // TODO: remove this if not printing
             minAlpha = glm::min<float>(minAlpha, alpha);
 
-            if (_explicitDissipateHighFreqs)
-            {
-                bi.newCoeff -= alpha * bi.coeff;
-            }
-
-
 
             for (uint iRelFreq = 0; iRelFreq < _nbExplicitTransferFreqs; iRelFreq++)
             {
@@ -304,13 +298,8 @@ void Application::ComputeBasisAdvection()
                     alphaBiCoeff = alpha * (bi.coeff + _obstacleBoundaryFactorTransferOnly * bi.coeffBoundary);
 
                     bj.newCoeff += alphaBiCoeff * transferCoeffs[iRelFreq] * inter.coeff / _coeffBBExplicitTransferSum_abs[i].coeffs[iRelFreq];
-                    //                                bj.newCoeff += alphaBiCoeff * transferCoeffs[iRelFreq] * (bj.coeff >= 0 ? 1 : -1)*abs(inter.coeff)/coeffBBExplicitTransferSum_abs[i].coeffs[iRelFreq];
 
-                    if (!_explicitDissipateHighFreqs)
-                    {
-                        bi.newCoeff -= alpha * bi.coeff * transferCoeffs[iRelFreq] * abs(inter.coeff) / _coeffBBExplicitTransferSum_abs[i].coeffs[iRelFreq];
-                        //                                bi.newCoeff -= alpha * bi.coeff * transferCoeffs[iRelFreq] * inter.coeff/coeffBBExplicitTransferSum_abs[i].coeffs[iRelFreq];
-                    }
+                    bi.newCoeff -= alpha * bi.coeff * transferCoeffs[iRelFreq] * abs(inter.coeff) / _coeffBBExplicitTransferSum_abs[i].coeffs[iRelFreq];
                 }
             }
 
