@@ -5,7 +5,7 @@ public:
     std::function<float(glm::vec2)> phi; // assumed eikonal, to be updated by updatePhi().
     std::function<glm::vec2(glm::vec2)> gradPhi; // assumed unit norm, to be updated by updatePhi().
 
-    bool dynamic; //  can move during the simulation
+    bool dynamic; // if can move during the simulation
     bool visible;
     std::function<float(glm::vec2)> prevPhi; // only used for dynamic obstacles, copied from phi;
     std::function<glm::vec2(glm::vec2)> prevGradPhi; // only used for dynamic obstacles, copied from gradPhi;
@@ -75,7 +75,6 @@ struct ObstacleBar : Obstacle {
 
         _frameCount++;
 
-        //float theta = -3.1416f/4.f + pApp->tw->obstacleSpeed.get()*pApp->tw->dt.get()*pApp->frameCount;
         float theta = app->_obstacleBarRotationSpeed * app->_dt * _frameCount;
         float widthX = app->_obstacleBarWidth;
         float widthY = app->_obstacleBarHeight;

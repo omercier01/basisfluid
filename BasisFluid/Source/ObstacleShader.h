@@ -42,7 +42,6 @@ public:
             new ShaderPipeline::ShaderProgram(GL_FRAGMENT_SHADER, {fragmentSource}, true)
             });
 
-        //pipelineObstacle->connect_bufferLineSegmentsVertices_to_attribute("pos");
         bufferLineSegmentsVertices_loc = glGetAttribLocation(_vertexShader->_glidShaderProgram, "pos");
         bufferLineSegmentsVertices_offset = 0;
         bufferLineSegmentsVertices_nbComponents =
@@ -50,27 +49,15 @@ public:
         glEnableVertexArrayAttrib(_glidVao, bufferLineSegmentsVertices_loc);
 
 
-        //pipelineObstacle->connect_lineColor_to_uniform(GL_FRAGMENT_SHADER, "color");
         lineColor_shaderType = GL_FRAGMENT_SHADER;
         lineColor_loc = glGetUniformLocation(GetShader(lineColor_shaderType)->_glidShaderProgram, "color");
 
-        //pipelineObstacle->connect_vpMat_to_uniform(GL_VERTEX_SHADER, "vpMat");
         vpMat_shaderType = GL_VERTEX_SHADER;
         vpMat_loc = glGetUniformLocation(GetShader(vpMat_shaderType)->_glidShaderProgram, "vpMat");
 
-        //pipelineObstacle->in_lineColor.receive(vec4(0,0,0,1));
-        /*glm::vec4 lineColor = { 0,0,0,1 };
-        glProgramUniform4fv(GetShader(lineColor_shaderType)->_glidShaderProgram, lineColor_loc, 4, &lineColor[0]);*/
-
         _nbVerticesPerPrimitive = 2;
         _primitiveType = GL_LINES;
-        //_nbPrimitives = obstacleLines->metadataBuffer.nbElements;
 
-        // external connections
-        /*createPullConnection(&obstacleLines->out_metadataBuffer,
-            &pipelineObstacle->in_bufferLineSegmentsVertices)->activate();
-        createPullConnection(&cam->out_viewProjMatrix,
-            &pipelineObstacle->in_vpMat)->activate();*/
     }
 
     void Execute() {
@@ -82,7 +69,7 @@ public:
             app->_obstacleLines->_metadataBuffer.bufferId,
             0,
             app->_obstacleLines->_metadataBuffer.nbElementsPerComponent *
-                SizeOfEnumType(app->_obstacleLines->_metadataBuffer.dataType));
+            SizeOfEnumType(app->_obstacleLines->_metadataBuffer.dataType));
         glVertexArrayAttribFormat(
             _glidVao,
             bufferLineSegmentsVertices_loc,
@@ -93,15 +80,12 @@ public:
 
         glm::vec4 lineColor = { 0,0,1,1 };
         glProgramUniform4fv(GetShader(lineColor_shaderType)->_glidShaderProgram, lineColor_loc, 1, &lineColor[0]);
-        //glProgramUniform4f(GetShader(lineColor_shaderType)->_glidShaderProgram, lineColor_loc,  
-        //    lineColor.x, lineColor.y, lineColor.z, lineColor.w);
 
         glm::mat4 temp = app->_viewProjMat;
         glProgramUniformMatrix4fv(GetShader(vpMat_shaderType)->_glidShaderProgram, vpMat_loc, 1, GL_FALSE, glm::value_ptr(temp));
 
         glEnable(GL_DEPTH_TEST);
 
-        //_nbPrimitives = app->_obstacleLines->_metadataBuffer.nbElements;
         _nbPrimitives = app->_obstacleLines->_metadataBuffer.nbElements / 2;
 
         glDrawArrays(_primitiveType, 0, _nbPrimitives * _nbVerticesPerPrimitive);

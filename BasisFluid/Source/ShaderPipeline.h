@@ -1,6 +1,3 @@
-//TODO: make it possible to load some preset program pipeline,s e.g. a basic
-//phong illumination model, from already existing shader programs
-
 
 #ifndef SHADERPIPELINE_H
 #define SHADERPIPELINE_H
@@ -24,7 +21,6 @@ public:
         GLenum _shaderType;
         GLuint _glidShaderProgram;
     public:
-        ShaderProgram();
         ShaderProgram(GLenum shaderType,
                       std::initializer_list<std::string> srcFilenames,
                       bool readSrcFilenamesAsSourceCode = false);

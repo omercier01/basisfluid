@@ -30,13 +30,11 @@ inline unsigned int SizeOfEnumType(GLenum enumType) {
     switch(enumType) {
     case GL_BYTE:
     case GL_UNSIGNED_BYTE:
-//        std::cout << "RETURNING 1" << std::endl;
         return 1;
         break;
     case GL_SHORT:
     case GL_UNSIGNED_SHORT:
     case GL_HALF_FLOAT:
-//        std::cout << "RETURNING 2" << std::endl;
         return 2;
         break;
     case GL_INT:
@@ -46,11 +44,9 @@ inline unsigned int SizeOfEnumType(GLenum enumType) {
     case GL_INT_2_10_10_10_REV:
     case GL_UNSIGNED_INT_2_10_10_10_REV:
     case GL_UNSIGNED_INT_10F_11F_11F_REV:
-//        std::cout << "RETURNING 4" << std::endl;
         return 4;
         break;
     case GL_DOUBLE:
-//        std::cout << "RETURNING 8" << std::endl;
         return 8;
         break;
     default:

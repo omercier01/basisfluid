@@ -58,7 +58,6 @@ void Application::CallbackMouseScroll(GLFWwindow* /*pGlfwWindow*/, double /*xOff
         app->_velocityArrowFactor /= 1.2f;
     }
     cout << "Velocity arrow length = " << app->_velocityArrowFactor << "." << endl;
-    //pipelineArrows->in_arrowLengthFactor.receive(factor);
 }
 
 

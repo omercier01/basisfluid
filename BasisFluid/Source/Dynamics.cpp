@@ -14,24 +14,17 @@ void Application::AddParticleForcesToBasisFlows()
 
 
     // add particle forces in forces grid
-    //_partPos->refreshCpuData();
     vec2* particlesPointer = _partPos->getCpuDataPointer();
-    //_partAges->refreshCpuData();
     float* agesPointer = _partAges->getCpuDataPointer();
 
 
-    for (unsigned int i = 0; i < _partPos->_nbElements; i++) { //  everywhere use const to store end of loop, so compiler can optimize the check?
+    for (unsigned int i = 0; i < _partPos->_nbElements; i++) {
         uvec2 index = _forceField->pointToClosestIndex(particlesPointer[i]);
         index = glm::clamp(index, uvec2(0), uvec2(_nbParticlesPerCell->_nbElementsX - 1,
             _nbParticlesPerCell->_nbElementsY - 1));
-        // TODO: speed up addVectorCpuData
         _forceField->addVectorCpuData(index.x, index.y, _dt * powf(_buoyancyDecayRatioWithAge, agesPointer[i]) * _buoyancyPerParticle*vec2(0, 1));
     }
 
-
-
-
-    //_basisFlowParams->refreshCpuData();
     BasisFlow* basisFlowParamsPointer = _basisFlowParams->getCpuDataPointer();
 
     // set flag for whether or not to use basis for forces
@@ -45,12 +38,6 @@ void Application::AddParticleForcesToBasisFlows()
         }
     }
     _basisFlowParams->_sourceStorageType = DataBuffer1D<BasisFlow>::StorageType::CPU;
-    //_basisFlowParams->dirtyData();
-
-    //_basisFlowParams->refreshCpuData();
-    //BasisFlow* basisFlowParamsPointer = basisFlowParams->getCpuDataPointer();
-
-
 
     // project forces into basis space  
     double* vecBPointer = _vecB->getCpuDataPointer();
@@ -63,7 +50,6 @@ void Application::AddParticleForcesToBasisFlows()
         }
     }
     _vecB->_sourceStorageType = DataBuffer1D<double>::StorageType::CPU;
-    //_vecB->dirtyData();
 
 
     // inverse to obtain base weights
@@ -73,16 +59,13 @@ void Application::AddParticleForcesToBasisFlows()
 
 
     // add force weights to current basis weights
-    //_vecXForces->refreshCpuData();
     double* vecXForcesPointer = _vecXForces->getCpuDataPointer();
     for (unsigned int i = 0; i < _basisFlowParams->_nbElements; ++i) {
         basisFlowParamsPointer[i].coeff += _dt * float(vecXForcesPointer[i]);
     }
     _vecXForces->_sourceStorageType = DataBuffer1D<double>::StorageType::CPU;
-    //vecXForces->dirtyData();
 
 }
-
 
 
 
@@ -97,40 +80,20 @@ float Application::ComputeNewCenterProportions(vec2& newCenter, BasisFlow& bi, B
 
 
 
-
-
-
 void Application::ComputeBasisAdvection()
 {
     const unsigned int nbBasisFlows = _basisFlowParams->_nbElements;
 
 
-    //basisFlowParams->refreshCpuData();
     BasisFlow* basisFlowParamsPointer = _basisFlowParams->getCpuDataPointer();
-
-    //intersectingBasesIds->refreshCpuData();
-    //accelBasisCentersIds->refreshCpuData();
-
-
 
     for (uint i = 0; i < nbBasisFlows; i++) {
         BasisFlow& bi = basisFlowParamsPointer[i];
         bi.newCoeff = 0;
-        //bi.coeffBoundary = 0;
     }
-
-    unsigned int nbBasisTransportTooFar = 0;
-    float minTotalTempCoeffs = 99999999999.f;
-    uint minTotalTempCoeffsId = -1;
-    float maxTotalTempCoeffs = 0.f;
-    uint maxTotalTempCoeffsId = -1;
-
-
-    //        float maxCoeffNorm = 0;
 
     for (uint i = 0; i < nbBasisFlows; i++) {
 
-        //BasisFlow bi = basisFlowParams->getCpuData(i);
         BasisFlow& bi = basisFlowParamsPointer[i];
         vec2 avgDisplacement(0);
 
@@ -158,8 +121,6 @@ void Application::ComputeBasisAdvection()
             abs(newCenter.y - bi.center.y) > bi.supportHalfSize().y*_densityMultiplierBasisHalfSize*0.99
             ) {
             // new center not located within immediate neighbours, must look further using basis acceleration grid
-            // TODO: test this is okay by comparing a simulation where the basis does not go away from neighbors to the same sim forcing to use this block instead.
-            nbBasisTransportTooFar++;
             uvec2 minId(9999);
             uvec2 maxId(0);
             for (int iX = -1; iX <= 1; iX += 2) {
@@ -174,7 +135,6 @@ void Application::ComputeBasisAdvection()
                     }
                 }
             }
-
 
             for (uint iX = minId.x; iX <= maxId.x; iX++) {
                 for (uint iY = minId.y; iY <= maxId.y; iY++) {
@@ -203,22 +163,10 @@ void Application::ComputeBasisAdvection()
 
         }
 
-        // TODO: don't compute if not printing
-        if (totalTempCoeffs < minTotalTempCoeffs) {
-            minTotalTempCoeffsId = i;
-            minTotalTempCoeffs = totalTempCoeffs;
-        }
-        if (totalTempCoeffs > maxTotalTempCoeffs) {
-            maxTotalTempCoeffsId = i;
-            maxTotalTempCoeffs = totalTempCoeffs;
-        }
-
     }
 
 
     // add transport cofficients and set new coefficients
-    // TODO: Should we also ass the boundar coefficient here?
-    //     - if not, we are using the boundary flow to push the flow, but the boundary flow is not added to what is pushed. Might be okay, not sure.
     for (uint i = 0; i < nbBasisFlows; i++) {
         BasisFlow& bi = basisFlowParamsPointer[i];
 
@@ -228,20 +176,12 @@ void Application::ComputeBasisAdvection()
         bi.newCoeff = 0;
     }
 
-
-
     _basisFlowParams->_sourceStorageType = DataBuffer1D<BasisFlow>::StorageType::CPU;
-
     basisFlowParamsPointer = _basisFlowParams->getCpuDataPointer();
 
 
-
-
-
     _basisFlowParams->_sourceStorageType = DataBuffer1D<BasisFlow>::StorageType::CPU;
-
     basisFlowParamsPointer = _basisFlowParams->getCpuDataPointer();
-
 
 
     //
@@ -266,9 +206,6 @@ void Application::ComputeBasisAdvection()
     }
 
 
-    float maxAlpha = 0;
-    float minAlpha = 999999999999.f;
-
     for (uint iSubstep = 0; iSubstep < _substepsDeformation; iSubstep++)
     {
         for (uint i = 0; i < nbBasisFlows; i++) {
@@ -283,9 +220,6 @@ void Application::ComputeBasisAdvection()
             if (!AllBitsSet(bi.bitFlags, INTERIOR) && !AllBitsSet(bi.bitFlags, DYNAMIC_BOUNDARY_PROJECTION)) { continue; }
 
             float alpha = _dt * _explicitTransferSpeed * powf(WavenumberBasis(bi), -_explicitTransferExponent) / _substepsDeformation; // not exact substepping, but that's what we do by multiplying by dt anyways, so close enough I guess.
-            maxAlpha = glm::max<float>(maxAlpha, alpha); // TODO: remove this if not printing
-            minAlpha = glm::min<float>(minAlpha, alpha);
-
 
             for (uint iRelFreq = 0; iRelFreq < _nbExplicitTransferFreqs; iRelFreq++)
             {
@@ -315,8 +249,6 @@ void Application::ComputeBasisAdvection()
         }
 
     }
-
-
 
 
 

@@ -13,27 +13,6 @@ DataBuffer1D<T>::DataBuffer1D(unsigned int size) {
     _sourceStorageType = StorageType::UNKNOWN;
 }
 
-//template<class T>
-//T& DataBuffer1D<T>::operator()(unsigned int x)
-//{
-//    if(_hasCpuStorage) {
-//        return mpData[x];
-//    } else {
-//        Application::sInsertDebugMessage(
-//                "DataBuffer1D::operator() : DataBuffer has no "
-//                "CPU storage, accessing it returns a default value.",
-//                GL_DEBUG_SEVERITY_HIGH);
-//        T temp;
-//        return temp;
-//    }
-//}
-
-//template <class T>
-//T DataBuffer1D<T>::getCpuData(unsigned int i)
-//{
-//    return dataCpu.get()[i];
-//}
-
 template <class T>
 T DataBuffer1D<T>::getCpuData(unsigned int i)
 {
@@ -51,14 +30,6 @@ T* DataBuffer1D<T>::getCpuDataPointer()
 {
     return _dataCpu;
 }
-
-
-//template <class T>
-//void DataBuffer1D<T>::refreshCpuData()
-//{
-//    _dataCpu.refresh();
-//}
-
 
 template <class T>
 void DataBuffer1D<T>::setCpuData(unsigned int i, T data)
@@ -200,10 +171,6 @@ void DataBuffer1D<T>::resize(unsigned int size)
             for (int i = 0; i < nbElementsToCopy; i++) {
                 newData[i] = getCpuData(i);
             }
-            //            for(unsigned int i=nbElementsToCopy; i<size; i++) {
-                //            newData[i] = 0;
-                            // initialize? With what?
-            //            }
             delete[] _dataCpu;
             _dataCpu = newData;
             _metadataCpu.dataPointer = _dataCpu;
@@ -212,7 +179,6 @@ void DataBuffer1D<T>::resize(unsigned int size)
         if (_hasBufferStorage) {
             GLuint newBuffer;
             glCreateBuffers(1, &newBuffer);
-            //glNamedBufferStorage(newBuffer, dataCpuSizeInBytes(), NULL,
             glNamedBufferStorage(newBuffer, _capacity * _metadataBuffer.nbElementsPerComponent * SizeOfEnumType(_metadataBuffer.dataType), NULL,
                 GL_DYNAMIC_STORAGE_BIT | GL_MAP_READ_BIT |
                 GL_MAP_WRITE_BIT);
@@ -222,9 +188,7 @@ void DataBuffer1D<T>::resize(unsigned int size)
             _glidBuffer = newBuffer;
 
             _metadataBuffer.bufferId = newBuffer;
-            //        metadataBuffer.dataType = dataType;
             _metadataBuffer.nbElements = _nbElements;
-            //        metadataBuffer.nbElementsPerComponent = nbElementsPerComponent;
 
 
         }
@@ -272,12 +236,6 @@ void DataBuffer1D<T>::appendCpu(T elem)
 template<class T>
 void DataBuffer1D<T>::TransferDataCpuToBuffer()
 {
-    //if(mbHasTexture1DStorage) {
-    //    glTextureSubImage1D(mGlidTexture1D, 0, 0, mNbDataElements,
-    //                        mTexture1DExternalFormat,
-    //                        mTexture1DSizedExternalFormat, mpData);
-    //    glGenerateTextureMipmap(mGlidTexture1D);
-    //}
     if(_hasBufferStorage||_hasTextureBufferStorage) {
         glNamedBufferSubData(_glidBuffer, 0, dataCpuSizeInBytes(), _dataCpu);
     }

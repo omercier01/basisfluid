@@ -1,11 +1,10 @@
+
 // grid with world space dimensions storing any type of data
 
 #ifndef GRIDDATA2D_H
 #define GRIDDATA2D_H
 
-//#include "glm/glm.hpp"
 #include "DataBuffer2D.h"
-
 
 
 template <class T>
@@ -14,9 +13,7 @@ class GridData2D
 public:
     enum class GridNodeLocation{ CENTER, CORNER };
 public:
-//private:
     DataBuffer2D<T> _data;
-//    DataBuffer2D<glm::vec2> mNodePositions;
     float _boundXMin, _boundXMax, _boundYMin, _boundYMax;
     unsigned int _nbCellsX, _nbCellsY;
     GridNodeLocation _gridNodeLocation;

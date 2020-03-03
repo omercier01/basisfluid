@@ -26,11 +26,9 @@ void Application::SetParticlesInAccelGrid()
     vec2* particlesPointer = _partPos->getCpuDataPointer();
     vec2* partVecsPointer = _partVecs->getCpuDataPointer();
     for (uint iPart = 0; iPart < _partPos->_nbElements; ++iPart) {
-        //vec2 pos = particles->getCpuData(iPart);
         vec2 pos = particlesPointer[iPart];
         ivec2 gridId = ivec2(_accelParticles->pointToClosestIndex(pos));
         _accelParticles->getCpuData_noRefresh(gridId.x, gridId.y)->push_back(iPart);
-        //partVecs->setCpuData(iPart, vec2(0));
         partVecsPointer[iPart] = vec2(0);
     }
     _partPos->_sourceStorageType = DataBuffer1D<vec2>::StorageType::CPU;
@@ -43,13 +41,9 @@ void Application::SetParticlesInAccelGrid()
 void Application::ComputeParticleAdvection()
 {
 
-    //particles->refreshCpuData();
     vec2* particlesPointer = _partPos->getCpuDataPointer();
-    //partVecs->refreshCpuData();
     vec2* partVecsPointer = _partVecs->getCpuDataPointer();
-    //partAges->refreshCpuData();
     float* partAgesPointer = _partAges->getCpuDataPointer();
-    //_basisFlowParams->refreshCpuData();
     BasisFlow* basisFlowParamsPointer = _basisFlowParams->getCpuDataPointer();
 
     bool useLocalVectorFieldPartAdv = true;
@@ -61,7 +55,6 @@ void Application::ComputeParticleAdvection()
 
         // reset particle movement to 0.
         for (unsigned int iPart = 0; iPart < _partVecs->_nbElements; ++iPart) {
-            //partVecs->setCpuData(iPart, vec2(0));
             partVecsPointer[iPart] = vec2(0);
         }
 
@@ -69,14 +62,10 @@ void Application::ComputeParticleAdvection()
 
         // accumulate particle movement from basis velocities. Do not acutally move particles yet.
         for (unsigned int iBasis = 0; iBasis < _basisFlowParams->_nbElements; ++iBasis) {
-            //BasisFlow b = basisFlowParams->getCpuData(iBasis);
             BasisFlow& b = basisFlowParamsPointer[iBasis];
 
             // compute range of the basis in the particle acceleration grid, to know what particles to change.
             ivec2 gridIdsMin, gridIdsMax;
-            //                if(!b.valid) {
-            //                if( !allBitsSet(b.bitFlags, INTERIOR) ) {
-            //                if (true) {
             if ((!AllBitsSet(b.bitFlags, INTERIOR)) && (!AllBitsSet(b.bitFlags, DYNAMIC_BOUNDARY_PROJECTION))) {
                 continue;
             }
@@ -104,10 +93,10 @@ void Application::ComputeParticleAdvection()
                     for (auto partIt = partIds->begin(); partIt != partIds->end(); partIt++) {
                         vec2 p = particlesPointer[*partIt];
                         if (AllBitsSet(b.bitFlags, INTERIOR)) {
-                            partVecsPointer[*partIt] += VecObstacle_stretch(p, b); // TODO: This is the slow part, optimize it.
+                            partVecsPointer[*partIt] += VecObstacle_stretch(p, b);
                         }
                         partVecsPointer[*partIt] += b.coeffBoundary *
-                            TranslatedBasisEval(  // TODO: This is the slow part, optimize it.
+                            TranslatedBasisEval(
                                 p, b.freqLvl, b.center
                             )
                             ;
@@ -117,7 +106,6 @@ void Application::ComputeParticleAdvection()
                 }
             }
         }
-
 
         // actually advect particle
         for (unsigned int iPart = 0; iPart < _partPos->_nbElements; ++iPart) {
@@ -145,11 +133,9 @@ void Application::ComputeParticleAdvection()
 
     }
 
-
     _partPos->_sourceStorageType = DataBuffer1D<vec2>::StorageType::CPU;
     _partVecs->_sourceStorageType = DataBuffer1D<vec2>::StorageType::CPU;
     _partAges->_sourceStorageType = DataBuffer1D<float>::StorageType::CPU;
-
 }
 
 
@@ -160,7 +146,6 @@ void Application::ComputeParticleAdvection()
 void Application::SeedParticles()
 {
     bool pushParticlesOutOfObstacles = true;
-
 
     // reset seed cursor at beginning of circular buffer after loop, and detect looping to switch from appending to replacing
     unsigned int nbTotalPartSeed = MAX_NB_PARTICLE_SEED_GROUPS * NB_PARTICLES_TO_SEED_PER_DIM;
@@ -187,20 +172,17 @@ void Application::SeedParticles()
         }
         if (pushParticlesOutOfObstacles && isInsideObstacle) { continue; }
         float temp = mod(float(10.f*(p.y - _domainBottom) / (_domainTop - _domainBottom)), 1.f);
-        //vec3 c = vec3(1-temp,0.5*(1-temp),0.8);
         vec3 c = vec3(0, 0, 0);
 
 
         if (_particleSeedBufferLooped) {
             _partPos->setCpuData(_particleCircularSeedId, p);
             _partVecs->setCpuData(_particleCircularSeedId, vec2(0));
-            //_colors->setCpuData(_particleCircularSeedId, c);
             _partAges->setCpuData(_particleCircularSeedId, 0);
         }
         else {
             _partPos->appendCpu(p);
             _partVecs->appendCpu(vec2(0));
-            //_colors->appendCpu(c);
             _partAges->appendCpu(0);
         }
         _particleCircularSeedId++;

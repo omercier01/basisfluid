@@ -1,10 +1,3 @@
-//TODO: verify validation errors, not sure if I've done it correctly.
-
-//TODO: turn this into a component. For now, leave all the internal shader
-//linkage manually specified directly by the shader code, but later we can make
-//internal connection systems to link unrelated shaders (i.e. shader stages
-//where the names dont fit, and we change the code to alias the various
-//variables (or change their location?) so that they fit.
 
 #include "ShaderPipeline.h"
 
@@ -15,9 +8,9 @@
 using namespace std;
 
 ShaderPipeline::ShaderProgram::ShaderProgram(
-        GLenum shaderType,
-        std::initializer_list<string> srcFilenames,
-        bool readSrcFilenamesAsSourceCode)
+    GLenum shaderType,
+    std::initializer_list<string> srcFilenames,
+    bool readSrcFilenamesAsSourceCode)
 {
     _shaderType = shaderType;
 
@@ -26,31 +19,33 @@ ShaderPipeline::ShaderProgram::ShaderProgram(
     int count = 0;
     string* sourceCodeStrings;
 
-    if(readSrcFilenamesAsSourceCode) {
-        for(initializer_list<string>::iterator iSrc = srcFilenames.begin();
-                iSrc != srcFilenames.end(); iSrc++)
+    if (readSrcFilenamesAsSourceCode) {
+        for (initializer_list<string>::iterator iSrc = srcFilenames.begin();
+            iSrc != srcFilenames.end(); iSrc++)
         {
             sourceCodes[count++] = iSrc->c_str();
         }
 
-    } else {
+    }
+    else {
         // Read the Vertex Shader code from the files
         // based on http://www.opengl-tutorial.org/beginners-tutorials/tutorial-2-the-first-triangle/
 
         sourceCodeStrings = new string[nbSources];
 
-        for(initializer_list<string>::iterator iSrc = srcFilenames.begin();
-                iSrc != srcFilenames.end(); iSrc++)
+        for (initializer_list<string>::iterator iSrc = srcFilenames.begin();
+            iSrc != srcFilenames.end(); iSrc++)
         {
             ifstream sourceCodeStream(*iSrc, ios::in);
-            if(sourceCodeStream.is_open())
+            if (sourceCodeStream.is_open())
             {
                 string line = "";
-                while(getline(sourceCodeStream, line)) {
+                while (getline(sourceCodeStream, line)) {
                     sourceCodeStrings[count] += line + "\n";
                 }
                 sourceCodeStream.close();
-            } else {
+            }
+            else {
                 cout << "Error loading shader : " << *iSrc << endl;
             }
             sourceCodes[count] = sourceCodeStrings[count].c_str();
@@ -58,10 +53,6 @@ ShaderPipeline::ShaderProgram::ShaderProgram(
         }
 
     }
-    //mGlidShaderProgram = glCreateShaderProgramv(
-    //            shaderType, nbSources, sourceCodes);
-
-
 
     GLint result;
     int infoLength;
@@ -71,13 +62,14 @@ ShaderPipeline::ShaderProgram::ShaderProgram(
     glShaderSource(shader, GLsizei(nbSources), sourceCodes, NULL);
     glCompileShader(shader);
     glGetShaderiv(shader, GL_COMPILE_STATUS, &result);
-    if(!result) {
+    if (!result) {
         glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLength);
         info = new char[infoLength];
         glGetShaderInfoLog(shader, infoLength, NULL, info);
         cerr << "Compiler error in shader :" << endl;
         cerr << info << endl;
-    } else {
+    }
+    else {
         _glidShaderProgram = glCreateProgram();
         glProgramParameteri(_glidShaderProgram, GL_PROGRAM_SEPARABLE, GL_TRUE);
         glAttachShader(_glidShaderProgram, shader);
@@ -86,7 +78,7 @@ ShaderPipeline::ShaderProgram::ShaderProgram(
         glDeleteShader(shader);
 
         glGetProgramiv(_glidShaderProgram, GL_LINK_STATUS, &result);
-        if(!result) {
+        if (!result) {
             glGetProgramiv(_glidShaderProgram, GL_INFO_LOG_LENGTH, &infoLength);
             info = new char[infoLength];
             glGetProgramInfoLog(_glidShaderProgram, infoLength, NULL, info);
@@ -108,14 +100,14 @@ GLenum ShaderPipeline::GetAttribDataType(GLuint program, string attribName)
     GLint nbActiveAttribs;
     glGetProgramiv(program, GL_ACTIVE_ATTRIBUTES, &nbActiveAttribs);
     GLsizei tempLength; GLint tempSize; GLenum tempType; GLchar* tempName;
-    tempName = new GLchar[attribName.size()+1]; // +1 so if the returned name has the same beginning but is longer, we'll discard it.
-    for(int i=0; i<nbActiveAttribs; i++) {
-        glGetActiveAttrib(program, i, GLsizei(attribName.size()+1), &tempLength, &tempSize, &tempType, tempName);
-        if(!strcmp( attribName.c_str(), tempName )) { // if same name
+    tempName = new GLchar[attribName.size() + 1]; // +1 so if the returned name has the same beginning but is longer, we'll discard it.
+    for (int i = 0; i < nbActiveAttribs; i++) {
+        glGetActiveAttrib(program, i, GLsizei(attribName.size() + 1), &tempLength, &tempSize, &tempType, tempName);
+        if (!strcmp(attribName.c_str(), tempName)) { // if same name
             return tempType;
         }
     }
-    
+
     // if not found
     cout << "ShaderPipeline::GetAttribDataType : Unknown attribute name." << endl;
     return 0;
@@ -128,56 +120,56 @@ unsigned int ShaderPipeline::NumberOfComponentsInType(GLenum type)
 {
     switch (type)
     {
-      case GL_BOOL:
-      case GL_FLOAT:
-      case GL_INT:
-      case GL_SAMPLER_2D:
-      case GL_SAMPLER_3D:
-      case GL_SAMPLER_CUBE:
-      case GL_SAMPLER_2D_ARRAY:
-      case GL_INT_SAMPLER_2D:
-      case GL_INT_SAMPLER_3D:
-      case GL_INT_SAMPLER_CUBE:
-      case GL_INT_SAMPLER_2D_ARRAY:
-      case GL_UNSIGNED_INT_SAMPLER_2D:
-      case GL_UNSIGNED_INT_SAMPLER_3D:
-      case GL_UNSIGNED_INT_SAMPLER_CUBE:
-      case GL_UNSIGNED_INT_SAMPLER_2D_ARRAY:
-      case GL_SAMPLER_2D_SHADOW:
-      case GL_SAMPLER_CUBE_SHADOW:
-      case GL_SAMPLER_2D_ARRAY_SHADOW:
-      case GL_UNSIGNED_INT:
+    case GL_BOOL:
+    case GL_FLOAT:
+    case GL_INT:
+    case GL_SAMPLER_2D:
+    case GL_SAMPLER_3D:
+    case GL_SAMPLER_CUBE:
+    case GL_SAMPLER_2D_ARRAY:
+    case GL_INT_SAMPLER_2D:
+    case GL_INT_SAMPLER_3D:
+    case GL_INT_SAMPLER_CUBE:
+    case GL_INT_SAMPLER_2D_ARRAY:
+    case GL_UNSIGNED_INT_SAMPLER_2D:
+    case GL_UNSIGNED_INT_SAMPLER_3D:
+    case GL_UNSIGNED_INT_SAMPLER_CUBE:
+    case GL_UNSIGNED_INT_SAMPLER_2D_ARRAY:
+    case GL_SAMPLER_2D_SHADOW:
+    case GL_SAMPLER_CUBE_SHADOW:
+    case GL_SAMPLER_2D_ARRAY_SHADOW:
+    case GL_UNSIGNED_INT:
         return 1;
-      case GL_BOOL_VEC2:
-      case GL_FLOAT_VEC2:
-      case GL_INT_VEC2:
-      case GL_UNSIGNED_INT_VEC2:
+    case GL_BOOL_VEC2:
+    case GL_FLOAT_VEC2:
+    case GL_INT_VEC2:
+    case GL_UNSIGNED_INT_VEC2:
         return 2;
-      case GL_INT_VEC3:
-      case GL_FLOAT_VEC3:
-      case GL_BOOL_VEC3:
-      case GL_UNSIGNED_INT_VEC3:
+    case GL_INT_VEC3:
+    case GL_FLOAT_VEC3:
+    case GL_BOOL_VEC3:
+    case GL_UNSIGNED_INT_VEC3:
         return 3;
-      case GL_BOOL_VEC4:
-      case GL_FLOAT_VEC4:
-      case GL_INT_VEC4:
-      case GL_UNSIGNED_INT_VEC4:
-      case GL_FLOAT_MAT2:
+    case GL_BOOL_VEC4:
+    case GL_FLOAT_VEC4:
+    case GL_INT_VEC4:
+    case GL_UNSIGNED_INT_VEC4:
+    case GL_FLOAT_MAT2:
         return 4;
-      case GL_FLOAT_MAT2x3:
-      case GL_FLOAT_MAT3x2:
+    case GL_FLOAT_MAT2x3:
+    case GL_FLOAT_MAT3x2:
         return 6;
-      case GL_FLOAT_MAT2x4:
-      case GL_FLOAT_MAT4x2:
+    case GL_FLOAT_MAT2x4:
+    case GL_FLOAT_MAT4x2:
         return 8;
-      case GL_FLOAT_MAT3:
+    case GL_FLOAT_MAT3:
         return 9;
-      case GL_FLOAT_MAT3x4:
-      case GL_FLOAT_MAT4x3:
+    case GL_FLOAT_MAT3x4:
+    case GL_FLOAT_MAT4x3:
         return 12;
-      case GL_FLOAT_MAT4:
+    case GL_FLOAT_MAT4:
         return 16;
-      default:
+    default:
         cout << "ShaderPipeline::numberOfComponentsInType(...) : Unknown data type." << endl;
         return NULL;
         break;
@@ -187,10 +179,10 @@ unsigned int ShaderPipeline::NumberOfComponentsInType(GLenum type)
 
 
 GLbitfield ShaderPipeline::ShaderTypeEnumToBitField(
-        GLenum shaderType)
+    GLenum shaderType)
 {
     GLbitfield shaderBit;
-    switch(shaderType) {
+    switch (shaderType) {
     case GL_VERTEX_SHADER:
         shaderBit = GL_VERTEX_SHADER_BIT;
         break;
@@ -215,7 +207,7 @@ GLbitfield ShaderPipeline::ShaderTypeEnumToBitField(
 
 ShaderPipeline::ShaderProgram *ShaderPipeline::GetShader(GLenum shaderType)
 {
-    switch(shaderType) {
+    switch (shaderType) {
     case GL_VERTEX_SHADER:
         return _vertexShader;
         break;
@@ -252,29 +244,29 @@ ShaderPipeline::ShaderPipeline()
     _computeShader = NULL;
     glGenProgramPipelines(1, &_glidProgramPipeline);
     glBindProgramPipeline(_glidProgramPipeline);
-    //glBindProgramPipeline(0);
 
     glGenVertexArrays(1, &_glidVao);
     glBindVertexArray(_glidVao);
 }
 
 void ShaderPipeline::UseShaders(
-        std::initializer_list<ShaderPipeline::ShaderProgram *> shaders)
+    std::initializer_list<ShaderPipeline::ShaderProgram *> shaders)
 {
-    for(initializer_list<ShaderProgram*>::iterator iShader = shaders.begin();
-            iShader != shaders.end(); iShader++)
+    for (initializer_list<ShaderProgram*>::iterator iShader = shaders.begin();
+        iShader != shaders.end(); iShader++)
     {
         GLbitfield shaderBit = ShaderTypeEnumToBitField((*iShader)->_shaderType);
 
         // make sure we don't mix compute shaders with other shader types.
-        if((*iShader)->_shaderType == GL_COMPUTE_SHADER) {
+        if ((*iShader)->_shaderType == GL_COMPUTE_SHADER) {
             glUseProgramStages(_glidProgramPipeline, GL_ALL_SHADER_BITS, 0);
-        } else {
+        }
+        else {
             glUseProgramStages(_glidProgramPipeline, GL_COMPUTE_SHADER_BIT, 0);
         }
 
         // store shader ID
-        switch((*iShader)->_shaderType) {
+        switch ((*iShader)->_shaderType) {
         case GL_VERTEX_SHADER:
             _vertexShader = *iShader;
             break;
@@ -297,7 +289,7 @@ void ShaderPipeline::UseShaders(
 
         // attach shader shage
         glUseProgramStages(_glidProgramPipeline, shaderBit,
-                           (*iShader)->_glidShaderProgram);
+            (*iShader)->_glidShaderProgram);
     }
 
     // check for validation errors.
@@ -306,7 +298,7 @@ void ShaderPipeline::UseShaders(
     char* info;
     glValidateProgramPipeline(_glidProgramPipeline);
     glGetProgramPipelineiv(_glidProgramPipeline, GL_VALIDATE_STATUS, &result);
-    if(!result) {
+    if (!result) {
         glGetProgramPipelineiv(_glidProgramPipeline, GL_INFO_LOG_LENGTH, &infoLength);
         info = new char[infoLength];
         glGetProgramPipelineInfoLog(_glidProgramPipeline, infoLength, NULL, info);
@@ -319,10 +311,10 @@ void ShaderPipeline::UseShaders(
 void ShaderPipeline::RemoveShader(GLenum shaderStage)
 {
     glUseProgramStages(_glidProgramPipeline,
-                       ShaderTypeEnumToBitField(shaderStage), 0);
+        ShaderTypeEnumToBitField(shaderStage), 0);
 
     // store shader ID
-    switch(shaderStage) {
+    switch (shaderStage) {
     case GL_VERTEX_SHADER:
         _vertexShader = 0;
         break;

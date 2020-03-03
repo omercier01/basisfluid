@@ -87,18 +87,9 @@ bool Application::Init() {
 
 bool Application::Init_Shaders() {
 
-    _pipelineObstacle = new ObstacleShaderPipeline();
-    _pipelineParticle = new ParticleShaderPipeline();
-    _pipelineVelocityArrow = new VelocityArrowShaderPipeline();
-    //if( !Init_ObstacleShader() ) { return false; }
-    //if( !Init_ParticleShader() ) { return false; }
-    //if( !Init_VelocityArrowsShader() ) { return false; }
-
-    //Init_CSIntegrateAvgBasis();
-    //Init_CSIntegrateBasisBasis();
-    //Init_CSIntegrateBasisGradBasis();
-    //Init_CSIntegrateBasisGrid_onePerDispatch();
-    //Init_CSIntegrateBasisGrid_onePerInvocation();
+    _pipelineObstacle = std::make_unique<ObstacleShaderPipeline>();
+    _pipelineParticle = std::make_unique<ParticleShaderPipeline>();
+    _pipelineVelocityArrow = std::make_unique<VelocityArrowShaderPipeline>();
 
     return true;
 }

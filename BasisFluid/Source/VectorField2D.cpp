@@ -40,9 +40,6 @@ void VectorField2D::populateWithFunction(std::function<vec2(float x, float y)> f
             for (unsigned int j = 0; j < _nbCellsY; j++) {
                 float x = _boundXMin + (i + 0.5f) / _nbCellsX * (_boundXMax - _boundXMin);
                 float y = _boundYMin + (j + 0.5f) / _nbCellsY * (_boundYMax - _boundYMin);
-                //            _vectors(i,j) = function(x, y);
-                            // TODO: setting dtaa one by one like this is probably sloooow!
-                            //_vectors.setCpuData(i, j, function(x, y));
                 _vectorsPointer[nxVec*j + i] = function(x, y);
             }
         break;
@@ -51,21 +48,16 @@ void VectorField2D::populateWithFunction(std::function<vec2(float x, float y)> f
             for (unsigned int j = 0; j < _nbCellsY + 1; j++) {
                 float x = _boundXMin + float(i) / _nbCellsX * (_boundXMax - _boundXMin);
                 float y = _boundYMin + float(j) / _nbCellsY * (_boundYMax - _boundYMin);
-                //            _vectors(i,j) = function(x, y);
-                            //_vectors.setCpuData(i, j, function(x, y));
                 _vectorsPointer[nxVec*j + i] = function(x, y);
             }
         break;
     }
 
     _vectors._sourceStorageType = DataBuffer2D<vec2>::StorageType::CPU;
-    //_vectors.dirtyData();
-
 }
 
 void VectorField2D::addFunction(std::function<vec2(float, float)> function)
 {
-
     vec2* _vectorsPointer = _vectors.getCpuDataPointer();
     unsigned int nxVec = _vectors._nbElementsX;
 
@@ -75,8 +67,6 @@ void VectorField2D::addFunction(std::function<vec2(float, float)> function)
             for (unsigned int j = 0; j < _nbCellsY; j++) {
                 float x = _boundXMin + (i + 0.5f) / _nbCellsX * (_boundXMax - _boundXMin);
                 float y = _boundYMin + (j + 0.5f) / _nbCellsY * (_boundYMax - _boundYMin);
-                // TODO: setting data one by one like this is probably sloooow!
-                //_vectors.addCpuData(i, j, function(x, y));
                 _vectorsPointer[nxVec*j + i] += function(x, y);
             }
         break;
@@ -85,15 +75,12 @@ void VectorField2D::addFunction(std::function<vec2(float, float)> function)
             for (unsigned int j = 0; j < _nbCellsY + 1; j++) {
                 float x = _boundXMin + float(i) / _nbCellsX * (_boundXMax - _boundXMin);
                 float y = _boundYMin + float(j) / _nbCellsY * (_boundYMax - _boundYMin);
-                //_vectors.addCpuData(i, j, function(x, y));
                 _vectorsPointer[nxVec*j + i] += function(x, y);
             }
         break;
     }
 
     _vectors._sourceStorageType = DataBuffer2D<vec2>::StorageType::CPU;
-    //_vectors.dirtyData();
-
 }
 
 vec2 VectorField2D::interp(vec2 pos)
@@ -423,7 +410,6 @@ vec2 VectorField2D::interp(vec2 pos)
         break;
     }
 
-    //_vectors.refreshCpuData();
     vec2* _vectorsPointer = _vectors.getCpuDataPointer();
 
     const unsigned int nx = _vectors._nbElementsX;
@@ -459,7 +445,6 @@ void VectorField2D::createVectorCpuStorage()
 {
     _vectors.createCpuStorage();
 }
-
 
 void VectorField2D::createVectorTexture2DStorage(
     GLenum internalFormat,
@@ -675,7 +660,6 @@ uvec2 VectorField2D::pointToFlooredIndex(vec2 point)
 }
 
 
-
 vec2 VectorField2D::indexToPosition(uvec2 index)
 {
     vec2 pos;
@@ -695,12 +679,8 @@ vec2 VectorField2D::indexToPosition(uvec2 index)
 }
 
 
-
-
 // copies and returns a linear buffer containing the grid positions.
 Metadata1DCpu VectorField2D::GenerateGridNodeLocations() {
-
-    //_vectors._dataCpu.refresh();
 
     Metadata1DCpu metadata;
     vec2* data = nullptr;
@@ -732,176 +712,3 @@ Metadata1DCpu VectorField2D::GenerateGridNodeLocations() {
     return metadata;
 }
 
-
-
-
-
-//
-////==============================================================================
-//// PLUGS ACTIONS
-////==============================================================================
-//
-//// copies and returns a linear buffer containing the grid positions.
-//Metadata1DCpu VectorField2D::out_gridNodeLocationsCpu_getData() {
-//
-//    _vectors.dataCpu.refresh();
-//
-//    Metadata1DCpu metadata;
-//    vec2* data;
-//    float cellWidthX = (_boundXMax - _boundXMin) / _nbCellsX;
-//    float cellWidthY = (_boundYMax - _boundYMin) / _nbCellsY;
-//
-//    switch (_gridNodeLocation) {
-//    case GridNodeLocation::CENTER:
-//        data = new vec2[_nbCellsX*_nbCellsY];
-//        for (unsigned int i = 0; i < _nbCellsX; i++) {
-//            for (unsigned int j = 0; j < _nbCellsY; j++) {
-//                data[_nbCellsY*j + i] = vec2(_boundXMin + (i + 0.5f)*cellWidthX,
-//                    _boundYMin + (j + 0.5f)*cellWidthY);
-//            }
-//        }
-//        break;
-//    case GridNodeLocation::CORNER:
-//        data = new vec2[(_nbCellsX + 1)*(_nbCellsY + 1)];
-//        for (unsigned int i = 0; i <= _nbCellsX; i++) {
-//            for (unsigned int j = 0; j <= _nbCellsY; j++) {
-//                data[(_nbCellsY + 1)*j + i] = vec2(_boundXMin + i * cellWidthX,
-//                    _boundYMin + j * cellWidthY);
-//            }
-//        }
-//        break;
-//    }
-//
-//    metadata.dataPointer = data;
-//    return metadata;
-//}
-//void VectorField2D::out_gridNodeLocationsCpu_receivePushConnectionUpdate(ConnectionAbstract* /*connection*/) {}
-//
-//
-//GLuint VectorField2D::out_gridNodeLocationsBuffer_getData() {
-//    //TODO: generate grid node postions.
-//    return 0;
-//}
-//void VectorField2D::out_gridNodeLocationsBuffer_receivePushConnectionUpdate(ConnectionAbstract* /*connection*/) {}
-//
-//
-//// creates and return a linear copy of the vector data.
-//Metadata1DCpu VectorField2D::out_vectorValuesCpu_getData() {
-//
-//    Metadata1DCpu metadata;
-//    vec2* data;
-//
-//    switch (_gridNodeLocation) {
-//    case GridNodeLocation::CENTER:
-//        data = new vec2[_nbCellsX*_nbCellsY];
-//        break;
-//    case GridNodeLocation::CORNER:
-//        data = new vec2[(_nbCellsX + 1)*(_nbCellsY + 1)];
-//        break;
-//    }
-//
-//    //    _vectors.sourceStorageType = DataBuffer2D<vec2>::StorageType::TEXTURE2D;
-//    _vectors.dataCpu.dirtyItselfAndDependents();
-//    memcpy(data, _vectors.dataCpu.get(), _vectors.dataSizeInBytes());
-//
-//    metadata.dataPointer = data;
-//    return metadata;
-//}
-//void VectorField2D::out_vectorValuesCpu_receivePushConnectionUpdate(ConnectionAbstract* /*connection*/) {}
-//
-//
-//Metadata2DCpu VectorField2D::out_divergenceCpu_getData() {
-//    Metadata2DCpu metadata;
-//    float* data;
-//
-//    float hx = (_boundXMax - _boundXMin) / _nbCellsX;
-//    float hy = (_boundYMax - _boundYMin) / _nbCellsY;
-//    vec2 vecHx = vec2(hx, 0);
-//    vec2 vecHy = vec2(0, hy);
-//
-//    switch (_gridNodeLocation) {
-//    case GridNodeLocation::CENTER:
-//        data = new float[_nbCellsX*_nbCellsY];
-//
-//        for (unsigned int i = 0; i < _nbCellsX; ++i) {
-//            for (unsigned int j = 0; j < _nbCellsY; ++j) {
-//                vec2 c = vec2(_boundXMin + (i + 0.5)*hx, _boundYMin + (j + 0.5)*hy);
-//                data[_nbCellsY*j + i] = 0.5f / hx * (interp(c + vecHx).x - interp(c - vecHx).x) +
-//                    0.5f / hy * (interp(c + vecHy).y - interp(c - vecHy).y);
-//                //            data[_nbCellsY*j + i] *= 100;
-//                //            data[_nbCellsY*j + i] = 0.5;
-//            }
-//        }
-//
-//        break;
-//    case GridNodeLocation::CORNER:
-//        data = new float[(_nbCellsX + 1)*(_nbCellsY + 1)];
-//
-//        for (unsigned int i = 0; i < _nbCellsX + 1; ++i) {
-//            for (unsigned int j = 0; j < _nbCellsY + 1; ++j) {
-//                vec2 c = vec2(_boundXMin + i * hx, _boundYMin + j * hy);
-//                data[(_nbCellsY + 1)*j + i] = 0.5f / hx * (interp(c + vecHx).x - interp(c - vecHx).x) +
-//                    0.5f / hy * (interp(c + vecHy).y - interp(c - vecHy).y);
-//                //            data[(_nbCellsY+1)*j + i] = 1;
-//            }
-//        }
-//
-//        break;
-//    }
-//
-//    //    memcpy(data, _vectors.dataCpu.get(), _vectors.dataSizeInBytes());
-//
-//
-//    metadata.dataPointer = data;
-//    return metadata;
-//}
-//void VectorField2D::out_divergenceCpu_receivePushConnectionUpdate(ConnectionAbstract* /*connection*/) {}
-//
-//
-//Metadata2DTexture2D VectorField2D::out_vectorsMetadataTexture2D_getData()
-//{
-//    return _vectors.out_metadataTexture2D.getData();
-//}
-//void VectorField2D::out_vectorsMetadataTexture2D_receivePushConnectionUpdate(ConnectionAbstract* /*connection*/) {}
-//
-//
-//Metadata2DImage2D VectorField2D::out_vectorsMetadataImage2D_getData(unsigned int level)
-//{
-//    return _vectors.out_metadataImage2D.getData(level);
-//}
-//void VectorField2D::out_vectorsMetadataImage2D_receivePushConnectionUpdate(ConnectionAbstract* /*connection*/) {}
-//
-//
-//void VectorField2D::in_vectorsMetadataImage2D_dirtyDependents()
-//{
-//    out_int_vectorsMetadataImage2D.dirtyConnections();
-//}
-//void VectorField2D::in_vectorsMetadataImage2D_receive(Metadata2DImage2D data)
-//{
-//    out_int_vectorsMetadataImage2D.pushUpdate(data);
-//}
-//void VectorField2D::in_vectorsMetadataImage2D_receivePullConnectionUpdate(ConnectionAbstract* /*connection*/) {}
-//
-//
-//Metadata2DImage2D VectorField2D::out_int_vectorsMetadataImage2D_getData()
-//{
-//    return in_vectorsMetadataImage2D.pullUpdate();
-//}
-//void VectorField2D::out_int_vectorsMetadataImage2D_receivePushConnectionUpdate(ConnectionAbstract* /*connection*/) {}
-//
-//
-//void VectorField2D::in_int_vectorsMetadataImage2D_dirtyDependents()
-//{
-//    out_int_vectorsMetadataImage2D.dirtyConnections();
-//}
-//void VectorField2D::in_int_vectorsMetadataImage2D_receivePullConnectionUpdate(ConnectionAbstract* /*connection*/) {}
-//
-//
-////<<goglu>> {
-////    Beacon VectorField2D_dirtyblesDefs;
-////} <<goglu>>;
-//
-//GOGLU_BEGIN(
-//    component_definitions VectorField2D
-//)GOGLU_END
-//#include "../../gogluGeneratedCode/src/dataStructures/VectorField2D.cpp_d/snippet1.goglu"

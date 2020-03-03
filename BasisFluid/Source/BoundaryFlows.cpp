@@ -5,9 +5,6 @@
 #include <glm/gtc/random.hpp>
 #include <glm/ext.hpp>
 
-// TODO: remove
-#include <iostream>
-
 using namespace glm;
 
 //------------------------------------------------------------------------------
@@ -22,9 +19,6 @@ float distanceToPlane(vec2 x, vec2 p, vec2 n) {
     return dot(x - p, n);
 }
 
-//vec2 perpCw(vec2 v) {return vec2(-v.y,v.x);}
-
-
 BasisFlow Application::ComputeStretch(BasisFlow b, bool staticObstaclesOnly, bool noStretch) {
     const float stretchBandRatio = STRETCH_BAND_RATIO; // band of possible corner movement has width _this_ times the basis support half size.
 
@@ -35,20 +29,16 @@ BasisFlow Application::ComputeStretch(BasisFlow b, bool staticObstaclesOnly, boo
 
     b.bitFlags = SetBits(b.bitFlags, INTERIOR); // interior basis by default
     b.bitFlags = UnsetBits(b.bitFlags, DYNAMIC_BOUNDARY_PROJECTION);
-    //b.bitFlags = true; 
 
-//    float centerObs = obstacleLevelSet(b.center);
     for (Obstacle* obs : _obstacles)
     {
         if (staticObstaclesOnly && obs->dynamic) { continue; }
 
         // if the center of the basis is inside the obstacle, we know the stretch will be too important, so we directly invalidate this basis. This prevents from running into undefined obstacle gradient cases inside the obstacle.
         if (obs->phi(b.center) < 0) {
-            //            b.valid = false;
             b.bitFlags = UnsetBits(b.bitFlags, INTERIOR);
             b.coeff = 0;
             b.coeffBoundary = 0;
-            //return b;
         }
     }
 
@@ -84,8 +74,6 @@ BasisFlow Application::ComputeStretch(BasisFlow b, bool staticObstaclesOnly, boo
         vec2 originalCorner;
         vec2* stretchedCorner;
         for (int i = 0; i < 4; i++) {
-            // TODO: should we reinitialize originalCorner to stretchedCorner, in case the point is stretched by two obstacles at the same time?
-            //       Probably not, we still reuse the stretched corners to create new ones, we only use the oiginal points to figure out if a basis is valid or not.
             switch (i) {
             case 0:
                 stretchedCorner = &b.stretchedCornerLB;
@@ -119,10 +107,6 @@ BasisFlow Application::ComputeStretch(BasisFlow b, bool staticObstaclesOnly, boo
                 b.bitFlags = UnsetBits(b.bitFlags, INTERIOR);
                 b.coeff = 0;
                 b.coeffBoundary = 0;
-
-                //                if( obs->dynamic ) { hasAtLeastOneCornerInside = true; }
-
-                                //break;
             }
             else if (dist >= 0 && // must be stretched
                 (
@@ -158,8 +142,6 @@ BasisFlow Application::ComputeStretch(BasisFlow b, bool staticObstaclesOnly, boo
             float stretchRatio = (maxOriginalDistToPlane - minOriginalDistToPlane) / (maxStretchedDistToPlane - minStretchedDistToPlane);
 
             for (int i = 0; i < 4; i++) {
-                // TODO: should we reinitialize originalCorner to stretchedCorner, in case the point is stretched by two obstacles at the same time?
-                //       Probably not, we still reuse the stretched corners to create new ones, we only use the oiginal points to figure out if a basis is valid or not.
                 switch (i) {
                 case 0:
                     stretchedCorner = &b.stretchedCornerLB; break;
@@ -186,7 +168,6 @@ BasisFlow Application::ComputeStretch(BasisFlow b, bool staticObstaclesOnly, boo
         b.bitFlags = SetBits(b.bitFlags, DYNAMIC_BOUNDARY_PROJECTION);
     }
 
-    //b.valid = true;
     b.stretched = basisIsStretched;
 
 
@@ -213,8 +194,6 @@ BasisFlow Application::ComputeStretch(BasisFlow b, bool staticObstaclesOnly, boo
 
                 vec2* stretchedCorner;
                 for (int i = 0; i < 4; i++) {
-                    // TODO: should we reinitialize originalCorner to stretchedCorner, in case the point is stretched by two obstacles at the same time?
-                    //       Probably not, we still reuse the stretched corners to create new ones, we only use the oiginal points to figure out if a basis is valid or not.
                     switch (i) {
                     case 0:
                         stretchedCorner = &b.stretchedCornerLB; break;
@@ -265,8 +244,6 @@ BasisFlow Application::ComputeStretch(BasisFlow b, bool staticObstaclesOnly, boo
                     float stretchRatio = (maxOriginalDistToPlane - minOriginalDistToPlane) / (maxStretchedDistToPlane - minStretchedDistToPlane);
 
                     for (int i = 0; i < 4; i++) {
-                        // TODO: should we reinitialize originalCorner to stretchedCorner, in case the point is stretched by two obstacles at the same time?
-                        //       Probably not, we still reuse the stretched corners to create new ones, we only use the oiginal points to figure out if a basis is valid or not.
                         switch (i) {
                         case 0:
                             stretchedCorner = &b.stretchedCornerLB; break;
@@ -299,7 +276,6 @@ BasisFlow Application::ComputeStretch(BasisFlow b, bool staticObstaclesOnly, boo
 
 void Application::ComputeStretches()
 {
-    // TODO: speed this up.
     for (unsigned int iBasis = 0; iBasis < _basisFlowParams->_nbElements; ++iBasis) {
         BasisFlow b = _basisFlowParams->getCpuData(iBasis);
         b = ComputeStretch(b);
@@ -362,12 +338,8 @@ vec2 Application::VecObstacle_stretch(vec2 p, BasisFlow const& b)
 
     vec2 vec;
 
-    //if(!b.valid) {
-    //if(!b.valid && atLeastOneBitNotSet(b.bitFlags, BASIS_FLAGS::DYNAMIC_BOUNDARY_PROJECTION) ) {
     if (!AllBitsSet(b.bitFlags, INTERIOR) && AtLeastOneBitNotSet(b.bitFlags, DYNAMIC_BOUNDARY_PROJECTION)) {
-
         vec = vec2(1);
-
     }
     else if (!b.stretched) {
 
@@ -393,7 +365,6 @@ vec2 Application::VecObstacle_stretch(vec2 p, BasisFlow const& b)
                 )
 
             ;
-
 
     }
 

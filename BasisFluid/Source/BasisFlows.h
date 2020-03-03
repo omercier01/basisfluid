@@ -1,11 +1,8 @@
 #ifndef BASISFLOWS_H
 #define BASISFLOWS_H
 
-//#include "Application.h"
-
 #include <glm\glm.hpp>
 
-//#include <set>
 #include <tuple>
 #include <unordered_map>
 #include <functional>
@@ -82,10 +79,6 @@ struct CoeffBBDecompressedIntersectionInfo {
 };
 
 
-
-
-
-
 struct BasisSupport {
     float left;
     float right;
@@ -134,7 +127,6 @@ struct BasisFlow {
     glm::vec2 stretchedCornerLT; // left-top
     glm::vec2 stretchedCornerRB; // right-bottom
     glm::vec2 stretchedCornerRT; // right-top
-//    glm::VECD stretchedCenter; // new center of stretched basis
     float normSquared; // matBBCoeff(this, this)
     bool stretched; // true if the basis is close to an obstacle and we must compute its stretched vector field when using it.
 
@@ -146,7 +138,7 @@ struct BasisFlow {
         bitFlags = 0;
         this->freqLvl = freq;
         this->center = center;
-        this->normSquared = 0; //1; // computed during basis setup.
+        this->normSquared = 0; // computed during basis setup.
         this->stretched = false;
     }
 
@@ -158,7 +150,7 @@ struct BasisFlow {
         bitFlags = 0;
         this->freqLvl = glm::vec2(0);
         this->center = glm::vec2(0);
-        this->normSquared = 0; //1;
+        this->normSquared = 0;
     }
 
     BasisSupport getSupport() const;
@@ -170,10 +162,5 @@ struct BasisFlow {
 
 glm::dvec2 flowBasisHat(glm::dvec2 p, int log2Aniso);
 glm::dmat2 flowBasisHatGrad(glm::dvec2 p, int log2Aniso);
-
-
-// TEST: to see the basis domains more clearly
-glm::vec2 squareFlow(glm::vec2 p, BasisFlow b);
-
 
 #endif // BASISFLOWS_H

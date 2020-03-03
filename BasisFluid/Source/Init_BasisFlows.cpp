@@ -14,13 +14,11 @@ bool Application::Init_BasisFlows() {
     for (int anisoLvl = _minAnisoLvl; anisoLvl <= _maxAnisoLvl; anisoLvl++) {
         if (anisoLvl == 0) {
             for (int iFreq = _minFreqLvl; iFreq <= _maxFreqLvl; iFreq++) {
-                //for(int iFreq=maxFreqLvl; iFreq <= maxFreqLvl; iFreq++) {
                 _freqLvls.push_back(ivec2(iFreq, iFreq));
             }
         }
         else {
             for (int majorFreq = _minFreqLvl; majorFreq + anisoLvl <= _maxFreqLvl; majorFreq++) {
-                //for(int majorFreq=maxFreqLvl; majorFreq+anisoLvl <= maxFreqLvl; majorFreq++) {
                 _freqLvls.push_back(ivec2(majorFreq, majorFreq + anisoLvl));
                 _freqLvls.push_back(ivec2(majorFreq + anisoLvl, majorFreq));
             }
@@ -45,7 +43,6 @@ bool Application::Init_BasisFlows() {
         ivec2 freqLvl = _freqLvls[iFreqLvl];
         ivec2 freq = ivec2(powf(2.f, float(freqLvl.x)), powf(2.f, float(freqLvl.y)));
 
-        //vec2 origin = vec2(0, 0);
         vec2 origin = _lengthLvl0 * vec2((1.f / 4.f) / 2.f*(1.f - 1.f / freq.x), (1.f / 4.f) / 2.f*(1.f - 1.f / freq.y));
         vec2 stride = 0.5f*vec2(1.f / freq.x, 1.f / freq.y);
         vec2 extraOffsets[4] = { vec2(0,0), vec2(0.5,0), vec2(0,0.5), vec2(0.5,0.5) };
@@ -67,8 +64,6 @@ bool Application::Init_BasisFlows() {
         for (int iOffsetX = offsetMinX; iOffsetX <= offsetMaxX; iOffsetX++) {
             for (int iOffsetY = offsetMinY; iOffsetY <= offsetMaxY; iOffsetY++) {
 
-
-                //for(vec2 extraOffset : extraOffsets) {
                 for (unsigned int iOffset = 0; iOffset < nbOffsets; iOffset++) {
 
                     vec2 extraOffset = extraOffsets[iOffset];
@@ -88,7 +83,6 @@ bool Application::Init_BasisFlows() {
 
                     }
                 }
-
 
             }
         }
@@ -122,11 +116,6 @@ bool Application::Init_BasisFlows() {
     _vecXBoundaryForces->resize(N);
     _vecB->resize(N);
 
-    //tw->in_nbBases.receive(N);
-    //tw->in_nbActiveBases.receive(N);
-
-
-
 
     // fill basis centers acceleration structure
     for (unsigned int iBasis = 0; iBasis < N; ++iBasis) {
@@ -141,7 +130,6 @@ bool Application::Init_BasisFlows() {
     }
 
 
-
     // precompute intersection bases (including themselves)
     _intersectingBasesIds->resize(N);
     _intersectingBasesSignificantBBIds->resize(N);
@@ -154,8 +142,6 @@ bool Application::Init_BasisFlows() {
     }
 
 
-
-    //_basisFlowParams->refreshCpuData();
     basisFlowParamsPointer = _basisFlowParams->getCpuDataPointer();
 
     // precompute basis supports intersections
@@ -168,20 +154,15 @@ bool Application::Init_BasisFlows() {
     // compute basis intersections and transport
     for (unsigned int iBasis1 = 0; iBasis1 < N; ++iBasis1) {
         BasisFlow& b1 = basisFlowParamsPointer[iBasis1];
-        //BasisSupport b1Support = b1.getSupport();
         BasisSupport& b1Support = basisSupports[iBasis1];
 
         vec2 b1TransportLimits = b1.supportHalfSize()*_densityMultiplierBasisHalfSize*1.01f;
 
         for (unsigned int iBasis2 = iBasis1 + 1; iBasis2 < N; ++iBasis2) {
-            //            BasisFlow b1 = basisFlowParams->getCpuData(iBasis1);
-            //            BasisFlow b2 = basisFlowParams->getCpuData(iBasis2);
             BasisFlow& b2 = basisFlowParamsPointer[iBasis2];
             BasisSupport& b2Support = basisSupports[iBasis2];
 
-            //if( !b1.emptyIntersectionWithBasis(b2) )
             if (!IntersectionInteriorEmpty(b1Support, b2Support))
-                //            if( !intersectionInteriorEmpty(b1Support, b1Support) )
             {
                 _intersectingBasesIds->getCpuData_noRefresh(iBasis1)->push_back(iBasis2);
                 _intersectingBasesIds->getCpuData_noRefresh(iBasis2)->push_back(iBasis1);
@@ -202,7 +183,7 @@ bool Application::Init_BasisFlows() {
 
             }
         }
-        // include itself
+        // include itself in intersections
         _intersectingBasesIds->getCpuData_noRefresh(iBasis1)->push_back(iBasis1);
         _intersectingBasesSignificantBBIds->getCpuData_noRefresh(iBasis1)->push_back(iBasis1);
         _intersectingBasesIdsTransport->getCpuData_noRefresh(iBasis1)->push_back(iBasis1);
@@ -220,10 +201,7 @@ bool Application::Init_BasisFlows() {
 
     basisSupports.clear();
 
-
-
     // precompute decompressed T coefficients
-
 
     cout << "computing decompressed coefficients T..." << endl;
     _coeffsTDecompressedIntersections.clear();
@@ -232,8 +210,6 @@ bool Application::Init_BasisFlows() {
         vector<CoeffTDecompressedIntersectionInfo>& intersectionInfos = _coeffsTDecompressedIntersections[i];
         vector<unsigned int>* localIntersectingBasesIds = _intersectingBasesIds->getCpuData(i);
         for (auto itJ = localIntersectingBasesIds->begin(); itJ != localIntersectingBasesIds->end(); ++itJ) {
-            //            BasisFlow bj = basisFlowParams->getCpuData(*itJ);
-            //            avgDisplacement += matTCoeff(i,*itJ) * bj.coeff;
             vec2 coeff = MatTCoeff(i, *itJ);
             intersectionInfos.push_back(CoeffTDecompressedIntersectionInfo(*itJ, coeff));
         }
@@ -242,7 +218,6 @@ bool Application::Init_BasisFlows() {
             cout << "decompressed T : " << i << " / " << N << endl;
         }
     }
-
 
 
     // precompute decompressed BB coefficients
@@ -298,17 +273,12 @@ bool Application::Init_BasisFlows() {
     }
 
 
-
-
     unsigned int minNbBases = -1;
     unsigned int maxNbBases = 0;
     for (unsigned int i = 0; i < N; i++) {
         minNbBases = glm::min(minNbBases, (unsigned int)_coeffsBBDecompressedIntersections[i].size());
         maxNbBases = glm::max(maxNbBases, (unsigned int)_coeffsBBDecompressedIntersections[i].size());
     }
-
-
-
 
 
     // set prevBilFlags
@@ -318,11 +288,7 @@ bool Application::Init_BasisFlows() {
     }
 
 
-
-
-
     cout << "Basis setup done." << endl;
-
 
     return true;
 }

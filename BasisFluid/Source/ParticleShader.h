@@ -51,39 +51,25 @@ public:
             new ShaderPipeline::ShaderProgram(GL_FRAGMENT_SHADER, {fragmentSource}, true)
             });
 
-        //pipelineParticles->connect_bufferPositions_to_attribute("pos");
         bufferPositions_loc = glGetAttribLocation(_vertexShader->_glidShaderProgram, "pos");
         bufferPositions_offset = 0;
         bufferPositions_nbComponents =
             NumberOfComponentsInType(GetAttribDataType(_vertexShader->_glidShaderProgram, "pos"));
         glEnableVertexArrayAttrib(_glidVao, bufferPositions_loc);
 
-        ////pipelineParticles->connect_bufferColors_to_attribute("color");
-        //bufferColors_loc = glGetAttribLocation(_vertexShader->_glidShaderProgram, "color");
-        //bufferColors_offset = 0;
-        //bufferColors_nbComponents = NumberOfComponentsInType(GetAttribDataType(_vertexShader->_glidShaderProgram, "color"));
-        //glEnableVertexArrayAttrib(_glidVao, bufferColors_loc);
-
-        //pipelineParticles->connect_pointSize_to_uniform(GL_VERTEX_SHADER, "size");
         pointSize_shaderType = GL_VERTEX_SHADER;
         pointSize_loc = glGetUniformLocation(GetShader(pointSize_shaderType)->_glidShaderProgram, "size");
 
-        //pipelineParticles->connect_vpMat_to_uniform(GL_VERTEX_SHADER, "vpMat");
         vpMat_shaderType = GL_VERTEX_SHADER;
         vpMat_loc = glGetUniformLocation(GetShader(vpMat_shaderType)->_glidShaderProgram, "vpMat");
 
-        //pipelineParticles->in_pointSize.receive(4);
-
         _nbVerticesPerPrimitive = 1;
         _primitiveType = GL_POINTS;
-        //_nbPrimitives.set(particles->metadataBuffer.nbElements);
     }
 
     void Execute() {
         glBindProgramPipeline(_glidProgramPipeline);
         glBindVertexArray(_glidVao);
-        //bufferPositions.refresh();
-        //bufferPositions.set(in_bufferPositions.pullUpdate());
         glVertexArrayVertexBuffer(
             _glidVao,
             bufferPositions_loc,
@@ -98,9 +84,6 @@ public:
             app->_partPos->_metadataBuffer.dataType,
             GL_FALSE,
             bufferPositions_offset);
-
-        //glVertexArrayVertexBuffer(_glidVao, bufferColors_loc, bufferColors.get().bufferId, 0, bufferColors.get().nbElementsPerComponent * sizeOfEnumType(bufferColors.get().dataType));
-        //glVertexArrayAttribFormat(_glidVao, bufferColors_loc, bufferColors_nbComponents, bufferColors.get().dataType, GL_FALSE, bufferColors_offset);
 
         glProgramUniform1f(GetShader(pointSize_shaderType)->_glidShaderProgram, pointSize_loc, 4.f);
 

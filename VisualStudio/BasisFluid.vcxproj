@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\BasisFluid\Source\Application.cpp" />
     <ClCompile Include="..\BasisFluid\Source\BasisFlows.cpp" />
     <ClCompile Include="..\BasisFluid\Source\BoundaryFlows.cpp" />
     <ClCompile Include="..\BasisFluid\Source\DataBuffer1D.tpp">

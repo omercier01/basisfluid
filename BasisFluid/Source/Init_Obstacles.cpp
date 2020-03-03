@@ -32,7 +32,6 @@ bool Application::Init_Obstacles() {
         _obstacles.push_back(new ObstacleBar());
     }
 
-
     for (Obstacle* obs : _obstacles)
     {
         if (obs->dynamic)

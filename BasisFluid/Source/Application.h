@@ -47,6 +47,9 @@ enum class ObstacleType {None, Circle, Bar};
 // Global class to manage program execution
 class Application {
 public:
+    Application();
+    ~Application();
+
     bool Run();
     bool Init();
     bool Init_DataBuffers();
@@ -209,9 +212,9 @@ public:
     std::vector<std::vector<CoeffTDecompressedIntersectionInfo>>  _coeffsTDecompressedIntersections;
 
     // shader pipelines
-    ObstacleShaderPipeline* _pipelineObstacle;
-    ParticleShaderPipeline* _pipelineParticle;
-    VelocityArrowShaderPipeline* _pipelineVelocityArrow;
+    std::unique_ptr<ObstacleShaderPipeline> _pipelineObstacle;
+    std::unique_ptr<ParticleShaderPipeline> _pipelineParticle;
+    std::unique_ptr<VelocityArrowShaderPipeline> _pipelineVelocityArrow;
 
     // Parameters
     uint _maxNbItMatBBInversion = 10;

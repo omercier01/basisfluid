@@ -10,13 +10,13 @@
 
 #include <functional>
 
-
 class VectorField2D
 {
 public:
     enum class BoundaryCondition{ LINEAR, FLAT, ZERO, MIRROR, PERIODIC };
     enum class GridNodeLocation{ CENTER, CORNER };
     enum class InterpolationMethod{ LINEAR };
+
 public:
     DataBuffer2D<glm::vec2> _vectors;
     float _boundXMin, _boundYMin, _boundXMax, _boundYMax;

@@ -7,15 +7,15 @@ using namespace std;
 
 bool Application::Run() {
 
-    if(!app->Init()) {
+    if (!app->Init()) {
         system("pause");
         return 0;
     }
 
     glfwSwapInterval(0);
-    while(!app->_readyToQuit) {
+    while (!app->_readyToQuit) {
         glfwPollEvents();
-        if(_stepSimulation) {
+        if (_stepSimulation) {
             SimulationStep();
         }
         Draw();

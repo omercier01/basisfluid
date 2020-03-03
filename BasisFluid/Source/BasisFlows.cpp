@@ -1,4 +1,3 @@
-//#include "glm/glm.hpp"
 
 #include "Application.h"
 #include "BasisFlows.h"
@@ -71,19 +70,13 @@ void Application::InverseBBMatrix(
     uint n = vecX->_nbElements;
 
     // get references
-    //vecX->refreshCpuData();
     double* vecXPointer = vecX->getCpuDataPointer();
-    //_vecTemp->refreshCpuData();
     double* vecTempPointer = _vecTemp->getCpuDataPointer();
-    //vecB->refreshCpuData();
     double* vecBPointer = vecB->getCpuDataPointer();
-    //_basisFlowParams->refreshCpuData();
     BasisFlow* basisFlowParamsPointer = _basisFlowParams->getCpuDataPointer();
-    //_intersectingBasesSignificantBBIds->refreshCpuData();
 
 
-        // zero x
-        //#pragma omp parallel for
+    // zero x
     for (int i = 0; i < int(n); i++) {
         vecXPointer[i] = 0.;
     }
@@ -107,9 +100,6 @@ void Application::InverseBBMatrix(
 
         iIt++;
     }
-
-
-
 
     vecX->_sourceStorageType = DataBuffer1D<double>::StorageType::CPU;
     _vecTemp->_sourceStorageType = DataBuffer1D<double>::StorageType::CPU;
@@ -142,10 +132,8 @@ dmat2 gradEigenLaplace(dvec2 p, dvec2 k) {
 
 
 // integrates basis(...) dot a vector field defined on a grid
-// TODO: pass basis info by reference when the function does not modify the basis? would avoid copying a lot of data...
 float Application::IntegrateBasisGrid(BasisFlow& b, VectorField2D* velField)
 {
-
     // compute intersection of supports
     BasisSupport supportBasis = b.getSupport();
     BasisSupport supportField = BasisSupport(_domainLeft, _domainRight, _domainBottom, _domainTop);
@@ -212,7 +200,6 @@ float Application::IntegrateBasisBasis(BasisFlow b1, BasisFlow b2) {
 #endif
 
 
-
     for (int i = 0; i <= int(_integralGridRes); i++) {
         for (int j = 0; j <= int(_integralGridRes); j++) {
 
@@ -222,13 +209,11 @@ float Application::IntegrateBasisBasis(BasisFlow b1, BasisFlow b2) {
                 glm::dot(TranslatedBasisEval(p, b1.freqLvl, b1.center),
                     TranslatedBasisEval(p, b2.freqLvl, b2.center));
         }
-        }
-
+    }
 
     return float(sum) * (supRight - supLeft)*(supTop - supBottom) / Sqr(_integralGridRes);
 
-
-    }
+}
 
 
 
@@ -258,62 +243,6 @@ vec2 Application::AverageBasisOnSupport(BasisFlow bVec, BasisFlow bSupport) {
     vec2 sum(0);
 #endif
 
-#if DEF_COEFF_COMPUTE_GPU
-
-    int minLvl;
-
-    // data basis
-    auto connI = createPullConnection(
-        &basisFlowTemplates[abs(bVec.freqLvl.x - bVec.freqLvl.y)]->out_vectorsMetadataTexture2D,
-        &pipelineIntegrateAvgBasis->in_texBi);
-    connI->activate();
-    minLvl = glm::min<int>(bVec.freqLvl.x, bVec.freqLvl.y);
-    pipelineIntegrateAvgBasis->in_postScalingI.receive(float(1 << minLvl));
-    pipelineIntegrateAvgBasis->in_centerI.receive(bVec.center);
-    pipelineIntegrateAvgBasis->in_halfWidthsI.receive(0.5f*vec2(supportVec.right - supportVec.left, supportVec.top - supportVec.bottom));
-    if (bVec.freqLvl.x <= bVec.freqLvl.y) {
-        pipelineIntegrateAvgBasis->in_forwardRotI.receive(mat2(1, 0, 0, 1));
-        pipelineIntegrateAvgBasis->in_backwardRotI.receive(mat2(1, 0, 0, 1));
-    }
-    else {
-        pipelineIntegrateAvgBasis->in_forwardRotI.receive(mat2(0, 1, -1, 0));
-        pipelineIntegrateAvgBasis->in_backwardRotI.receive(mat2(0, -1, 1, 0));
-    }
-
-    // other data
-    auto connTransfer = createPushConnection(
-        &pipelineIntegrateAvgBasis->out_transferBuffer,
-        &integrationTransferBufferGpu->in_metadataBuffer);
-    connTransfer->activate();
-    pipelineIntegrateAvgBasis->in_integralGridRes.receive(integralGridRes);
-    pipelineIntegrateAvgBasis->in_supportInterLeftBottom.receive(vec2(supLeft, supBottom));
-    pipelineIntegrateAvgBasis->in_supportInterRightTop.receive(vec2(supRight, supTop));
-
-
-    unsigned int nbGroupDiv = 1;
-    unsigned int it = 0;
-    uvec2 nbGroups;
-    do
-    {
-        nbGroups = uvec2(((integralGridRes + 1) - 1) / nbGroupDiv / INTEGRAL_GPU_GROUP_DIM + 1,
-            ((integralGridRes + 1) - 1) / nbGroupDiv / INTEGRAL_GPU_GROUP_DIM + 1);
-
-        pipelineIntegrateAvgBasis->in_globalIteration.receive(it++);
-        pipelineIntegrateAvgBasis->goglu_nbWorkGroups.set(glm::uvec3(nbGroups.x, nbGroups.y, 1));
-        pipelineIntegrateAvgBasis->execute();
-        glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-
-        nbGroupDiv *= INTEGRAL_GPU_GROUP_DIM;
-
-    } while (nbGroups.x > 1 && nbGroups.y > 1);
-
-
-    sum = vec2(integrationTransferBufferGpu->getCpuData(0)); // vec4 -> vec2
-
-    connI->deactivate(); delete connI;
-    connTransfer->deactivate(); delete connTransfer;
-
-#else
 
     for (uint i = 0; i <= _integralGridRes; i++) {
         for (uint j = 0; j <= _integralGridRes; j++) {
@@ -321,20 +250,15 @@ vec2 Application::AverageBasisOnSupport(BasisFlow bVec, BasisFlow bSupport) {
             vec2 p = vec2(supLeft + float(i) / _integralGridRes * (supRight - supLeft),
                 supBottom + float(j) / _integralGridRes * (supTop - supBottom));
 
-
-
-
             sum += ((i == 0 || i == _integralGridRes) ? 0.5f : 1.f) * ((j == 0 || j == _integralGridRes) ? 0.5f : 1.f) *
                 TranslatedBasisEval(p, bVec.freqLvl, bVec.center);
         }
     }
 
-#endif
-
     // divide by domain size to get averaged value
     return vec2(sum) * (supRight - supLeft)*(supTop - supBottom) / float(Sqr(_integralGridRes)) / ((1.f / float(1 << bSupport.freqLvl.x))*(1.f / float(1 << bSupport.freqLvl.y)));
 
-    }
+}
 
 #endif
 
@@ -390,7 +314,7 @@ void Application::LoadCoeffsBB(string filename)
         );
         float coeff = dataF[2];
         _coeffsBB.insert(std::pair<KeyTypeBB, float>(key, coeff));
-    }
+}
     file.close();
 }
 
@@ -527,19 +451,11 @@ vec2 Application::MatTCoeff(BasisFlow bTransported, BasisFlow bTransporting)
 }
 
 
-
-
-
-
-
-
-//TODO: optimize this using const&
 float Application::MatBBCoeff(int i, int j) {
     BasisFlow b1 = _basisFlowParams->getCpuData(i);
     BasisFlow b2 = _basisFlowParams->getCpuData(j);
     return MatBBCoeff(b1, b2);
 }
-
 
 
 // compute the integral and store it for future use
@@ -566,13 +482,6 @@ float Application::MatBBCoeff(const BasisFlow& b1, const BasisFlow& b2)
     ivec2 normFreqLvl2 = b2.freqLvl - baseLvl;
 
     // all bases are symmetric w.r.t. x and y, so we take the relative offset in the first quadrant.
-//    vec2 relativeOffset = baseFreq*vec2( 
-//                abs(b2.center.x-b1.center.x),
-//                abs(b2.center.y-b1.center.y) 
-//                #if SIM3D
-//                    ,abs(b2.center.z-b1.center.z)
-//                #endif
-//                );
     vec2 relativeOffset = baseFreq * vec2(
         b2.center.x - b1.center.x,
         b2.center.y - b1.center.y
@@ -608,10 +517,10 @@ float Application::MatBBCoeff(const BasisFlow& b1, const BasisFlow& b2)
 
         if (_coeffsBB.size() % 1000 == 0) {
             std::cout << "coeffs BB : " << _coeffsBB.size() << endl;
-        }
+    }
 
         _newBBCoeffComputed = true;
-    }
+}
 
     // scaled coefficient
     return result;
@@ -688,7 +597,7 @@ dvec2 flowBasisHat(dvec2 p, int log2Aniso)
         std::cout << "unknown basis parameters" << endl;
         return dvec2(0, 0);
         break;
-}
+    }
 
 
     dvec2 p2(p.x + 0.5 / kx, p.y + 0.5 / ky);
@@ -769,7 +678,7 @@ dmat2 flowBasisHatGrad(dvec2 p, int log2Aniso)
         std::cout << "unknown basis parameters" << endl;
         return dmat2(0, 0, 0, 0);
         break;
-}
+    }
 
     dvec2 p2(p.x + 0.5 / kx, p.y + 0.5 / ky);
 
@@ -852,7 +761,6 @@ mat2 Application::TranslatedBasisGradEval(
 #if USE_PRECISE_BASIS_EVAL
     return FMATD(translatedBasisGradEvalPrecise(dvec2(p), freqLvl, dvec2(center)));
 #else
-    //vec2 eps = 1.f / (float(_nbCells) * vec2(1 << freqLvl) * 2.0f);
     vec2 eps = 1.f / (float(BASE_GRID_SIZE - 1) * vec2(1 << freqLvl) * 2.0f);
 
     return mat2(
@@ -883,19 +791,10 @@ dmat2 Application::TranslatedBasisGradEvalPrecise(const dvec2 p, const ivec2 fre
             freqLvl.x - minLvl
         );
         result = dmat2(result[1][1], result[1][0], result[0][1], result[0][0]);
-        //        result = -flowBasisHatGrad(
-        //                    double(1<<minLvl)*(p.y-center.y)/lengthLvl0,
-        //                    double(1<<minLvl)*(p.x-center.x)/lengthLvl0,
-        //                    freqLvl.x-minLvl
-        //                );
     }
 
     return double(Sqr(1 << minLvl))*result;
 }
-
-
-//#endif
-
 
 
 BasisSupport BasisFlow::getSupport() const
@@ -939,6 +838,4 @@ bool IntersectionInteriorEmpty(BasisSupport& sup1, BasisSupport& sup2)
     return (glm::max(sup1.left, sup2.left) >= glm::min(sup1.right, sup2.right))
         || (glm::max(sup1.bottom, sup2.bottom) >= glm::min(sup1.top, sup2.top));
 }
-
-
 

@@ -29,33 +29,6 @@
 //1D textures can also be stored as buffer textures. 2D textures can have
 //texture storage or 1D_array storage. etc for 3D.
 
-// TODO: use data format conversion with lambdas. i.e. say something like
-// copyDataTo(srcBuffer, dstBuffer, <optional lambda function for conversion, or else
-// default casting is used>)
-
-// TODO: Use texture views to reinterpret the data?
-
-// TODO: "const" some of this stuff?
-
-// TODO: add flags specification for glBufferStorage
-
-// TODO: make sure to delete all CPU and GPU storage when the DataBuffer object is deleted.
-
-//TODO: do I really need to specify the number of mipmap levels in
-//glTextureStorage1D, or does glGenerateTextureMipmap create them anyway?
-
-//TODO: utiliser des samplers pour controler les stats de la texture, plutot que
-//d'utiliser le sampler par defaut de la texture?
-
-//TODO: some warning messages are missing for transferCPUDataToGpu. Same for Texture2D.
-
-//TODO: rename the size variables (e.g. in resize) like in the 2D definitions,
-//it is much clearer than always using the nbDataElements.
-
-//TODO: check size compatibility at plug time.
-
-//TODO: problems if the buffer has zero elements?
-
 
 #ifndef DATABUFFER1D_H
 #define DATABUFFER1D_H
@@ -64,7 +37,6 @@
 
 struct Metadata1DCpu {
     void* dataPointer;
-//    unsigned int nbElements;
 };
 
 struct Metadata1DBuffer {
@@ -79,11 +51,7 @@ struct Metadata1DBuffer {
 template<class T>
 class DataBuffer1D
 {
-
-
 public:
-//private:
-
     Metadata1DBuffer _metadataBuffer;
     Metadata1DCpu _metadataCpu;
 
@@ -111,10 +79,7 @@ public:
 
 public:
 
-    // TODO: when deleting a storage, update all other storages (e.g. so that it gets to the GPU before we delete it from the CPU)
-
     DataBuffer1D(unsigned int size);
-//    T& operator()(unsigned int x);
     void createCpuStorage();
     void deleteCpuStorage();
     void createBufferStorage(GLenum dataType, unsigned int nbElementsPerComponent, GLbitfield flags = GL_DYNAMIC_STORAGE_BIT | GL_MAP_READ_BIT | GL_MAP_WRITE_BIT);
@@ -125,30 +90,18 @@ public:
     void createTextureBufferStorage(GLenum sizedFormat);
     void deleteTextureBufferStorage();
 
-//    void transferCpuDataToGpu();
-//    void transferBufferDataToCpu();
-//    void transferTexture1DDataToCpu();
-
     void resize(unsigned int size);
     void appendCpu(T elem);
-
-//    void bindBufferToTarget(GLenum target);
 
     T getCpuData(unsigned int i);
     T getCpuData_noRefresh(unsigned int i) const;
     T* getCpuDataPointer();
-    //void refreshCpuData();
     void setCpuData(unsigned int i, T data);
     void setCpuData_noDirty(unsigned int i, T data);
-    //void dirtyData();
     void TransferDataCpuToBuffer();
     
-    // TODO:
-    //void copyFrom(DataBuffer* src);
-
     unsigned int dataCpuSizeInBytes() {
         return _nbElements * sizeof(T);
-        //return metadataCpu.mNbElements * metadataCpu.nbElementsPerComponent * sizeof(T)
     }
 };
 

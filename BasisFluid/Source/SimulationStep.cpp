@@ -38,7 +38,6 @@ void Application::SimulationStep()
         BasisFlow* basisFlowParamsPointer = _basisFlowParams->getCpuDataPointer();
         for (unsigned int i = 0; i < _basisFlowParams->_nbElements; ++i) {
             basisFlowParamsPointer[i].bitFlags = 0;
-            //basisFlowParamsPointer[i].coeffBoundary = 0;
         }
 
         ComputeStretches();
@@ -64,7 +63,6 @@ void Application::SimulationStep()
 
 
     // project dynamic obstacle boundary on bases (reusing forces grid)
-    // TODO create a reference to the forces grid instead
     float boundaryPhiBandDecrease = 99999;
     float obstacleBoundaryFactor = 1.5f;
     float obstacleBoundaryFactorTransferOnly = 1.5f;
@@ -86,10 +84,8 @@ void Application::SimulationStep()
         }
     }
     _forceField->_vectors._sourceStorageType = DataBuffer2D<vec2>::StorageType::CPU;
-    //_forceField->mVectors.dirtyData();
 
 
-    //BasisFlow* basisFlowParamsPointer = _basisFlowParams->getCpuDataPointer();
     basisFlowParamsPointer = _basisFlowParams->getCpuDataPointer();
 
     double* vecBPointer = _vecB->getCpuDataPointer();
@@ -99,7 +95,6 @@ void Application::SimulationStep()
         vecBPointer[iBasis] = IntegrateBasisGrid(b, _forceField.get());
     }
 
-    //inverseBBMatrix(vecX,vecB,inversionPrecision);
     InverseBBMatrix(_vecXBoundaryForces.get(), _vecB.get(), BASIS_FLAGS::DYNAMIC_BOUNDARY_PROJECTION);
 
     double* vecXBoundaryForcesPointer = _vecXBoundaryForces->getCpuDataPointer();
@@ -107,22 +102,17 @@ void Application::SimulationStep()
         basisFlowParamsPointer[i].coeffBoundary = float(vecXBoundaryForcesPointer[i]);
     }
 
-
-
     ComputeBasisAdvection();
 
     if (_useForcesFromParticles) {
         AddParticleForcesToBasisFlows();
     }
 
-
     ComputeParticleAdvection();
-
 
     if (_seedParticles)
     {
         SeedParticles();
     }
-
 
 }
