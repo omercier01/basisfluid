@@ -55,9 +55,6 @@ public:
     Metadata1DBuffer _metadataBuffer;
     Metadata1DCpu _metadataCpu;
 
-    enum class StorageType {UNKNOWN, CPU, BUFFER, TEXTURE1D, TEXTUREBUFFER};
-    StorageType _sourceStorageType;
-
     unsigned int _capacity;
     unsigned int _nbElements;
     GLuint _glidBuffer;

@@ -43,9 +43,6 @@ public:
     Metadata2DTexture2D _metadataTexture2D;
     Metadata2DImage2D _metadataImage2D;
 
-    enum class StorageType {CPU, TEXTURE2D};
-    StorageType _sourceStorageType;
-
     typedef typename T _dataType;
     unsigned int _nbElementsX, _nbElementsY;
     GLuint _glidTexture2D;

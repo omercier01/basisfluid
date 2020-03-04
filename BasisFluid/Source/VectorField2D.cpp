@@ -52,8 +52,6 @@ void VectorField2D::populateWithFunction(std::function<vec2(float x, float y)> f
             }
         break;
     }
-
-    _vectors._sourceStorageType = DataBuffer2D<vec2>::StorageType::CPU;
 }
 
 void VectorField2D::addFunction(std::function<vec2(float, float)> function)
@@ -79,8 +77,6 @@ void VectorField2D::addFunction(std::function<vec2(float, float)> function)
             }
         break;
     }
-
-    _vectors._sourceStorageType = DataBuffer2D<vec2>::StorageType::CPU;
 }
 
 vec2 VectorField2D::interp(vec2 pos)

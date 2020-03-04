@@ -31,8 +31,6 @@ void Application::SetParticlesInAccelGrid()
         _accelParticles->getCpuData_noRefresh(gridId.x, gridId.y)->push_back(iPart);
         partVecsPointer[iPart] = vec2(0);
     }
-    _partPos->_sourceStorageType = DataBuffer1D<vec2>::StorageType::CPU;
-    _partVecs->_sourceStorageType = DataBuffer1D<vec2>::StorageType::CPU;
 }
 
 
@@ -130,12 +128,7 @@ void Application::ComputeParticleAdvection()
                 }
             }
         }
-
     }
-
-    _partPos->_sourceStorageType = DataBuffer1D<vec2>::StorageType::CPU;
-    _partVecs->_sourceStorageType = DataBuffer1D<vec2>::StorageType::CPU;
-    _partAges->_sourceStorageType = DataBuffer1D<float>::StorageType::CPU;
 }
 
 

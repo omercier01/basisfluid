@@ -125,7 +125,6 @@ void DataBuffer2D<T>::setFromImage(Metadata2DImage2D srcImage, unsigned int leve
                 _metadataTexture2D.textureId, GL_TEXTURE_2D, level,
                 0, 0, 0,
                 _metadataTexture2D.nbElementsX, _metadataTexture2D.nbElementsY, 1);
-        _sourceStorageType = StorageType::TEXTURE2D;
     } else {
         // TODO: error, texture storage required.
     }
@@ -259,14 +258,12 @@ T* DataBuffer2D<T>::getCpuDataPointer()
 template <class T>
 void DataBuffer2D<T>::setCpuData(unsigned int i, unsigned int j, T inData)
 {
-    _sourceStorageType = StorageType::CPU;
     _dataCpu[_nbElementsX*j + i] = inData;
 }
 
 template <class T>
 void DataBuffer2D<T>::addCpuData(unsigned int i, unsigned int j, T inData)
 {
-    _sourceStorageType = StorageType::CPU;
     _dataCpu[_nbElementsX*j + i] += inData;
 }
 

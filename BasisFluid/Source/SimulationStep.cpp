@@ -43,8 +43,6 @@ void Application::SimulationStep()
         ComputeStretches();
         _basisStretchedUpdateRequired = false;
 
-        _basisFlowParams->_sourceStorageType = DataBuffer1D<BasisFlow>::StorageType::CPU;
-
         // save stretch flags
         for (unsigned int i = 0; i < _basisFlowParams->_nbElements; ++i) {
             basisFlowParamsPointer[i].stretchBitFlags = basisFlowParamsPointer[i].bitFlags;
@@ -83,8 +81,6 @@ void Application::SimulationStep()
             });
         }
     }
-    _forceField->_vectors._sourceStorageType = DataBuffer2D<vec2>::StorageType::CPU;
-
 
     basisFlowParamsPointer = _basisFlowParams->getCpuDataPointer();
 

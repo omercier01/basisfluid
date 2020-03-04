@@ -37,7 +37,6 @@ void Application::AddParticleForcesToBasisFlows()
             b.bitFlags = UnsetBits(b.bitFlags, BASIS_FLAGS::FORCE_PROJECTION);
         }
     }
-    _basisFlowParams->_sourceStorageType = DataBuffer1D<BasisFlow>::StorageType::CPU;
 
     // project forces into basis space  
     double* vecBPointer = _vecB->getCpuDataPointer();
@@ -49,7 +48,6 @@ void Application::AddParticleForcesToBasisFlows()
             vecBPointer[iBasis] = 0;
         }
     }
-    _vecB->_sourceStorageType = DataBuffer1D<double>::StorageType::CPU;
 
 
     // inverse to obtain base weights
@@ -63,7 +61,6 @@ void Application::AddParticleForcesToBasisFlows()
     for (unsigned int i = 0; i < _basisFlowParams->_nbElements; ++i) {
         basisFlowParamsPointer[i].coeff += _dt * float(vecXForcesPointer[i]);
     }
-    _vecXForces->_sourceStorageType = DataBuffer1D<double>::StorageType::CPU;
 
 }
 
@@ -176,11 +173,9 @@ void Application::ComputeBasisAdvection()
         bi.newCoeff = 0;
     }
 
-    _basisFlowParams->_sourceStorageType = DataBuffer1D<BasisFlow>::StorageType::CPU;
     basisFlowParamsPointer = _basisFlowParams->getCpuDataPointer();
 
 
-    _basisFlowParams->_sourceStorageType = DataBuffer1D<BasisFlow>::StorageType::CPU;
     basisFlowParamsPointer = _basisFlowParams->getCpuDataPointer();
 
 

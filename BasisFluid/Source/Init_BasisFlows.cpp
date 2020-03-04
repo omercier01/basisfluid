@@ -105,7 +105,6 @@ bool Application::Init_BasisFlows() {
         BasisFlow& b = basisFlowParamsPointer[iBasis];
         b.normSquared = MatBBCoeff(b, b);
     }
-    _basisFlowParams->_sourceStorageType = DataBuffer1D<BasisFlow>::StorageType::CPU;
 
 
 

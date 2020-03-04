@@ -101,10 +101,6 @@ void Application::InverseBBMatrix(
         iIt++;
     }
 
-    vecX->_sourceStorageType = DataBuffer1D<double>::StorageType::CPU;
-    _vecTemp->_sourceStorageType = DataBuffer1D<double>::StorageType::CPU;
-    vecB->_sourceStorageType = DataBuffer1D<double>::StorageType::CPU;
-    _basisFlowParams->_sourceStorageType = DataBuffer1D<BasisFlow>::StorageType::CPU;
 }
 
 

@@ -10,7 +10,6 @@ DataBuffer1D<T>::DataBuffer1D(unsigned int size) {
     _hasBufferStorage = false;
     _hasTexture1DStorage = false;
     _hasTextureBufferStorage = false;
-    _sourceStorageType = StorageType::UNKNOWN;
 }
 
 template <class T>
@@ -34,14 +33,12 @@ T* DataBuffer1D<T>::getCpuDataPointer()
 template <class T>
 void DataBuffer1D<T>::setCpuData(unsigned int i, T data)
 {
-    _sourceStorageType = StorageType::CPU;
     _dataCpu[i] = data;
 }
 
 template <class T>
 void DataBuffer1D<T>::setCpuData_noDirty(unsigned int i, T data)
 {
-    _sourceStorageType = StorageType::CPU;
     _dataCpu[i] = data;
 }
 
