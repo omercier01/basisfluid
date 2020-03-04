@@ -520,7 +520,6 @@ float Application::MatBBCoeff(const BasisFlow& b1, const BasisFlow& b2)
 
     // scaled coefficient
     return result;
-
 }
 
 
