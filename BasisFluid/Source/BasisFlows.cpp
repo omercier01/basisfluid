@@ -440,7 +440,6 @@ vec2 Application::MatTCoeff(BasisFlow bTransported, BasisFlow bTransporting)
         _newTCoeffComputed = true;
     }
 
-
     // scaled coefficient
     return result * baseFreq;
 
