@@ -6,3 +6,4 @@
 
 /VisualStudio/.vs/*
 /VisualStudio/BasisFluid.vcxproj.user
+Data/*

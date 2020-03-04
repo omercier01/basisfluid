@@ -4,10 +4,26 @@
 #include <algorithm>
 #include <vector>
 #include <iostream>
+#include <sstream>
+#include <filesystem>
 
 using namespace std;
 
 bool Application::Init_BasisFlows() {
+
+    cout << "Computing bais coefficients..." << endl;
+    PrintTime();
+
+    stringstream ss;
+
+    ss.str("");
+    ss << "Data/Coeffs" << "-" << _maxFreqLvl << "-" << _maxAnisoLvl << "-BB.txt";
+    LoadCoeffsBB(ss.str());
+
+    ss.str("");
+    ss << "Data/Coeffs" << "-" << _maxFreqLvl << "-" << _maxAnisoLvl << "-T.txt";
+    LoadCoeffsT(ss.str());
+
 
     // compute possible frequencies
     _freqLvls.clear();
@@ -287,7 +303,18 @@ bool Application::Init_BasisFlows() {
     }
 
 
+    ss.str("");
+    ss << "Data/Coeffs" << "-" << _maxFreqLvl << "-" << _maxAnisoLvl << "-BB.txt";
+    filesystem::create_directory("Data");
+    SaveCoeffsBB(ss.str());
+
+    ss.str("");
+    ss << "Data/Coeffs" << "-" << _maxFreqLvl << "-" << _maxAnisoLvl << "-T.txt";
+    SaveCoeffsT(ss.str());
+
+
     cout << "Basis setup done." << endl;
+    PrintTime();
 
     return true;
 }

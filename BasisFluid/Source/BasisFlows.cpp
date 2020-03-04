@@ -334,7 +334,7 @@ void Application::SaveCoeffsT(string filename)
                 val.y << endl;
         }
         file.close();
-        std::cout << "saved R coefficient to " << filename << endl;
+        std::cout << "saved T coefficient to " << filename << endl;
     }
 }
 
