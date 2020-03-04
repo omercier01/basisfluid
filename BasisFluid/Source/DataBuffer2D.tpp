@@ -1,5 +1,5 @@
 
-//#include "DataBuffer2D.h" // not necessary, but helps IDEs.
+#include "DataBuffer2D.h" // not necessary, but helps IDEs.
 
 using namespace glm;
 
