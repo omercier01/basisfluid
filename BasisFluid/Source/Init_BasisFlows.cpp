@@ -11,7 +11,7 @@ using namespace std;
 
 bool Application::Init_BasisFlows() {
 
-    cout << "Computing bais coefficients..." << endl;
+    std::cout << "Computing bais coefficients..." << endl;
     PrintTime();
 
     stringstream ss;
@@ -205,9 +205,10 @@ bool Application::Init_BasisFlows() {
 
 
 
-        if (iBasis1 % 1000 == 0) { cout << "Basis intersection: " << iBasis1 << "/" << _basisFlowParams->_nbElements << endl; }
-
+        if ((iBasis1 + 1) % 1000 == 0) { std::cout << "Basis intersection: " << iBasis1 + 1 << "/" << _basisFlowParams->_nbElements << endl; }
     }
+    std::cout << "Basis intersection: " << _basisFlowParams->_nbElements << "/" << _basisFlowParams->_nbElements << endl;
+
     // sort sets by ID number
     for (unsigned int i = 0; i < _basisFlowParams->_nbElements; ++i) {
         std::sort(_intersectingBasesSignificantBBIds->getCpuData(i)->begin(),
@@ -218,7 +219,7 @@ bool Application::Init_BasisFlows() {
 
     // precompute decompressed T coefficients
 
-    cout << "computing decompressed coefficients T..." << endl;
+    std::cout << "computing decompressed coefficients T..." << endl;
     _coeffsTDecompressedIntersections.clear();
     _coeffsTDecompressedIntersections.resize(N);
     for (unsigned int i = 0; i < N; i++) {
@@ -229,14 +230,15 @@ bool Application::Init_BasisFlows() {
             intersectionInfos.push_back(CoeffTDecompressedIntersectionInfo(*itJ, coeff));
         }
 
-        if (i % 1000 == 0) {
-            cout << "decompressed T : " << i << " / " << N << endl;
+        if ((i + 1) % 1000 == 0) {
+            std::cout << "decompressed T : " << i + 1 << " / " << N << endl;
         }
     }
+    std::cout << "decompressed T : " << N << " / " << N << endl;
 
 
     // precompute decompressed BB coefficients
-    cout << "computing decompressed coefficients BB..." << endl;
+    std::cout << "computing decompressed coefficients BB..." << endl;
     _coeffsBBDecompressedIntersections.clear();
     _coeffsBBDecompressedIntersections.resize(N);
     _coeffBBExplicitTransferSum_abs.clear();
@@ -282,10 +284,11 @@ bool Application::Init_BasisFlows() {
             _coeffBBExplicitTransferSum_sqr[i].coeffs[iRelFreq] = std::sqrt(explicitTransferTotalWeight_sqr[iRelFreq]);
         }
 
-        if (i % 1000 == 0) {
-            cout << "Decompressed BB : " << i << " / " << N << endl;
+        if ((i + 1) % 1000 == 0) {
+            std::cout << "Decompressed BB : " << i + 1 << " / " << N << endl;
         }
     }
+    std::cout << "Decompressed BB : " << N << " / " << N << endl;
 
 
     unsigned int minNbBases = -1;
@@ -313,7 +316,7 @@ bool Application::Init_BasisFlows() {
     SaveCoeffsT(ss.str());
 
 
-    cout << "Basis setup done." << endl;
+    std::cout << "Basis setup done." << endl;
     PrintTime();
 
     return true;
