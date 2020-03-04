@@ -310,7 +310,7 @@ void Application::LoadCoeffsBB(string filename)
         );
         float coeff = dataF[2];
         _coeffsBB.insert(std::pair<KeyTypeBB, float>(key, coeff));
-}
+    }
     file.close();
 }
 
@@ -513,10 +513,10 @@ float Application::MatBBCoeff(const BasisFlow& b1, const BasisFlow& b2)
 
         if (_coeffsBB.size() % 1000 == 0) {
             std::cout << "coeffs BB : " << _coeffsBB.size() << endl;
-    }
+        }
 
         _newBBCoeffComputed = true;
-}
+    }
 
     // scaled coefficient
     return result;
