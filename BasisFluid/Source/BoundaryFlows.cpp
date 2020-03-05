@@ -342,12 +342,7 @@ vec2 Application::VecObstacle_stretch(vec2 p, BasisFlow const& b)
         vec = vec2(1);
     }
     else if (!b.stretched) {
-
-        vec = b.coeff *
-            TranslatedBasisEval(
-                p, b.freqLvl, b.center
-            );
-
+        vec = b.coeff * TranslatedBasisEval(p, b.freqLvl, b.center);
     }
     else {
 
@@ -358,14 +353,9 @@ vec2 Application::VecObstacle_stretch(vec2 p, BasisFlow const& b)
         vec = b.coeff *
             mat * // to inverse deformation from World to UV
             (
-                TranslatedBasisEval(
-                    pos, b.freqLvl, b.center
-                )
+                TranslatedBasisEval(pos, b.freqLvl, b.center)
                 / (2.f * b.supportHalfSize()) // division to inverse deformation from UV to Basis
-                )
-
-            ;
-
+            );
     }
 
     return vec;

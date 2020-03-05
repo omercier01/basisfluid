@@ -144,11 +144,7 @@ float Application::IntegrateBasisGrid(BasisFlow& b, VectorField2D* velField)
     }
 
     // compute integral as discretized sum at grid centers
-#if INTEGRATION_SUM_DOUBLE_PRECISION
-    double sum = 0;
-#else
     float sum = 0;
-#endif
 
 
     for (uint i = 0; i <= _integralGridRes; i++) {
@@ -189,11 +185,7 @@ float Application::IntegrateBasisBasis(BasisFlow b1, BasisFlow b2) {
 
 
     // compute integral as discretized sum at grid centers
-#if INTEGRATION_SUM_DOUBLE_PRECISION
-    double sum = 0;
-#else
     float sum = 0;
-#endif
 
 
     for (int i = 0; i <= int(_integralGridRes); i++) {
@@ -212,10 +204,6 @@ float Application::IntegrateBasisBasis(BasisFlow b1, BasisFlow b2) {
 }
 
 
-
-
-#if EXPLICIT_TRANSPORT_ROTATION
-
 // gives the average value of bVec over the support of bSupport
 vec2 Application::AverageBasisOnSupport(BasisFlow bVec, BasisFlow bSupport) {
 
@@ -233,11 +221,7 @@ vec2 Application::AverageBasisOnSupport(BasisFlow bVec, BasisFlow bSupport) {
     }
 
     // compute integral as discretized sum at grid centers
-#if INTEGRATION_SUM_DOUBLE_PRECISION
-    dvec2 sum(0);
-#else
     vec2 sum(0);
-#endif
 
 
     for (uint i = 0; i <= _integralGridRes; i++) {
@@ -256,7 +240,6 @@ vec2 Application::AverageBasisOnSupport(BasisFlow bVec, BasisFlow bSupport) {
 
 }
 
-#endif
 
 
 
@@ -535,18 +518,6 @@ dvec2 flowBasisHat(dvec2 p, int log2Aniso)
     int kx = 1;
     int ky = 1 << log2Aniso;
 
-#if SAFETY_ASSERTS
-    // out of bound asserts
-    if (
-        log2Aniso > 2 ||
-        !isInClosedInterval(p.x, -0.5 / kx, 0.5 / kx) ||
-        !isInClosedInterval(p.y, -0.5 / ky, 0.5 / ky)
-        ) {
-        Application::spApp->insertDebugMessage("flowBasisHat : out of bounds.");
-        return dvec2(0, 0);
-    }
-#endif
-
     double coeffs[3][3];
     double norm;
 
@@ -616,18 +587,6 @@ dmat2 flowBasisHatGrad(dvec2 p, int log2Aniso)
     int kx = 1;
     int ky = 1 << log2Aniso;
 
-#if SAFETY_ASSERTS
-    // out of bound asserts
-    if (
-        log2Aniso > 2 ||
-        !isInClosedInterval(p.x, -0.5 / kx, 0.5 / kx) ||
-        !isInClosedInterval(p.y, -0.5 / ky, 0.5 / ky)
-        ) {
-        Application::spApp->insertDebugMessage("flowBasisHatGrad : out of bounds.");
-        return dmat2(0, 0, 0, 0);
-    }
-#endif
-
     double coeffs[3][3];
     double norm; // actually 1/norm? Like,the factor you need to multiply by to get unit norm ?
 
@@ -696,9 +655,6 @@ vec2 Application::TranslatedBasisEval(
     const ivec2 freqLvl,
     const vec2 center)
 {
-#if SAFETY_ASSERTS
-    if (abs(int(freqLvl.x) - int(freqLvl.y)) > maxAnisoLvl) { cout << "translateBasisEval: frequency out of bounds." << endl; return vec2(0, 0); }
-#endif
 
     vec2 result;
 
@@ -752,16 +708,12 @@ mat2 Application::TranslatedBasisGradEval(
     const ivec2 freqLvl,
     const vec2 center)
 {
-#if USE_PRECISE_BASIS_EVAL
-    return FMATD(translatedBasisGradEvalPrecise(dvec2(p), freqLvl, dvec2(center)));
-#else
     vec2 eps = 1.f / (float(BASE_GRID_SIZE - 1) * vec2(1 << freqLvl) * 2.0f);
 
     return mat2(
         (TranslatedBasisEval(p + vec2(eps.x, 0), freqLvl, center) - TranslatedBasisEval(p - vec2(eps.x, 0), freqLvl, center)) / (2.f*eps.x),
         (TranslatedBasisEval(p + vec2(0, eps.y), freqLvl, center) - TranslatedBasisEval(p - vec2(0, eps.y), freqLvl, center)) / (2.f*eps.y)
     );
-#endif
 
 }
 
