@@ -91,10 +91,8 @@ public:
     void appendCpu(T elem);
 
     T getCpuData(unsigned int i);
-    T getCpuData_noRefresh(unsigned int i) const;
     T* getCpuDataPointer();
     void setCpuData(unsigned int i, T data);
-    void setCpuData_noDirty(unsigned int i, T data);
     void TransferDataCpuToBuffer();
     
     unsigned int dataCpuSizeInBytes() {

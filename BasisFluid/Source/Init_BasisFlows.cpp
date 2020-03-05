@@ -171,7 +171,7 @@ bool Application::Init_BasisFlows() {
         BasisFlow& b1 = basisFlowParamsPointer[iBasis1];
         BasisSupport& b1Support = basisSupports[iBasis1];
 
-        vec2 b1TransportLimits = b1.supportHalfSize()*_densityMultiplierBasisHalfSize*1.01f;
+        vec2 b1TransportLimits = b1.supportHalfSize()*0.5f*1.01f;
 
         for (unsigned int iBasis2 = iBasis1 + 1; iBasis2 < N; ++iBasis2) {
             BasisFlow& b2 = basisFlowParamsPointer[iBasis2];
@@ -179,11 +179,11 @@ bool Application::Init_BasisFlows() {
 
             if (!IntersectionInteriorEmpty(b1Support, b2Support))
             {
-                _intersectingBasesIds->getCpuData_noRefresh(iBasis1)->push_back(iBasis2);
-                _intersectingBasesIds->getCpuData_noRefresh(iBasis2)->push_back(iBasis1);
+                _intersectingBasesIds->getCpuData(iBasis1)->push_back(iBasis2);
+                _intersectingBasesIds->getCpuData(iBasis2)->push_back(iBasis1);
 
-                _intersectingBasesSignificantBBIds->getCpuData_noRefresh(iBasis1)->push_back(iBasis2);
-                _intersectingBasesSignificantBBIds->getCpuData_noRefresh(iBasis2)->push_back(iBasis1);
+                _intersectingBasesSignificantBBIds->getCpuData(iBasis1)->push_back(iBasis2);
+                _intersectingBasesSignificantBBIds->getCpuData(iBasis2)->push_back(iBasis1);
 
 
                 // transport
@@ -192,16 +192,16 @@ bool Application::Init_BasisFlows() {
                     abs(b2.center.x - b1.center.x) <= b1TransportLimits.x &&
                     abs(b2.center.y - b1.center.y) <= b1TransportLimits.y
                     ) {
-                    _intersectingBasesIdsTransport->getCpuData_noRefresh(iBasis1)->push_back(iBasis2);
-                    _intersectingBasesIdsTransport->getCpuData_noRefresh(iBasis2)->push_back(iBasis1);
+                    _intersectingBasesIdsTransport->getCpuData(iBasis1)->push_back(iBasis2);
+                    _intersectingBasesIdsTransport->getCpuData(iBasis2)->push_back(iBasis1);
                 }
 
             }
         }
         // include itself in intersections
-        _intersectingBasesIds->getCpuData_noRefresh(iBasis1)->push_back(iBasis1);
-        _intersectingBasesSignificantBBIds->getCpuData_noRefresh(iBasis1)->push_back(iBasis1);
-        _intersectingBasesIdsTransport->getCpuData_noRefresh(iBasis1)->push_back(iBasis1);
+        _intersectingBasesIds->getCpuData(iBasis1)->push_back(iBasis1);
+        _intersectingBasesSignificantBBIds->getCpuData(iBasis1)->push_back(iBasis1);
+        _intersectingBasesIdsTransport->getCpuData(iBasis1)->push_back(iBasis1);
 
 
 

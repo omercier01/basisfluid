@@ -63,10 +63,6 @@ void Application::InverseBBMatrix(
     DataBuffer1D<double>* vecB,
     unsigned int basisBitMask)
 {
-
-
-
-    uint maxNbItMatBBInversion = _maxNbItMatBBInversion;
     uint n = vecX->_nbElements;
 
     // get references
@@ -82,7 +78,7 @@ void Application::InverseBBMatrix(
     }
 
     uint iIt = 0;
-    while (iIt < maxNbItMatBBInversion) {
+    while (iIt < _maxNbItMatBBInversion) {
 
         for (int iBasisGroup = 0; iBasisGroup < _orthogonalBasisGroupIds.size(); iBasisGroup++)
         {
@@ -110,21 +106,6 @@ dvec2 eigenLaplace(dvec2 p, dvec2 k) {
         -k.x*cos(M_PI*p.x*k.x)*sin(M_PI*p.y*k.y)
     );
 }
-
-
-
-// jacobian matrix
-dmat2 gradEigenLaplace(dvec2 p, dvec2 k) {
-    // glm is column-major
-    return dmat2(
-        k.x*k.y * M_PI * cos(k.x*M_PI*p.x) * cos(k.y*M_PI*p.y), // xdx
-        k.x*k.x * M_PI * sin(k.x*M_PI*p.x) * sin(k.y*M_PI*p.y), // ydx
-        -k.y*k.y * M_PI * sin(k.x*M_PI*p.x) * sin(k.y*M_PI*p.y), // xdy
-        -k.x*k.y * M_PI * cos(k.x*M_PI*p.x) * cos(k.y*M_PI*p.y)  // ydy
-    );
-}
-
-
 
 
 // integrates basis(...) dot a vector field defined on a grid
@@ -441,12 +422,6 @@ float Application::MatBBCoeff(const BasisFlow& b1, const BasisFlow& b2)
 {
     if (IntersectionInteriorEmpty(b1.getSupport(), b2.getSupport())) { return 0.0; }
 
-#if ENFORCE_EXACT_ORTHOGONALITY
-    if (b1.orthoGroup == b2.orthoGroup && b1.center != b2.center) {
-        return 0;
-    }
-#endif
-
     int baseLvl;
     baseLvl = glm::min<int>(
         glm::min<int>(b1.freqLvl.x, b1.freqLvl.y),
@@ -581,72 +556,6 @@ dvec2 flowBasisHat(dvec2 p, int log2Aniso)
 
 }
 
-dmat2 flowBasisHatGrad(dvec2 p, int log2Aniso)
-{
-    // frequencies are 2^level
-    int kx = 1;
-    int ky = 1 << log2Aniso;
-
-    double coeffs[3][3];
-    double norm; // actually 1/norm? Like,the factor you need to multiply by to get unit norm ?
-
-    switch (log2Aniso) {
-    case 0:
-        coeffs[0][0] = 1.;
-        coeffs[0][1] = -0.1107231462697129;
-        coeffs[0][2] = -0.1335661122381723;
-        coeffs[1][0] = -0.1107231462697125;
-        coeffs[1][1] = 0.126276763526633;
-        coeffs[1][2] = -0.05362142886203727;
-        coeffs[2][0] = -0.1335661122381725;
-        coeffs[2][1] = -0.05362142886203719;
-        coeffs[2][2] = 0.05888607976485681;
-        norm = 1.0221139695997405;
-        break;
-    case 1:
-        coeffs[0][0] = 1.;
-        coeffs[0][1] = 0.02773519585551282;
-        coeffs[0][2] = -0.2166411175133077;
-        coeffs[1][0] = -0.4866818264236261;
-        coeffs[1][1] = 0.05437868400363529;
-        coeffs[1][2] = 0.06470915488254406;
-        coeffs[2][0] = 0.0920090958541756;
-        coeffs[2][1] = -0.03817424957328374;
-        coeffs[2][2] = 0.00450273057313512;
-        norm = 0.7620965477955399;
-        break;
-    case 2:
-        coeffs[0][0] = 1.;
-        coeffs[0][1] = 0.03365588438312442;
-        coeffs[0][2] = -0.2201935306298747;
-        coeffs[1][0] = -0.5578126028758348;
-        coeffs[1][1] = -0.00367012134209574;
-        coeffs[1][2] = 0.1137645933804244;
-        coeffs[2][0] = 0.1346875617255008;
-        coeffs[2][1] = -0.004529104071367439;
-        coeffs[2][2] = -0.02422004990227971;
-        norm = 0.5618900800300474;
-        break;
-    default:
-        std::cout << "unknown basis parameters" << endl;
-        return dmat2(0, 0, 0, 0);
-        break;
-    }
-
-    dvec2 p2(p.x + 0.5 / kx, p.y + 0.5 / ky);
-
-    return norm * (
-        coeffs[0][0] * gradEigenLaplace(p2, dvec2(1 * kx, 1 * ky)) +
-        coeffs[0][1] * gradEigenLaplace(p2, dvec2(1 * kx, 3 * ky)) +
-        coeffs[0][2] * gradEigenLaplace(p2, dvec2(1 * kx, 5 * ky)) +
-        coeffs[1][0] * gradEigenLaplace(p2, dvec2(3 * kx, 1 * ky)) +
-        coeffs[1][1] * gradEigenLaplace(p2, dvec2(3 * kx, 3 * ky)) +
-        coeffs[1][2] * gradEigenLaplace(p2, dvec2(3 * kx, 5 * ky)) +
-        coeffs[2][0] * gradEigenLaplace(p2, dvec2(5 * kx, 1 * ky)) +
-        coeffs[2][1] * gradEigenLaplace(p2, dvec2(5 * kx, 3 * ky)) +
-        coeffs[2][2] * gradEigenLaplace(p2, dvec2(5 * kx, 5 * ky))
-        );
-}
 
 //evaluate basis from stored basis templates. Note that in exponent space,
 //division is substraction, so lvlY-minLvl is ky/minK
@@ -674,72 +583,6 @@ vec2 Application::TranslatedBasisEval(
         result = vec2(result.y, result.x);
     }
     return float(1 << minLvl)*result;
-}
-
-
-// evaluates without using stored grid, using double precision.
-dvec2 Application::TranslatedBasisEvalPrecise(const dvec2 p, const ivec2 freqLvl, const dvec2 center)
-{
-    dvec2 result;
-    int minLvl = glm::min<int>(freqLvl.x, freqLvl.y);
-
-    if (freqLvl.x <= freqLvl.y) {
-        result = flowBasisHat(
-            double(1 << minLvl)*(p - center) / double(_lengthLvl0),
-            freqLvl.y - minLvl
-        );
-    }
-    else {
-        // rotated
-        dvec2 r = p - center;
-        result = flowBasisHat(
-            double(1 << minLvl)*dvec2(r.y, -r.x) / double(_lengthLvl0),
-            freqLvl.x - minLvl
-        );
-        result = dvec2(-result.y, result.x);
-    }
-    return double(1 << minLvl)*result;
-}
-
-
-
-mat2 Application::TranslatedBasisGradEval(
-    const vec2 p,
-    const ivec2 freqLvl,
-    const vec2 center)
-{
-    vec2 eps = 1.f / (float(BASE_GRID_SIZE - 1) * vec2(1 << freqLvl) * 2.0f);
-
-    return mat2(
-        (TranslatedBasisEval(p + vec2(eps.x, 0), freqLvl, center) - TranslatedBasisEval(p - vec2(eps.x, 0), freqLvl, center)) / (2.f*eps.x),
-        (TranslatedBasisEval(p + vec2(0, eps.y), freqLvl, center) - TranslatedBasisEval(p - vec2(0, eps.y), freqLvl, center)) / (2.f*eps.y)
-    );
-
-}
-
-
-
-dmat2 Application::TranslatedBasisGradEvalPrecise(const dvec2 p, const ivec2 freqLvl, const dvec2 center)
-{
-    dmat2 result;
-    int minLvl = glm::min<int>(freqLvl.x, freqLvl.y);
-    if (freqLvl.x <= freqLvl.y) {
-        result = flowBasisHatGrad(
-            double(1 << minLvl)*(p - center) / double(_lengthLvl0),
-            freqLvl.y - minLvl
-        );
-    }
-    else {
-        // rotated
-        dvec2 r = p - center;
-        result = -flowBasisHatGrad(
-            double(1 << minLvl)*dvec2(r.y, r.x) / double(_lengthLvl0),
-            freqLvl.x - minLvl
-        );
-        result = dmat2(result[1][1], result[1][0], result[0][1], result[0][0]);
-    }
-
-    return double(Sqr(1 << minLvl))*result;
 }
 
 

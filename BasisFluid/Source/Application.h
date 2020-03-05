@@ -77,9 +77,6 @@ public:
     float IntegrateBasisBasis(BasisFlow b1, BasisFlow b2);
     float IntegrateBasisGrid(BasisFlow& b, VectorField2D* velField);
     glm::vec2 TranslatedBasisEval(const glm::vec2 p, const glm::ivec2 freqLvl, const glm::vec2 center);
-    glm::dvec2 TranslatedBasisEvalPrecise(const glm::dvec2 p, const glm::ivec2 freqLvl, const glm::dvec2 center);
-    glm::mat2 TranslatedBasisGradEval(const glm::vec2 p, const glm::ivec2 freqLvl, const glm::vec2 center);
-    glm::dmat2 TranslatedBasisGradEvalPrecise(const glm::dvec2 p, const glm::ivec2 freqLvl, const glm::dvec2 center);
     glm::vec2 AverageBasisOnSupport(BasisFlow bVec, BasisFlow bSupport);
 
     BasisFlow ComputeStretch(BasisFlow b, bool staticObstaclesOnly = false, bool noStretch = false);
@@ -93,7 +90,7 @@ public:
     void SeedParticles();
 
     void AddParticleForcesToBasisFlows();
-    float ComputeNewCenterProportions(vec2& newCenter, BasisFlow& bi, BasisFlow& bj, vec2& interBasisDist);
+    void ComputeNewCenterProportions(vec2& newCenter, BasisFlow& bi, BasisFlow& bj, vec2& interBasisDist);
     void ComputeBasisAdvection();
 
     inline float WavenumberBasis(BasisFlow& b)
@@ -217,7 +214,6 @@ public:
     float _seedCenterX = 0.f;
     float _seedCenterY = -0.75f;
     float _seedRadius = 0.1f;
-    const float _densityMultiplierBasisHalfSize = 1.f / 2.f;
     float _buoyancyDecayRatioWithAge = 1.f;
     uint _substepsDeformation = 1;
     float _explicitTransferSpeed = 0.1f;

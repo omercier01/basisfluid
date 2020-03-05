@@ -7,7 +7,6 @@
 
 void Application::Draw()
 {
-
     // update obstacle display
     if (_obstacleDisplayNeedsUpdating) {
 
@@ -129,7 +128,7 @@ void Application::ComputeVelocityGridForDisplay()
     _velocityField->populateWithFunction([](float /*x*/, float /*y*/) {return vec2(0); });
 
     for (unsigned int i = 0; i < _basisFlowParams->_nbElements; ++i) {
-        BasisFlow b = _basisFlowParams->getCpuData_noRefresh(i);
+        BasisFlow b = _basisFlowParams->getCpuData(i);
 
         _velocityField->addFunction(
             [&](float x, float y) {
@@ -141,11 +140,8 @@ void Application::ComputeVelocityGridForDisplay()
             }
 
             vec += b.coeffBoundary * (vec2)(
-                TranslatedBasisEval(
-                    p, b.freqLvl, b.center
-                )
-                )
-                ;
+                TranslatedBasisEval(p, b.freqLvl, b.center)
+            );
 
             return vec;
         }

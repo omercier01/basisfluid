@@ -11,7 +11,7 @@ void Application::SimulationStep()
         {
             obs->prevPhi = obs->phi;
             obs->prevGradPhi = obs->gradPhi;
-            if(_moveObstacles) {
+            if (_moveObstacles) {
                 obs->updatePhi();
             }
 
@@ -53,12 +53,7 @@ void Application::SimulationStep()
         basisFlowParamsPointer[i].bitFlags = basisFlowParamsPointer[i].stretchBitFlags;
     }
 
-
-
-
     SetParticlesInAccelGrid();
-
-
 
     // project dynamic obstacle boundary on bases (reusing forces grid)
     float boundaryPhiBandDecrease = 99999;
@@ -75,9 +70,7 @@ void Application::SimulationStep()
         {
             _forceField->addFunction([=](float x, float y) {
                 float phi = obs->phi(vec2(x, y));
-                return
-                    -(obstacleBoundaryFactor * (phi - obs->prevPhi(vec2(x, y))) / _dt * obs->gradPhi(vec2(x, y))) * glm::max<float>(1.f - abs(phi) / boundaryPhiBandDecrease, 0.f)
-                    ;
+                return -(obstacleBoundaryFactor * (phi - obs->prevPhi(vec2(x, y))) / _dt * obs->gradPhi(vec2(x, y))) * glm::max<float>(1.f - abs(phi) / boundaryPhiBandDecrease, 0.f);
             });
         }
     }

@@ -38,8 +38,6 @@ template<class T>
 class DataBuffer2D
 {
 public:
-//private:
-
     Metadata2DTexture2D _metadataTexture2D;
     Metadata2DImage2D _metadataImage2D;
 
@@ -71,10 +69,7 @@ public:
 
     void resize(unsigned int newSizeX, unsigned int newSizeY);
 
-    void bindBufferToTarget(GLenum target);
-
     T getCpuData(unsigned int i, unsigned int j);
-    T getCpuData_noRefresh(unsigned int i, unsigned int j) const;
     T* getCpuDataPointer();
     void setCpuData(unsigned int i, unsigned int j, T data);
     void addCpuData(unsigned int i, unsigned int j, T data);

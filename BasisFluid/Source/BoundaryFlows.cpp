@@ -22,8 +22,6 @@ float distanceToPlane(vec2 x, vec2 p, vec2 n) {
 BasisFlow Application::ComputeStretch(BasisFlow b, bool staticObstaclesOnly, bool noStretch) {
     const float stretchBandRatio = STRETCH_BAND_RATIO; // band of possible corner movement has width _this_ times the basis support half size.
 
-    uint nbStretchLoops = _nbStretchLoops;
-
     BasisSupport s = b.getSupport();
     vec2 shs = b.supportHalfSize();
 
@@ -136,7 +134,7 @@ BasisFlow Application::ComputeStretch(BasisFlow b, bool staticObstaclesOnly, boo
 
         }
 
-        if (!noStretch && nbStretchLoops > 0 && basisIsStretched)
+        if (!noStretch && _nbStretchLoops > 0 && basisIsStretched)
         {
             // stretch relatively to basis center in direction orthogonal to obstacle plane
             float stretchRatio = (maxOriginalDistToPlane - minOriginalDistToPlane) / (maxStretchedDistToPlane - minStretchedDistToPlane);
@@ -173,7 +171,7 @@ BasisFlow Application::ComputeStretch(BasisFlow b, bool staticObstaclesOnly, boo
 
     if (!noStretch && AllBitsSet(b.bitFlags, INTERIOR) && b.stretched)
     {
-        for (uint iStretchLoop = 0; iStretchLoop < nbStretchLoops; iStretchLoop++)
+        for (uint iStretchLoop = 0; iStretchLoop < _nbStretchLoops; iStretchLoop++)
         {
 
             // push
@@ -237,7 +235,7 @@ BasisFlow Application::ComputeStretch(BasisFlow b, bool staticObstaclesOnly, boo
 
 
                 //stretch (not stretching on last iteration)
-                if (iStretchLoop != nbStretchLoops - 1)
+                if (iStretchLoop != _nbStretchLoops - 1)
                 {
 
                     // stretch relatively to basis center in direction orthogonal to obstacle plane

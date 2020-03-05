@@ -161,6 +161,5 @@ struct BasisFlow {
 };
 
 glm::dvec2 flowBasisHat(glm::dvec2 p, int log2Aniso);
-glm::dmat2 flowBasisHatGrad(glm::dvec2 p, int log2Aniso);
 
 #endif // BASISFLOWS_H

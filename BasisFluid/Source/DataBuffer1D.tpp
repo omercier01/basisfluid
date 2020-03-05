@@ -19,12 +19,6 @@ T DataBuffer1D<T>::getCpuData(unsigned int i)
 }
 
 template <class T>
-T DataBuffer1D<T>::getCpuData_noRefresh(unsigned int i) const
-{
-    return _dataCpu[i];
-}
-
-template <class T>
 T* DataBuffer1D<T>::getCpuDataPointer()
 {
     return _dataCpu;
@@ -32,12 +26,6 @@ T* DataBuffer1D<T>::getCpuDataPointer()
 
 template <class T>
 void DataBuffer1D<T>::setCpuData(unsigned int i, T data)
-{
-    _dataCpu[i] = data;
-}
-
-template <class T>
-void DataBuffer1D<T>::setCpuData_noDirty(unsigned int i, T data)
 {
     _dataCpu[i] = data;
 }

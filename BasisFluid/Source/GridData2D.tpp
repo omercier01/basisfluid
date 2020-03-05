@@ -35,12 +35,6 @@ T GridData2D<T>::getCpuData(unsigned int i, unsigned int j)
 }
 
 template <class T>
-T GridData2D<T>::getCpuData_noRefresh(unsigned int i, unsigned int j)
-{
-    return _data.getCpuData_noRefresh(i, j);
-}
-
-template <class T>
 void GridData2D<T>::createCpuStorage()
 {
     _data.createCpuStorage();

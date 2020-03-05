@@ -19,7 +19,7 @@ void Application::SetParticlesInAccelGrid()
 {
     for (uint i = 0; i < _accelParticlesRes; i++) {
         for (uint j = 0; j < _accelParticlesRes; j++) {
-            _accelParticles->getCpuData_noRefresh(i, j)->clear();
+            _accelParticles->getCpuData(i, j)->clear();
         }
     }
 
@@ -28,11 +28,10 @@ void Application::SetParticlesInAccelGrid()
     for (uint iPart = 0; iPart < _partPos->_nbElements; ++iPart) {
         vec2 pos = particlesPointer[iPart];
         ivec2 gridId = ivec2(_accelParticles->pointToClosestIndex(pos));
-        _accelParticles->getCpuData_noRefresh(gridId.x, gridId.y)->push_back(iPart);
+        _accelParticles->getCpuData(gridId.x, gridId.y)->push_back(iPart);
         partVecsPointer[iPart] = vec2(0);
     }
 }
-
 
 
 // compute particle direction first without moving them (because the velocity of a basis flow on a particle depends on its position). Then apply movement.
@@ -44,19 +43,12 @@ void Application::ComputeParticleAdvection()
     float* partAgesPointer = _partAges->getCpuDataPointer();
     BasisFlow* basisFlowParamsPointer = _basisFlowParams->getCpuDataPointer();
 
-    bool useLocalVectorFieldPartAdv = true;
-    bool pushParticlesOutOfObstacles = true;
-
-
     for (uint iSubstep = 0; iSubstep < uint(_substepsParticles); iSubstep++)
     {
-
         // reset particle movement to 0.
         for (unsigned int iPart = 0; iPart < _partVecs->_nbElements; ++iPart) {
             partVecsPointer[iPart] = vec2(0);
         }
-
-
 
         // accumulate particle movement from basis velocities. Do not acutally move particles yet.
         for (unsigned int iBasis = 0; iBasis < _basisFlowParams->_nbElements; ++iBasis) {
@@ -86,7 +78,7 @@ void Application::ComputeParticleAdvection()
 
             for (int i = gridIdsMin.x; i <= gridIdsMax.x; i++) {
                 for (int j = gridIdsMin.y; j <= gridIdsMax.y; j++) {
-                    vector<unsigned int>* partIds = _accelParticles->getCpuData_noRefresh(i, j);
+                    vector<unsigned int>* partIds = _accelParticles->getCpuData(i, j);
 
                     for (auto partIt = partIds->begin(); partIt != partIds->end(); partIt++) {
                         vec2 p = particlesPointer[*partIt];
@@ -113,18 +105,14 @@ void Application::ComputeParticleAdvection()
 
         }
 
-
-        if (pushParticlesOutOfObstacles)
+        // move particles out of obstacles
+        for (unsigned int iPart = 0; iPart < _partPos->_nbElements; ++iPart)
         {
-            // move particles out of obstacles
-            for (unsigned int iPart = 0; iPart < _partPos->_nbElements; ++iPart)
-            {
-                vec2& p = particlesPointer[iPart];
-                for (Obstacle* obs : _obstacles) {
-                    if (obs->phi(p) < 0)
-                    {
-                        p -= obs->gradPhi(p) * obs->phi(p);
-                    }
+            vec2& p = particlesPointer[iPart];
+            for (Obstacle* obs : _obstacles) {
+                if (obs->phi(p) < 0)
+                {
+                    p -= obs->gradPhi(p) * obs->phi(p);
                 }
             }
         }
@@ -133,22 +121,14 @@ void Application::ComputeParticleAdvection()
 
 
 
-
-
-
 void Application::SeedParticles()
 {
-    bool pushParticlesOutOfObstacles = true;
-
     // reset seed cursor at beginning of circular buffer after loop, and detect looping to switch from appending to replacing
     unsigned int nbTotalPartSeed = MAX_NB_PARTICLE_SEED_GROUPS * NB_PARTICLES_TO_SEED_PER_DIM;
     if (_particleCircularSeedId >= nbTotalPartSeed) {
         _particleSeedBufferLooped = true;
         _particleCircularSeedId = 0;
     }
-
-
-
 
     int seedingDensity = int(NB_PARTICLES_TO_SEED_PER_DIM);
 
@@ -163,7 +143,7 @@ void Application::SeedParticles()
                 break;
             }
         }
-        if (pushParticlesOutOfObstacles && isInsideObstacle) { continue; }
+        if (isInsideObstacle) { continue; }
         float temp = mod(float(10.f*(p.y - _domainBottom) / (_domainTop - _domainBottom)), 1.f);
         vec3 c = vec3(0, 0, 0);
 
@@ -179,11 +159,7 @@ void Application::SeedParticles()
             _partAges->appendCpu(0);
         }
         _particleCircularSeedId++;
-
     }
-
 }
-
-
 
 

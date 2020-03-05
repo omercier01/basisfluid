@@ -243,12 +243,6 @@ T DataBuffer2D<T>::getCpuData(unsigned int i, unsigned int j)
 
 
 template <class T>
-T DataBuffer2D<T>::getCpuData_noRefresh(unsigned int i, unsigned int j) const
-{
-    return _dataCpu[_nbElementsX*j + i];
-}
-
-template <class T>
 T* DataBuffer2D<T>::getCpuDataPointer()
 {
     return _dataCpu;

@@ -54,8 +54,6 @@ void Application::AddParticleForcesToBasisFlows()
     InverseBBMatrix(_vecXForces.get(), _vecB.get(), BASIS_FLAGS::FORCE_PROJECTION);
 
 
-
-
     // add force weights to current basis weights
     double* vecXForcesPointer = _vecXForces->getCpuDataPointer();
     for (unsigned int i = 0; i < _basisFlowParams->_nbElements; ++i) {
@@ -66,13 +64,11 @@ void Application::AddParticleForcesToBasisFlows()
 
 
 
-float Application::ComputeNewCenterProportions(vec2& newCenter, BasisFlow& bi, BasisFlow& bj, vec2& interBasisDist)
+void Application::ComputeNewCenterProportions(vec2& newCenter, BasisFlow& bi, BasisFlow& bj, vec2& interBasisDist)
 {
-    float tempCoeff;
-    tempCoeff = glm::max<float>(0.f, (1.f - abs(newCenter.x - bj.center.x) / interBasisDist.x)) *
+    float tempCoeff = glm::max<float>(0.f, (1.f - abs(newCenter.x - bj.center.x) / interBasisDist.x)) *
         glm::max<float>(0.f, (1.f - abs(newCenter.y - bj.center.y) / interBasisDist.y));
     bj.newCoeff += bi.coeff * tempCoeff;
-    return tempCoeff;
 }
 
 
@@ -80,7 +76,6 @@ float Application::ComputeNewCenterProportions(vec2& newCenter, BasisFlow& bi, B
 void Application::ComputeBasisAdvection()
 {
     const unsigned int nbBasisFlows = _basisFlowParams->_nbElements;
-
 
     BasisFlow* basisFlowParamsPointer = _basisFlowParams->getCpuDataPointer();
 
@@ -106,41 +101,37 @@ void Application::ComputeBasisAdvection()
         // compute new center
         vec2 newCenter = bi.center + _dt * avgDisplacement;
 
-        float totalTempCoeffs = 0;
-
         vec2 freqI(1 << bi.freqLvl.x, 1 << bi.freqLvl.y);
 
-        vec2 interBasisDist = 0.5f * _densityMultiplierBasisHalfSize / freqI;
+        vec2 interBasisDist = 0.5f * 0.5f / freqI;
 
 
         if (
-            abs(newCenter.x - bi.center.x) > bi.supportHalfSize().x*_densityMultiplierBasisHalfSize*0.99 ||
-            abs(newCenter.y - bi.center.y) > bi.supportHalfSize().y*_densityMultiplierBasisHalfSize*0.99
+            abs(newCenter.x - bi.center.x) > bi.supportHalfSize().x*0.5f*0.99 ||
+            abs(newCenter.y - bi.center.y) > bi.supportHalfSize().y*0.5f*0.99
             ) {
             // new center not located within immediate neighbours, must look further using basis acceleration grid
             uvec2 minId(9999);
             uvec2 maxId(0);
             for (int iX = -1; iX <= 1; iX += 2) {
                 for (int iY = -1; iY <= 1; iY += 2) {
-                    {
-                        vec2 corner = newCenter + vec2(iX, iY)*bi.supportHalfSize()*_densityMultiplierBasisHalfSize;
-                        uvec2 cellId;
-                        cellId.x = glm::clamp<int>(int(floor((corner.x - _domainLeft) / (_domainRight - _domainLeft)*_accelBasisRes)), 0, _accelBasisRes - 1);
-                        cellId.y = glm::clamp<int>(int(floor((corner.y - _domainBottom) / (_domainTop - _domainBottom)*_accelBasisRes)), 0, _accelBasisRes - 1);
-                        minId = glm::min<uint>(cellId, minId);
-                        maxId = glm::max<uint>(cellId, maxId);
-                    }
+                    vec2 corner = newCenter + vec2(iX, iY)*bi.supportHalfSize()*0.5f;
+                    uvec2 cellId;
+                    cellId.x = glm::clamp<int>(int(floor((corner.x - _domainLeft) / (_domainRight - _domainLeft)*_accelBasisRes)), 0, _accelBasisRes - 1);
+                    cellId.y = glm::clamp<int>(int(floor((corner.y - _domainBottom) / (_domainTop - _domainBottom)*_accelBasisRes)), 0, _accelBasisRes - 1);
+                    minId = glm::min<uint>(cellId, minId);
+                    maxId = glm::max<uint>(cellId, maxId);
                 }
             }
 
             for (uint iX = minId.x; iX <= maxId.x; iX++) {
                 for (uint iY = minId.y; iY <= maxId.y; iY++) {
                     {
-                        for (unsigned int basisId : *(_accelBasisCentersIds->getCpuData_noRefresh(iX, iY)))
+                        for (unsigned int basisId : *(_accelBasisCentersIds->getCpuData(iX, iY)))
                         {
                             BasisFlow& bj = basisFlowParamsPointer[basisId];
                             if (bj.freqLvl == bi.freqLvl) {
-                                totalTempCoeffs += ComputeNewCenterProportions(newCenter, bi, bj, interBasisDist);
+                                ComputeNewCenterProportions(newCenter, bi, bj, interBasisDist);
                             }
                         }
                     }
@@ -152,10 +143,10 @@ void Application::ComputeBasisAdvection()
         {
 
             // new center within immediate neighbours
-            vector<unsigned int>* localIntersectingBasesIdsTransport = _intersectingBasesIdsTransport->getCpuData_noRefresh(i);
+            vector<unsigned int>* localIntersectingBasesIdsTransport = _intersectingBasesIdsTransport->getCpuData(i);
             for (auto itJ = localIntersectingBasesIdsTransport->begin(); itJ != localIntersectingBasesIdsTransport->end(); ++itJ) {
                 BasisFlow& bj = basisFlowParamsPointer[*itJ];
-                totalTempCoeffs += ComputeNewCenterProportions(newCenter, bi, bj, interBasisDist);
+                ComputeNewCenterProportions(newCenter, bi, bj, interBasisDist);
             }
 
         }
@@ -172,9 +163,6 @@ void Application::ComputeBasisAdvection()
         bi.coeff = bi.newCoeff;
         bi.newCoeff = 0;
     }
-
-    basisFlowParamsPointer = _basisFlowParams->getCpuDataPointer();
-
 
     basisFlowParamsPointer = _basisFlowParams->getCpuDataPointer();
 
@@ -218,7 +206,7 @@ void Application::ComputeBasisAdvection()
 
             for (uint iRelFreq = 0; iRelFreq < _nbExplicitTransferFreqs; iRelFreq++)
             {
-                vector<CoeffBBDecompressedIntersectionInfo>* localIntersectingBasesIdsDeformation = _intersectingBasesIdsDeformation[iRelFreq]->getCpuData_noRefresh(i);
+                vector<CoeffBBDecompressedIntersectionInfo>* localIntersectingBasesIdsDeformation = _intersectingBasesIdsDeformation[iRelFreq]->getCpuData(i);
 
                 for (CoeffBBDecompressedIntersectionInfo& inter : *localIntersectingBasesIdsDeformation) {
                     BasisFlow& bj = basisFlowParamsPointer[inter.j];

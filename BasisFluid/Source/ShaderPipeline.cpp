@@ -91,9 +91,6 @@ ShaderPipeline::ShaderProgram::ShaderProgram(
 }
 
 
-//NOTE: if this gets called a lot, we could instead store all the info and
-//reorder it with the glGetAttribLocation order, instead of searching through
-//all the attribs evety time.
 GLenum ShaderPipeline::GetAttribDataType(GLuint program, string attribName)
 {
     // need to loop over all attributes becuase glGetActiveAttrib apparently does not use the order of the vertex attrib (i.e. the order of glGetAttribLocation).

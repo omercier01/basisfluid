@@ -20,7 +20,6 @@ public:
 
     void setCpuData(unsigned int i, unsigned int j, T data);
     T getCpuData(unsigned int i, unsigned int j);
-    T getCpuData_noRefresh(unsigned int i, unsigned int j);
 
     void createCpuStorage();
     unsigned int nbElementsX();
