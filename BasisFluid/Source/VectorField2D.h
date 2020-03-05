@@ -1,4 +1,4 @@
-// vector field defined by vectors on a regular grid.
+// vector field defined by vectors on a regular grid. Data is on cell corners.
 
 #ifndef VECTORFIELD2D_H
 #define VECTORFIELD2D_H
@@ -13,25 +13,16 @@
 class VectorField2D
 {
 public:
-    enum class BoundaryCondition{ LINEAR, FLAT, ZERO, MIRROR, PERIODIC };
-    enum class GridNodeLocation{ CENTER, CORNER };
-    enum class InterpolationMethod{ LINEAR };
-
-public:
     DataBuffer2D<glm::vec2> _vectors;
     float _boundXMin, _boundYMin, _boundXMax, _boundYMax;
     unsigned int _nbCellsX, _nbCellsY;
-    BoundaryCondition _boundaryCondition;
-    GridNodeLocation _gridNodeLocation;
 
 public:
     VectorField2D(float boundXMin, float boundXMax, float boundYMin,
-                  float boundYMax, unsigned int nbCellsX, unsigned int nbCellsY,
-                  GridNodeLocation gridNodeLocation = GridNodeLocation::CENTER,
-                  BoundaryCondition boundaryCondition = BoundaryCondition::LINEAR);
+        float boundYMax, unsigned int nbCellsX, unsigned int nbCellsY);
 
-    void populateWithFunction(std::function<glm::vec2 (float x, float y)> function);
-    void addFunction(std::function<glm::vec2 (float x, float y)> function);
+    void populateWithFunction(std::function<glm::vec2(float x, float y)> function);
+    void addFunction(std::function<glm::vec2(float x, float y)> function);
     glm::vec2 interp(glm::vec2 pos);
 
     void addVectorCpuData(unsigned int i, unsigned int j, glm::vec2 data);
@@ -40,19 +31,19 @@ public:
 
     void createVectorCpuStorage();
     void createVectorTexture2DStorage(GLenum internalFormat, GLenum sizedInternalFormat,
-                                      GLenum externalFormat, GLenum sizedExternalFormat,
-                                      unsigned int nbMipmapLevels);
+        GLenum externalFormat, GLenum sizedExternalFormat,
+        unsigned int nbMipmapLevels);
     void createVectorTexture2DStorage(GLenum internalFormat, GLenum sizedInternalFormat,
-                                      GLenum externalFormat, GLenum sizedExternalFormat);
+        GLenum externalFormat, GLenum sizedExternalFormat);
     void vectorTexture2DStorageAdjustBoundaryCondition();
 
     void setVectorsFromImage(Metadata2DImage2D metadataImage2D, unsigned int level);
 
     unsigned int nbElementsX();
     unsigned int nbElementsY();
-    
+
     void setBounds(float inBoundXMin, float inBoundXMax,
-                   float inBoundYMin, float inBoundYMax);
+        float inBoundYMin, float inBoundYMax);
 
     glm::uvec2 pointToClosestIndex(glm::vec2 point);
     glm::uvec2 pointToFlooredIndex(glm::vec2 point);

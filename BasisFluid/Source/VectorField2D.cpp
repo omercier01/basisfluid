@@ -4,14 +4,10 @@ using namespace glm;
 
 VectorField2D::VectorField2D(
     float boundXMin, float boundXMax, float boundYMin, float boundYMax,
-    unsigned int nbCellsX, unsigned int nbCellsY,
-    VectorField2D::GridNodeLocation gridNodeLocation,
-    VectorField2D::BoundaryCondition boundaryCondition) :
+    unsigned int nbCellsX, unsigned int nbCellsY) :
     _nbCellsX(nbCellsX),
     _nbCellsY(nbCellsY),
-    _vectors(1, 1),
-    _gridNodeLocation(gridNodeLocation),
-    _boundaryCondition(boundaryCondition) {
+    _vectors(1, 1) {
 
     _boundXMin = boundXMin;
     _boundXMax = boundXMax;
@@ -19,14 +15,7 @@ VectorField2D::VectorField2D(
     _boundYMax = boundYMax;
 
     // resizes, but does not necessarily allocate the data.
-    switch (gridNodeLocation) {
-    case GridNodeLocation::CENTER:
-        _vectors.resize(nbCellsX, nbCellsY);
-        break;
-    case GridNodeLocation::CORNER:
-        _vectors.resize(nbCellsX + 1, nbCellsY + 1);
-        break;
-    }
+    _vectors.resize(nbCellsX + 1, nbCellsY + 1);
 }
 
 void VectorField2D::populateWithFunction(std::function<vec2(float x, float y)> function)
@@ -34,24 +23,12 @@ void VectorField2D::populateWithFunction(std::function<vec2(float x, float y)> f
     vec2* _vectorsPointer = _vectors.getCpuDataPointer();
     unsigned int nxVec = _vectors._nbElementsX;
 
-    switch (_gridNodeLocation) {
-    case GridNodeLocation::CENTER:
-        for (unsigned int i = 0; i < _nbCellsX; i++)
-            for (unsigned int j = 0; j < _nbCellsY; j++) {
-                float x = _boundXMin + (i + 0.5f) / _nbCellsX * (_boundXMax - _boundXMin);
-                float y = _boundYMin + (j + 0.5f) / _nbCellsY * (_boundYMax - _boundYMin);
-                _vectorsPointer[nxVec*j + i] = function(x, y);
-            }
-        break;
-    case GridNodeLocation::CORNER:
-        for (unsigned int i = 0; i < _nbCellsX + 1; i++)
-            for (unsigned int j = 0; j < _nbCellsY + 1; j++) {
-                float x = _boundXMin + float(i) / _nbCellsX * (_boundXMax - _boundXMin);
-                float y = _boundYMin + float(j) / _nbCellsY * (_boundYMax - _boundYMin);
-                _vectorsPointer[nxVec*j + i] = function(x, y);
-            }
-        break;
-    }
+    for (unsigned int i = 0; i < _nbCellsX + 1; i++)
+        for (unsigned int j = 0; j < _nbCellsY + 1; j++) {
+            float x = _boundXMin + float(i) / _nbCellsX * (_boundXMax - _boundXMin);
+            float y = _boundYMin + float(j) / _nbCellsY * (_boundYMax - _boundYMin);
+            _vectorsPointer[nxVec*j + i] = function(x, y);
+        }
 }
 
 void VectorField2D::addFunction(std::function<vec2(float, float)> function)
@@ -59,24 +36,12 @@ void VectorField2D::addFunction(std::function<vec2(float, float)> function)
     vec2* _vectorsPointer = _vectors.getCpuDataPointer();
     unsigned int nxVec = _vectors._nbElementsX;
 
-    switch (_gridNodeLocation) {
-    case GridNodeLocation::CENTER:
-        for (unsigned int i = 0; i < _nbCellsX; i++)
-            for (unsigned int j = 0; j < _nbCellsY; j++) {
-                float x = _boundXMin + (i + 0.5f) / _nbCellsX * (_boundXMax - _boundXMin);
-                float y = _boundYMin + (j + 0.5f) / _nbCellsY * (_boundYMax - _boundYMin);
-                _vectorsPointer[nxVec*j + i] += function(x, y);
-            }
-        break;
-    case GridNodeLocation::CORNER:
-        for (unsigned int i = 0; i < _nbCellsX + 1; i++)
-            for (unsigned int j = 0; j < _nbCellsY + 1; j++) {
-                float x = _boundXMin + float(i) / _nbCellsX * (_boundXMax - _boundXMin);
-                float y = _boundYMin + float(j) / _nbCellsY * (_boundYMax - _boundYMin);
-                _vectorsPointer[nxVec*j + i] += function(x, y);
-            }
-        break;
-    }
+    for (unsigned int i = 0; i < _nbCellsX + 1; i++)
+        for (unsigned int j = 0; j < _nbCellsY + 1; j++) {
+            float x = _boundXMin + float(i) / _nbCellsX * (_boundXMax - _boundXMin);
+            float y = _boundYMin + float(j) / _nbCellsY * (_boundYMax - _boundYMin);
+            _vectorsPointer[nxVec*j + i] += function(x, y);
+        }
 }
 
 vec2 VectorField2D::interp(vec2 pos)
@@ -93,317 +58,27 @@ vec2 VectorField2D::interp(vec2 pos)
     float normalizedY = (y - _boundYMin) / (_boundYMax - _boundYMin)*_nbCellsY;
 
 
-    switch (_boundaryCondition) {
-    case BoundaryCondition::LINEAR:
-        switch (_gridNodeLocation) {
-        case GridNodeLocation::CENTER:
-            if (normalizedX < 0.5) {
-                indexXLeft = 0;
-                indexXRight = 1;
-                weightX = normalizedX - 0.5f;
-            }
-            else if (normalizedX >= _nbCellsX - 0.5f) {
-                indexXLeft = _nbCellsX - 2;
-                indexXRight = _nbCellsX - 1;
-                weightX = normalizedX - (indexXLeft + 0.5f);
-            }
-            else {
-                indexXLeft = clamp<int>(int(floor(normalizedX - 0.5f)), 0, _nbCellsX - 2);
-                indexXRight = indexXLeft + 1;
-                weightX = normalizedX - (indexXLeft + 0.5f);
-            }
-            if (normalizedY < 0.5) {
-                indexYLeft = 0;
-                indexYRight = 1;
-                weightY = normalizedY - 0.5f;
-            }
-            else if (normalizedY >= _nbCellsY - 0.5f) {
-                indexYLeft = _nbCellsY - 2;
-                indexYRight = _nbCellsY - 1;
-                weightY = normalizedY - (indexYLeft + 0.5f);
-            }
-            else {
-                indexYLeft = clamp<int>(int(floor(normalizedY - 0.5f)), 0, _nbCellsY - 2);
-                indexYRight = indexYLeft + 1;
-                weightY = normalizedY - (indexYLeft + 0.5f);
-            }
-            break;
-        case GridNodeLocation::CORNER:
-            if (normalizedX < 0) {
-                indexXLeft = 0;
-                indexXRight = 1;
-                weightX = normalizedX;
-            }
-            else if (normalizedX >= _nbCellsX) {
-                indexXLeft = _nbCellsX - 1;
-                indexXRight = _nbCellsX;
-                weightX = normalizedX - indexXLeft;
-            }
-            else {
-                indexXLeft = clamp<int>(int(floor(normalizedX)), 0, _nbCellsX - 1);
-                indexXRight = indexXLeft + 1;
-                weightX = normalizedX - indexXLeft;
-            }
-            if (normalizedY < 0) {
-                indexYLeft = 0;
-                indexYRight = 1;
-                weightY = normalizedY;
-            }
-            else if (normalizedY >= _nbCellsY) {
-                indexYLeft = _nbCellsY - 1;
-                indexYRight = _nbCellsY;
-                weightY = normalizedY - indexYLeft;
-            }
-            else {
-                indexYLeft = clamp<int>(int(floor(normalizedY)), 0, _nbCellsY - 1);
-                indexYRight = indexYLeft + 1;
-                weightY = normalizedY - indexYLeft;
-            }
-            break;
-        }
-        break;
-    case BoundaryCondition::FLAT:
-        switch (_gridNodeLocation) {
-        case GridNodeLocation::CENTER:
-            if (normalizedX < 0.5) {
-                indexXLeft = 0;
-                indexXRight = 1;
-                weightX = 0;
-            }
-            else if (normalizedX >= _nbCellsX - 0.5f) {
-                indexXLeft = _nbCellsX - 2;
-                indexXRight = _nbCellsX - 1;
-                weightX = 1;
-            }
-            else {
-                indexXLeft = clamp<int>(int(floor(normalizedX - 0.5f)), 0, _nbCellsX - 2);
-                indexXRight = indexXLeft + 1;
-                weightX = normalizedX - (indexXLeft + 0.5f);
-            }
-            if (normalizedY < 0.5) {
-                indexYLeft = 0;
-                indexYRight = 1;
-                weightY = 0;
-            }
-            else if (normalizedY >= _nbCellsY - 0.5f) {
-                indexYLeft = _nbCellsY - 2;
-                indexYRight = _nbCellsY - 1;
-                weightY = 1;
-            }
-            else {
-                indexYLeft = clamp<int>(int(floor(normalizedY - 0.5f)), 0, _nbCellsY - 2);
-                indexYRight = indexYLeft + 1;
-                weightY = normalizedY - (indexYLeft + 0.5f);
-            }
-            break;
-        case GridNodeLocation::CORNER:
-            if (normalizedX < 0) {
-                indexXLeft = 0;
-                indexXRight = 1;
-                weightX = 0;
-            }
-            else if (normalizedX >= _nbCellsX) {
-                indexXLeft = _nbCellsX - 1;
-                indexXRight = _nbCellsX;
-                weightX = 1;
-            }
-            else {
-                indexXLeft = clamp<int>(int(floor(normalizedX)), 0, _nbCellsX - 1);
-                indexXRight = indexXLeft + 1;
-                weightX = normalizedX - indexXLeft;
-            }
-            if (normalizedY < 0) {
-                indexYLeft = 0;
-                indexYRight = 1;
-                weightY = 0;
-            }
-            else if (normalizedY >= _nbCellsY) {
-                indexYLeft = _nbCellsY - 1;
-                indexYRight = _nbCellsY;
-                weightY = 1;
-            }
-            else {
-                indexYLeft = clamp<int>(int(floor(normalizedY)), 0, _nbCellsY - 1);
-                indexYRight = indexYLeft + 1;
-                weightY = normalizedY - indexYLeft;
-            }
-            break;
-        }
-        break;
-    case BoundaryCondition::ZERO:
-        switch (_gridNodeLocation) {
-        case GridNodeLocation::CENTER:
-            if (normalizedX < 0.5) {
-                return vec2(0, 0);
-            }
-            else if (normalizedX >= _nbCellsX - 0.5f) {
-                return vec2(0, 0);
-            }
-            else {
-                indexXLeft = clamp<int>(int(floor(normalizedX - 0.5f)), 0, _nbCellsX - 2);
-                indexXRight = indexXLeft + 1;
-                weightX = normalizedX - (indexXLeft + 0.5f);
-            }
-            if (normalizedY < 0.5) {
-                return vec2(0, 0);
-            }
-            else if (normalizedY >= _nbCellsY - 0.5f) {
-                return vec2(0, 0);
-            }
-            else {
-                indexYLeft = clamp<int>(int(floor(normalizedY - 0.5f)), 0, _nbCellsY - 2);
-                indexYRight = indexYLeft + 1;
-                weightY = normalizedY - (indexYLeft + 0.5f);
-            }
-            break;
-        case GridNodeLocation::CORNER:
-            if (normalizedX < 0) {
-                return vec2(0, 0);
-            }
-            else if (normalizedX >= _nbCellsX) {
-                return vec2(0, 0);
-            }
-            else {
-                indexXLeft = clamp<int>(int(floor(normalizedX)), 0, _nbCellsX - 1);
-                indexXRight = indexXLeft + 1;
-                weightX = normalizedX - indexXLeft;
-            }
-            if (normalizedY < 0) {
-                return vec2(0, 0);
-            }
-            else if (normalizedY >= _nbCellsY) {
-                return vec2(0, 0);
-            }
-            else {
-                indexYLeft = clamp<int>(int(floor(normalizedY)), 0, _nbCellsY - 1);
-                indexYRight = indexYLeft + 1;
-                weightY = normalizedY - indexYLeft;
-            }
-            break;
-        }
-        break;
-    case BoundaryCondition::MIRROR:
-        switch (_gridNodeLocation) {
-        case GridNodeLocation::CENTER:
-            if (normalizedX < 0) {
-                normalizedX = -normalizedX;
-            }
-            if (normalizedX >= _nbCellsX - 0.5f) {
-                float xInDomain01 = normalizedX / _nbCellsX;
-                unsigned int temp = int(floor(xInDomain01)) % 2;
-                if (temp == 0) {
-                    normalizedX = _nbCellsX * fract(xInDomain01);
-                }
-                else {
-                    normalizedX = _nbCellsX * (1 - fract(xInDomain01));
-                }
-            }
-            if (normalizedX < 0.5) {
-                indexXLeft = 0;
-                indexXRight = indexXLeft;
-                weightX = 0;
-            }
-            else if (normalizedX >= _nbCellsX - 0.5f) {
-                indexXLeft = _nbCellsX - 1;
-                indexXRight = indexXLeft;
-                weightX = 0;
-            }
-            else {
-                indexXLeft = clamp<int>(int(floor(normalizedX - 0.5f)), 0, _nbCellsX - 2);
-                indexXRight = indexXLeft + 1;
-                weightX = normalizedX - (indexXLeft + 0.5f);
-            }
-
-            if (normalizedY < 0) {
-                normalizedY = -normalizedY;
-            }
-            if (normalizedY >= _nbCellsY - 0.5f) {
-                float yInDomain01 = normalizedY / _nbCellsY;
-                unsigned int temp = int(floor(yInDomain01)) % 2;
-                if (temp == 0) {
-                    normalizedY = _nbCellsY * fract(yInDomain01);
-                }
-                else {
-                    normalizedY = _nbCellsY * (1 - fract(yInDomain01));
-                }
-            }
-            if (normalizedY < 0.5) {
-                indexYLeft = 0;
-                indexYRight = indexYLeft;
-                weightY = normalizedY - indexYLeft;
-            }
-            else if (normalizedY >= _nbCellsY - 0.5f) {
-                indexYLeft = _nbCellsY - 1;
-                indexYRight = indexYLeft;
-                weightY = normalizedY - indexYLeft;
-            }
-            else {
-                indexYLeft = clamp<int>(int(floor(normalizedY - 0.5f)), 0, _nbCellsY - 2);
-                indexYRight = indexYLeft + 1;
-                weightY = normalizedY - (indexYLeft + 0.5f);
-            }
-            break;
-        case GridNodeLocation::CORNER:
-            if (normalizedX < 0) {
-                normalizedX = -normalizedX;
-            }
-            if (normalizedX >= _nbCellsX) {
-                float xInDomain01 = normalizedX / _nbCellsX;
-                unsigned int temp = int(floor(xInDomain01)) % 2;
-                if (temp == 0) {
-                    normalizedX = _nbCellsX * fract(xInDomain01);
-                }
-                else {
-                    normalizedX = _nbCellsX * (1 - fract(xInDomain01));
-                }
-            }
-            indexXLeft = clamp<int>(int(floor(normalizedX)), 0, _nbCellsX - 1);
-            indexXRight = indexXLeft + 1;
-            weightX = normalizedX - indexXLeft;
-
-            if (normalizedY < 0) {
-                normalizedY = -normalizedY;
-            }
-            if (normalizedY >= _nbCellsY) {
-                float yInDomain01 = normalizedY / _nbCellsY;
-                unsigned int temp = int(floor(yInDomain01)) % 2;
-                if (temp == 0) {
-                    normalizedY = _nbCellsY * fract(yInDomain01);
-                }
-                else {
-                    normalizedY = _nbCellsY * (1 - fract(yInDomain01));
-                }
-            }
-            indexYLeft = clamp<int>(int(floor(normalizedY)), 0, _nbCellsY - 1);
-            indexYRight = indexYLeft + 1;
-            weightY = normalizedY - indexYLeft;
-            break;
-        }
-        break;
-    case BoundaryCondition::PERIODIC:
-        switch (_gridNodeLocation) {
-        case GridNodeLocation::CENTER:
-            normalizedX -= _nbCellsX * floor(normalizedX / _nbCellsX);
-            indexXLeft = clamp<int>(int(floor(normalizedX - 0.5f)), 0, _nbCellsX - 2);
-            indexXRight = indexXLeft + 1;
-            weightX = normalizedX - (indexXLeft + 0.5f);
-            normalizedY -= _nbCellsY * floor(normalizedY / _nbCellsY);
-            indexYLeft = clamp<int>(int(floor(normalizedY - 0.5f)), 0, _nbCellsY - 2);
-            indexYRight = indexYLeft + 1;
-            weightY = normalizedY - (indexYLeft + 0.5f);
-            break;
-        case GridNodeLocation::CORNER:
-            normalizedX -= _nbCellsX * floor(normalizedX / _nbCellsX);
-            indexXLeft = clamp<int>(int(floor(normalizedX)), 0, _nbCellsX - 1);
-            indexXRight = indexXLeft + 1;
-            weightX = normalizedX - indexXLeft;
-            normalizedY -= _nbCellsY * floor(normalizedY / _nbCellsY);
-            indexYLeft = clamp<int>(int(floor(normalizedY)), 0, _nbCellsY - 1);
-            indexYRight = indexYLeft + 1;
-            weightY = normalizedY - indexYLeft;
-            break;
-        }
-        break;
+    if (normalizedX < 0) {
+        return vec2(0, 0);
+    }
+    else if (normalizedX >= _nbCellsX) {
+        return vec2(0, 0);
+    }
+    else {
+        indexXLeft = clamp<int>(int(floor(normalizedX)), 0, _nbCellsX - 1);
+        indexXRight = indexXLeft + 1;
+        weightX = normalizedX - indexXLeft;
+    }
+    if (normalizedY < 0) {
+        return vec2(0, 0);
+    }
+    else if (normalizedY >= _nbCellsY) {
+        return vec2(0, 0);
+    }
+    else {
+        indexYLeft = clamp<int>(int(floor(normalizedY)), 0, _nbCellsY - 1);
+        indexYRight = indexYLeft + 1;
+        weightY = normalizedY - indexYLeft;
     }
 
     vec2* _vectorsPointer = _vectors.getCpuDataPointer();
@@ -472,33 +147,9 @@ void VectorField2D::vectorTexture2DStorageAdjustBoundaryCondition()
 {
     //LINEAR, FLAT, ZERO, MIRROR, PERIODIC
     float borderColor[] = { 0.0f, 0.0f, 0.0f, 0.0f };
-    switch (_boundaryCondition) {
-    case VectorField2D::BoundaryCondition::ZERO:
-        glTextureParameteri(_vectors._glidTexture2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-        glTextureParameteri(_vectors._glidTexture2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-        glTextureParameterfv(_vectors._glidTexture2D, GL_TEXTURE_BORDER_COLOR, borderColor);
-        break;
-    case VectorField2D::BoundaryCondition::LINEAR:
-        // not supported by OpenGL, substiture with FLAT boundary condition
-        glTextureParameteri(_vectors._glidTexture2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTextureParameteri(_vectors._glidTexture2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        break;
-    case VectorField2D::BoundaryCondition::FLAT:
-        glTextureParameteri(_vectors._glidTexture2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTextureParameteri(_vectors._glidTexture2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        break;
-    case VectorField2D::BoundaryCondition::MIRROR:
-        glTextureParameteri(_vectors._glidTexture2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-        glTextureParameteri(_vectors._glidTexture2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
-        break;
-    case VectorField2D::BoundaryCondition::PERIODIC:
-        glTextureParameteri(_vectors._glidTexture2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTextureParameteri(_vectors._glidTexture2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        break;
-    default:
-        // TODO: should not happen
-        break;
-    }
+    glTextureParameteri(_vectors._glidTexture2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTextureParameteri(_vectors._glidTexture2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    glTextureParameterfv(_vectors._glidTexture2D, GL_TEXTURE_BORDER_COLOR, borderColor);
 }
 
 
@@ -509,32 +160,12 @@ void VectorField2D::setVectorsFromImage(Metadata2DImage2D metadataImage2D, unsig
 
 unsigned int VectorField2D::nbElementsX()
 {
-    switch (_gridNodeLocation) {
-    case GridNodeLocation::CENTER:
-        return _nbCellsX;
-        break;
-    case GridNodeLocation::CORNER:
-        return _nbCellsX + 1;
-        break;
-    default:
-        // TODO: error, unknows grid location type.
-        return 0;
-    }
+    return _nbCellsX + 1;
 }
 
 unsigned int VectorField2D::nbElementsY()
 {
-    switch (_gridNodeLocation) {
-    case GridNodeLocation::CENTER:
-        return _nbCellsY;
-        break;
-    case GridNodeLocation::CORNER:
-        return _nbCellsY + 1;
-        break;
-    default:
-        // TODO: error, unknows grid location type.
-        return 0;
-    }
+    return _nbCellsY + 1;
 }
 
 
@@ -555,47 +186,23 @@ uvec2 VectorField2D::pointToClosestIndex(vec2 point)
     float normalizedY = (point.y - _boundYMin) / (_boundYMax - _boundYMin)*_nbCellsY;
 
 
-    switch (_gridNodeLocation) {
-    case GridNodeLocation::CENTER:
-        if (normalizedX < 0) {
-            index.x = 0;
-        }
-        else if (normalizedX >= _nbCellsX) {
-            index.x = _nbCellsX - 1;
-        }
-        else {
-            index.x = clamp<int>(int(floor(normalizedX)), 0, _nbCellsX - 1);
-        }
-        if (normalizedY < 0) {
-            index.y = 0;
-        }
-        else if (normalizedY >= _nbCellsY) {
-            index.y = _nbCellsY - 1;
-        }
-        else {
-            index.y = clamp<int>(int(floor(normalizedY)), 0, _nbCellsY - 1);
-        }
-        break;
-    case GridNodeLocation::CORNER:
-        if (normalizedX < 0) {
-            index.x = 0;
-        }
-        else if (normalizedX >= _nbCellsX) {
-            index.x = _nbCellsX;
-        }
-        else {
-            index.x = clamp<int>(int(floor(normalizedX + 0.5)), 0, _nbCellsX);
-        }
-        if (normalizedY < 0) {
-            index.y = 0;
-        }
-        else if (normalizedY >= _nbCellsY) {
-            index.y = _nbCellsY;
-        }
-        else {
-            index.y = clamp<int>(int(floor(normalizedY + 0.5)), 0, _nbCellsY);
-        }
-        break;
+    if (normalizedX < 0) {
+        index.x = 0;
+    }
+    else if (normalizedX >= _nbCellsX) {
+        index.x = _nbCellsX;
+    }
+    else {
+        index.x = clamp<int>(int(floor(normalizedX + 0.5)), 0, _nbCellsX);
+    }
+    if (normalizedY < 0) {
+        index.y = 0;
+    }
+    else if (normalizedY >= _nbCellsY) {
+        index.y = _nbCellsY;
+    }
+    else {
+        index.y = clamp<int>(int(floor(normalizedY + 0.5)), 0, _nbCellsY);
     }
 
     return index;
@@ -609,47 +216,23 @@ uvec2 VectorField2D::pointToFlooredIndex(vec2 point)
     float normalizedY = (point.y - _boundYMin) / (_boundYMax - _boundYMin)*_nbCellsY;
 
 
-    switch (_gridNodeLocation) {
-    case GridNodeLocation::CENTER:
-        if (normalizedX < 0) {
-            index.x = 0;
-        }
-        else if (normalizedX >= _nbCellsX) {
-            index.x = _nbCellsX - 1;
-        }
-        else {
-            index.x = clamp<int>(int(floor(normalizedX - 0.5)), 0, _nbCellsX - 1);
-        }
-        if (normalizedY < 0) {
-            index.y = 0;
-        }
-        else if (normalizedY >= _nbCellsY) {
-            index.y = _nbCellsY - 1;
-        }
-        else {
-            index.y = clamp<int>(int(floor(normalizedY - 0.5)), 0, _nbCellsY - 1);
-        }
-        break;
-    case GridNodeLocation::CORNER:
-        if (normalizedX < 0) {
-            index.x = 0;
-        }
-        else if (normalizedX >= _nbCellsX) {
-            index.x = _nbCellsX;
-        }
-        else {
-            index.x = clamp<int>(int(floor(normalizedX)), 0, _nbCellsX);
-        }
-        if (normalizedY < 0) {
-            index.y = 0;
-        }
-        else if (normalizedY >= _nbCellsY) {
-            index.y = _nbCellsY;
-        }
-        else {
-            index.y = clamp<int>(int(floor(normalizedY)), 0, _nbCellsY);
-        }
-        break;
+    if (normalizedX < 0) {
+        index.x = 0;
+    }
+    else if (normalizedX >= _nbCellsX) {
+        index.x = _nbCellsX;
+    }
+    else {
+        index.x = clamp<int>(int(floor(normalizedX)), 0, _nbCellsX);
+    }
+    if (normalizedY < 0) {
+        index.y = 0;
+    }
+    else if (normalizedY >= _nbCellsY) {
+        index.y = _nbCellsY;
+    }
+    else {
+        index.y = clamp<int>(int(floor(normalizedY)), 0, _nbCellsY);
     }
 
     return index;
@@ -660,16 +243,8 @@ vec2 VectorField2D::indexToPosition(uvec2 index)
 {
     vec2 pos;
 
-    switch (_gridNodeLocation) {
-    case GridNodeLocation::CENTER:
-        pos.x = _boundXMin + (index.x + 0.5f)*(_boundXMax - _boundXMin) / _nbCellsX;
-        pos.y = _boundYMin + (index.y + 0.5f)*(_boundYMax - _boundYMin) / _nbCellsY;
-        break;
-    case GridNodeLocation::CORNER:
-        pos.x = _boundXMin + (index.x)*(_boundXMax - _boundXMin) / _nbCellsX;
-        pos.y = _boundYMin + (index.y)*(_boundYMax - _boundYMin) / _nbCellsY;
-        break;
-    }
+    pos.x = _boundXMin + (index.x)*(_boundXMax - _boundXMin) / _nbCellsX;
+    pos.y = _boundYMin + (index.y)*(_boundYMax - _boundYMin) / _nbCellsY;
 
     return pos;
 }
@@ -683,25 +258,12 @@ Metadata1DCpu VectorField2D::GenerateGridNodeLocations() {
     float cellWidthX = (_boundXMax - _boundXMin) / _nbCellsX;
     float cellWidthY = (_boundYMax - _boundYMin) / _nbCellsY;
 
-    switch (_gridNodeLocation) {
-    case GridNodeLocation::CENTER:
-        data = new vec2[_nbCellsX*_nbCellsY];
-        for (unsigned int i = 0; i < _nbCellsX; i++) {
-            for (unsigned int j = 0; j < _nbCellsY; j++) {
-                data[_nbCellsY*j + i] = vec2(_boundXMin + (i + 0.5f)*cellWidthX,
-                    _boundYMin + (j + 0.5f)*cellWidthY);
-            }
+    data = new vec2[(_nbCellsX + 1)*(_nbCellsY + 1)];
+    for (unsigned int i = 0; i <= _nbCellsX; i++) {
+        for (unsigned int j = 0; j <= _nbCellsY; j++) {
+            data[(_nbCellsY + 1)*j + i] = vec2(_boundXMin + i * cellWidthX,
+                _boundYMin + j * cellWidthY);
         }
-        break;
-    case GridNodeLocation::CORNER:
-        data = new vec2[(_nbCellsX + 1)*(_nbCellsY + 1)];
-        for (unsigned int i = 0; i <= _nbCellsX; i++) {
-            for (unsigned int j = 0; j <= _nbCellsY; j++) {
-                data[(_nbCellsY + 1)*j + i] = vec2(_boundXMin + i * cellWidthX,
-                    _boundYMin + j * cellWidthY);
-            }
-        }
-        break;
     }
 
     metadata.dataPointer = data;

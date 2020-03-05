@@ -12,9 +12,7 @@ bool Application::Init_DataBuffers() {
 
     _velocityField = make_unique<VectorField2D>(
         _domainLeft, _domainRight, _domainBottom, _domainTop,
-        _nbCellsXTotal, _nbCellsYTotal,
-        VectorField2D::GridNodeLocation::CORNER,
-        VectorField2D::BoundaryCondition::FLAT);
+        _nbCellsXTotal, _nbCellsYTotal);
     _velocityField->createVectorCpuStorage();
     _velocityField->createVectorTexture2DStorage(
         GL_RG, GL_RG32F, GL_RG, GL_FLOAT, 1);
@@ -22,20 +20,16 @@ bool Application::Init_DataBuffers() {
         return vec2(0);
     });
 
-
-
     _prevVelocityField = make_unique<VectorField2D>(_domainLeft, _domainRight, _domainBottom, _domainTop,
-        _nbCellsXTotal, _nbCellsYTotal,
-        VectorField2D::GridNodeLocation::CORNER,
-        VectorField2D::BoundaryCondition::FLAT);
+        _nbCellsXTotal, _nbCellsYTotal);
     _prevVelocityField->createVectorCpuStorage();
     _prevVelocityField->createVectorTexture2DStorage(
         GL_RG, GL_RG32F, GL_RG, GL_FLOAT, 1);
     _prevVelocityField->populateWithFunction(
-        [=]
-    (float /*x*/, float /*y*/) {
+        [=](float /*x*/, float /*y*/) {
         return vec2(0, 0);
-    });
+    }
+    );
 
 
     _nbParticlesPerCell = make_unique<DataBuffer2D<unsigned int>>(_nbCellsXTotal, _nbCellsYTotal);
@@ -51,9 +45,7 @@ bool Application::Init_DataBuffers() {
 
 
     _forceField = make_unique<VectorField2D>(_domainLeft, _domainRight, _domainBottom, _domainTop,
-        _forcesGridRes, _forcesGridRes,
-        VectorField2D::GridNodeLocation::CORNER,
-        VectorField2D::BoundaryCondition::FLAT);
+        _forcesGridRes, _forcesGridRes);
     _forceField->createVectorCpuStorage();
     _forceField->createVectorTexture2DStorage(GL_RG, GL_RG32F, GL_RG, GL_FLOAT, 1);
 
@@ -74,9 +66,7 @@ bool Application::Init_DataBuffers() {
         _basisFlowTemplates[iRatio] = make_unique<VectorField2D>(
             -0.5f, 0.5f,
             -0.5f / float(1 << iRatio), 0.5f / float(1 << iRatio),
-            _nbCellsXBasis, _nbCellsYBasis,
-            VectorField2D::GridNodeLocation::CORNER,
-            VectorField2D::BoundaryCondition::ZERO);
+            _nbCellsXBasis, _nbCellsYBasis);
         _basisFlowTemplates[iRatio]->createVectorCpuStorage();
         _basisFlowTemplates[iRatio]->createVectorTexture2DStorage(
             GL_RG, GL_RG32F, GL_RG, GL_FLOAT, 1);
@@ -116,10 +106,6 @@ bool Application::Init_DataBuffers() {
         }
     }
 
-
-
-
-
     _bufferGridPoints = make_unique<DataBuffer1D<vec2>>(
         _velocityField->nbElementsX() * _velocityField->nbElementsY());
     _bufferGridPoints->createCpuStorage();
@@ -135,7 +121,6 @@ bool Application::Init_DataBuffers() {
         _velocityField->nbElementsX() * _velocityField->nbElementsY());
     _bufferArrows->createCpuStorage();
     _bufferArrows->createBufferStorage(GL_FLOAT, 2);
-
 
     _obstacleLines = make_unique<DataBuffer1D<vec2>>(1);
     _obstacleLines->createCpuStorage();
@@ -165,7 +150,6 @@ bool Application::Init_DataBuffers() {
             _accelBasisCentersIds->setCpuData(i, j, new vector<unsigned int>);
         }
     }
-
 
     _integrationGridGpu = make_unique<DataBuffer2D<vec4>>(((_integralGridRes + 1) - 1) / INTEGRAL_GPU_GROUP_DIM + 1, ((_integralGridRes + 1) - 1) / INTEGRAL_GPU_GROUP_DIM + 1);
     _integrationGridGpu->createTexture2DStorage(GL_RGBA, GL_RGBA32F, GL_RGBA, GL_FLOAT, 1);
