@@ -12,7 +12,7 @@ bool Application::Init_DataBuffers() {
 
     _velocityField = make_unique<VectorField2D>(
         _domainLeft, _domainRight, _domainBottom, _domainTop,
-        _nbCellsXTotal, _nbCellsYTotal);
+        _nbCellsVelocity, _nbCellsVelocity);
     _velocityField->createVectorCpuStorage();
     _velocityField->createVectorTexture2DStorage(
         GL_RG, GL_RG32F, GL_RG, GL_FLOAT, 1);
@@ -21,7 +21,7 @@ bool Application::Init_DataBuffers() {
     });
 
     _prevVelocityField = make_unique<VectorField2D>(_domainLeft, _domainRight, _domainBottom, _domainTop,
-        _nbCellsXTotal, _nbCellsYTotal);
+        _nbCellsVelocity, _nbCellsVelocity);
     _prevVelocityField->createVectorCpuStorage();
     _prevVelocityField->createVectorTexture2DStorage(
         GL_RG, GL_RG32F, GL_RG, GL_FLOAT, 1);
@@ -30,19 +30,6 @@ bool Application::Init_DataBuffers() {
         return vec2(0, 0);
     }
     );
-
-
-    _nbParticlesPerCell = make_unique<DataBuffer2D<unsigned int>>(_nbCellsXTotal, _nbCellsYTotal);
-    _nbParticlesPerCell->createCpuStorage();
-    _nbParticlesPerCell->createTexture2DStorage(
-        GL_RED_INTEGER, GL_R32I, GL_RED_INTEGER, GL_INT, 1);
-
-    for (unsigned int i = 0; i < _nbParticlesPerCell->_nbElementsX; ++i) {
-        for (unsigned int j = 0; j < _nbParticlesPerCell->_nbElementsY; ++j) {
-            _nbParticlesPerCell->setCpuData(i, j, 0);
-        }
-    }
-
 
     _forceField = make_unique<VectorField2D>(_domainLeft, _domainRight, _domainBottom, _domainTop,
         _forcesGridRes, _forcesGridRes);
@@ -66,7 +53,7 @@ bool Application::Init_DataBuffers() {
         _basisFlowTemplates[iRatio] = make_unique<VectorField2D>(
             -0.5f, 0.5f,
             -0.5f / float(1 << iRatio), 0.5f / float(1 << iRatio),
-            _nbCellsXBasis, _nbCellsYBasis);
+            _nbCellsBasisTemplates, _nbCellsBasisTemplates);
         _basisFlowTemplates[iRatio]->createVectorCpuStorage();
         _basisFlowTemplates[iRatio]->createVectorTexture2DStorage(
             GL_RG, GL_RG32F, GL_RG, GL_FLOAT, 1);
@@ -150,9 +137,6 @@ bool Application::Init_DataBuffers() {
             _accelBasisCentersIds->setCpuData(i, j, new vector<unsigned int>);
         }
     }
-
-    _integrationGridGpu = make_unique<DataBuffer2D<vec4>>(((_integralGridRes + 1) - 1) / INTEGRAL_GPU_GROUP_DIM + 1, ((_integralGridRes + 1) - 1) / INTEGRAL_GPU_GROUP_DIM + 1);
-    _integrationGridGpu->createTexture2DStorage(GL_RGBA, GL_RGBA32F, GL_RGBA, GL_FLOAT, 1);
 
     // Read from buffer instead of image directly, so we only need to transfer a single float instead of the whole image data
     _integrationTransferBufferGpu = make_unique<DataBuffer1D<vec4>>(1);

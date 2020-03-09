@@ -45,8 +45,8 @@ public:
     void setBounds(float inBoundXMin, float inBoundXMax,
         float inBoundYMin, float inBoundYMax);
 
-    glm::uvec2 pointToClosestIndex(glm::vec2 point);
-    glm::uvec2 pointToFlooredIndex(glm::vec2 point);
+    glm::uvec2 pointToCellIndex(glm::vec2 point);
+    glm::uvec2 pointToClosestNodeIndex(glm::vec2 point);
     glm::vec2 indexToPosition(glm::uvec2 index);
 
     Metadata1DCpu GenerateGridNodeLocations();

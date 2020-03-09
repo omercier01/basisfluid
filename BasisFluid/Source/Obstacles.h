@@ -80,7 +80,7 @@ struct ObstacleBar : Obstacle {
         float widthY = app->_obstacleBarHeight;
 
         float t2 = app->_obstacleBarMotionSpeed * app->_dt * _frameCount;
-        vec2 c = vec2(app->_obstacleBarMotionAmplitude * cos(t2), 0);
+        vec2 c = vec2(app->_obstacleBarMotionAmplitude * sin(t2), 0);
 
         phi = [=](vec2 p) {
 

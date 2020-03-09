@@ -15,28 +15,91 @@
 #include <memory>
 #include <vector>
 
-#define BASE_GRID_SIZE 64
-#define ACCEL_GRID_SIZE 64
-#define INTEGRAL_GRID_SIZE 32
-
-#define INTEGRAL_GPU_GROUP_DIM 32
 #define STRETCH_BAND_RATIO 0.5f
 #define NB_NEWTON_ITERATIONS_INVERSION 3
-
-#define PARTICLE_CIRCULAR_BUFFER        1
-#define NB_PARTICLES_TO_SEED_PER_DIM    200
-#define MAX_NB_PARTICLE_SEED_GROUPS     300
 
 class Obstacle;
 class ObstacleShaderPipeline;
 class ParticleShaderPipeline;
 class VelocityArrowShaderPipeline;
 
-enum class ObstacleType {None, Circle, Bar};
+enum class ObstacleType { None, Circle, Bar };
 
 
 // Global class to manage program execution
 class Application {
+
+public:
+    // Parameters
+    uint _maxNbItMatBBInversion = 10;
+    uint _nbStretchLoops = 2;
+    float _dt = 0.0325f;
+    float _buoyancyPerParticle = 0.1f;
+    glm::mat4 _viewProjMat = { 1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1 };
+    uint _substepsParticles = 1;
+    float _seedCenterX = 0.f;
+    float _seedCenterY = -0.75f;
+    float _seedRadius = 0.1f;
+    float _buoyancyDecayRatioWithAge = 1.f;
+    uint _substepsDeformation = 1;
+    float _explicitTransferSpeed = 0.1f;
+    float _explicitTransferExponent = -1.66f;
+    float _factorDeformation = 0.5f;
+    float _obstacleBoundaryFactorTransferOnly = 1.5f;
+
+    unsigned int _nbParticlesPerSeedGroupPerDimension = 200;
+    unsigned int _maxNbParticleSeedGroups = 300;
+
+    //ObstacleType _obstacleType = ObstacleType::None;
+    ObstacleType _obstacleType = ObstacleType::Circle;
+    //ObstacleType _obstacleType = ObstacleType::Bar;
+
+    float _obstacleCircleRadius = 0.2f;
+    float _obstacleCircleMotionSpeed = 1.f;
+    float _obstacleCircleMotionRadius = 0.25f;
+
+    float _obstacleBarWidth = 0.1f;
+    float _obstacleBarHeight = 0.2f;
+    float _obstacleBarRotationSpeed = 0.789f;
+    float _obstacleBarMotionSpeed = 0.75f;
+    float _obstacleBarMotionAmplitude = 0.25f;
+
+    float _explicitTransfer_10 = 1.f;
+    float _explicitTransfer_01 = 1.f;
+    float _explicitTransfer_11 = 1.f;
+    float _explicitTransfer_m10 = 0.f;
+    float _explicitTransfer_0m1 = 0.f;
+    float _explicitTransfer_m1m1 = 0.f;
+
+    const glm::vec2 _domainCenter = { 0,0 };
+    const glm::vec2 _domainHalfSize = { 1.f,1.f };
+    const float _domainLeft = _domainCenter.x - _domainHalfSize.x;
+    const float _domainRight = _domainCenter.x + _domainHalfSize.x;
+    const float _domainBottom = _domainCenter.y - _domainHalfSize.y;
+    const float _domainTop = _domainCenter.y + _domainHalfSize.y;
+
+    const int _nbCellsVelocity = 64 - 1;
+    const int _nbCellsBasisTemplates = 64 - 1;
+
+    const glm::uint _obstacleDisplayRes = 256; // grid resolution for obstacle marching squares
+    const glm::uint _integralGridRes = 32 - 1; // number of grid cells used when integrating basis to compute coefficients
+    const glm::uint _accelBasisRes = 32;// nb grid cells for acceleration structure for basis centers
+    const glm::uint _accelParticlesRes = 64; // nb grid cell for particle acceleration structure
+    const glm::uint _forcesGridRes = 64 - 1;
+
+    // Note: Pick maximum basis flows sizes that are not too large compared to domain features,
+    // otherwise basis stretch can sometimes fail
+    const int _minFreqLvl = 1;
+    const int _maxFreqLvl = 2;
+    const int _minAnisoLvl = 0;
+    const int _maxAnisoLvl = 1; //  MAXIMUM 2, OTHER BASES ARE NOT DEFINED
+
+    // Width of support of first basis frequency level.
+    // Note: not tested with _lengthLvl0 != 1
+    const float _lengthLvl0 = 1.0f;
+
+    const float _coeffSnapSize = _lengthLvl0 / float(1 << _maxFreqLvl) / 32.0f;
+
 public:
     Application();
     ~Application();
@@ -66,8 +129,6 @@ public:
     void InverseBBMatrixMain(
         unsigned int iRow, double* vecX, double* vecB,
         BasisFlow* basisDataPointer, unsigned int basisBitMask);
-
-
 
     void SaveCoeffsBB(std::string filename);
     void LoadCoeffsBB(std::string filename);
@@ -106,37 +167,6 @@ public:
 
 public:
 
-    const glm::vec2 _domainCenter = { 0,0 };
-    const glm::vec2 _domainHalfSize = { 1.f,1.f };
-    const float _domainLeft = _domainCenter.x - _domainHalfSize.x;
-    const float _domainRight = _domainCenter.x + _domainHalfSize.x;
-    const float _domainBottom = _domainCenter.y - _domainHalfSize.y;
-    const float _domainTop = _domainCenter.y + _domainHalfSize.y;
-
-    const int nbCells = BASE_GRID_SIZE - 1; // 64 corner data points, so 63 cells
-    const int _nbCellsXTotal = nbCells;
-    const int _nbCellsXBasis = nbCells;
-    const int _nbCellsYTotal = nbCells;
-    const int _nbCellsYBasis = nbCells;
-
-    glm::uint _obstacleDisplayRes = 4 * BASE_GRID_SIZE;
-    glm::uint _integralGridRes = INTEGRAL_GRID_SIZE - 1;//32-1; // e.g. 32 grid points, 31 cells
-    glm::uint _accelBasisRes = ACCEL_GRID_SIZE;//32; // raw data, so 32 cells
-    glm::uint _accelParticlesRes = _accelBasisRes;//32; // stored at cell center, so 32 grid points == 32 cells
-    glm::uint _forcesGridRes = BASE_GRID_SIZE - 1;//32-1; // 32 grid points, 31 cells
-
-    // Note: Pick maximum basis flows sizes that are not too large compared to domain features,
-    // otherwise basis stretch can sometimes fail
-    const int _minFreqLvl = 1;
-    const int _maxFreqLvl = 2;
-    const int _minAnisoLvl = 0;
-    const int _maxAnisoLvl = 1; //  MAXIMUM 2, OTHER BASES ARE NOT DEFINED
-#define _lengthLvl0 1.0f
-
-    const float _coeffSnapSize = _lengthLvl0 / float(1 << _maxFreqLvl) / 32.0f;
-
-public:
-
     GLFWwindow * _glfwWindow;
 
     static const unsigned int _nbExplicitTransferFreqs = 6;
@@ -145,7 +175,6 @@ public:
     // simulation buffers
     std::unique_ptr<VectorField2D> _velocityField = nullptr;
     std::unique_ptr<VectorField2D> _prevVelocityField = nullptr;
-    std::unique_ptr<DataBuffer2D<unsigned int>> _nbParticlesPerCell = nullptr;
     std::unique_ptr<VectorField2D> _forceField = nullptr;
     std::unique_ptr<VectorField2D>* _basisFlowTemplates = nullptr;
     std::unique_ptr<DataBuffer1D<BasisFlow>> _basisFlowParams = nullptr;
@@ -173,7 +202,6 @@ public:
     //DataBuffer2D<std::vector<unsigned int>*> _accelBasisCentersIds = nullptr;
     //std::unique_ptr<DataBuffer2D<std::vector<unsigned int>>> _accelBasisCentersIds = nullptr;
     std::unique_ptr<DataBuffer2D<std::vector<unsigned int>*>> _accelBasisCentersIds = nullptr;
-    std::unique_ptr<DataBuffer2D<vec4>> _integrationGridGpu = nullptr;
     std::unique_ptr<DataBuffer1D<vec4>> _integrationTransferBufferGpu = nullptr;
     std::unique_ptr<DataBuffer1D<float>> _integrationMultipleTransferBufferGpu = nullptr;
     std::unique_ptr<DataBuffer1D<vec2>> _integrationBasisCentersBufferGpu = nullptr;
@@ -203,45 +231,6 @@ public:
     std::unique_ptr<ObstacleShaderPipeline> _pipelineObstacle;
     std::unique_ptr<ParticleShaderPipeline> _pipelineParticle;
     std::unique_ptr<VelocityArrowShaderPipeline> _pipelineVelocityArrow;
-
-    // Parameters
-    uint _maxNbItMatBBInversion = 10;
-    uint _nbStretchLoops = 2;
-    float _dt = 0.0325f;
-    float _buoyancyPerParticle = 0.1f;
-    glm::mat4 _viewProjMat = { 1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1 };
-    uint _substepsParticles = 1;
-    float _seedCenterX = 0.f;
-    float _seedCenterY = -0.75f;
-    float _seedRadius = 0.1f;
-    float _buoyancyDecayRatioWithAge = 1.f;
-    uint _substepsDeformation = 1;
-    float _explicitTransferSpeed = 0.1f;
-    float _explicitTransferExponent = -1.66f;
-    float _factorDeformation = 0.5f;
-    float _obstacleBoundaryFactorTransferOnly = 1.5f;
-
-    
-    //ObstacleType _obstacleType = ObstacleType::None;
-    ObstacleType _obstacleType = ObstacleType::Circle;
-    //ObstacleType _obstacleType = ObstacleType::Bar;
-
-    float _obstacleCircleRadius = 0.2f;
-    float _obstacleCircleMotionSpeed = 1.f;
-    float _obstacleCircleMotionRadius = 0.25f;
-
-    float _obstacleBarWidth = 0.2f;
-    float _obstacleBarHeight = 0.1f;
-    float _obstacleBarRotationSpeed = 0.789f;
-    float _obstacleBarMotionSpeed = 0.75f;
-    float _obstacleBarMotionAmplitude = 0.25f;
-
-    float _explicitTransfer_10 = 1.f;//0.f;
-    float _explicitTransfer_01 = 1.f;//0.f;
-    float _explicitTransfer_11 = 1.f;
-    float _explicitTransfer_m10 = 0.f;
-    float _explicitTransfer_0m1 = 0.f;
-    float _explicitTransfer_m1m1 = 0.f;
 
     // Controls status
     bool _seedParticles = true;

@@ -178,7 +178,7 @@ void VectorField2D::setBounds(float in_boundXMin, float in_boundXMax, float in_b
 }
 
 
-uvec2 VectorField2D::pointToClosestIndex(vec2 point)
+uvec2 VectorField2D::pointToClosestNodeIndex(vec2 point)
 {
     uvec2 index;
 
@@ -208,32 +208,15 @@ uvec2 VectorField2D::pointToClosestIndex(vec2 point)
     return index;
 }
 
-uvec2 VectorField2D::pointToFlooredIndex(vec2 point)
+uvec2 VectorField2D::pointToCellIndex(vec2 point)
 {
     uvec2 index;
 
     float normalizedX = (point.x - _boundXMin) / (_boundXMax - _boundXMin)*_nbCellsX;
     float normalizedY = (point.y - _boundYMin) / (_boundYMax - _boundYMin)*_nbCellsY;
 
-
-    if (normalizedX < 0) {
-        index.x = 0;
-    }
-    else if (normalizedX >= _nbCellsX) {
-        index.x = _nbCellsX;
-    }
-    else {
-        index.x = clamp<int>(int(floor(normalizedX)), 0, _nbCellsX);
-    }
-    if (normalizedY < 0) {
-        index.y = 0;
-    }
-    else if (normalizedY >= _nbCellsY) {
-        index.y = _nbCellsY;
-    }
-    else {
-        index.y = clamp<int>(int(floor(normalizedY)), 0, _nbCellsY);
-    }
+    index.x = clamp<int>(int(floor(normalizedX)), 0, _nbCellsX);
+    index.y = clamp<int>(int(floor(normalizedY)), 0, _nbCellsY);
 
     return index;
 }

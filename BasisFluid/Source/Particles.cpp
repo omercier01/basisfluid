@@ -124,13 +124,13 @@ void Application::ComputeParticleAdvection()
 void Application::SeedParticles()
 {
     // reset seed cursor at beginning of circular buffer after loop, and detect looping to switch from appending to replacing
-    unsigned int nbTotalPartSeed = MAX_NB_PARTICLE_SEED_GROUPS * NB_PARTICLES_TO_SEED_PER_DIM;
+    unsigned int nbTotalPartSeed = _maxNbParticleSeedGroups * _nbParticlesPerSeedGroupPerDimension;
     if (_particleCircularSeedId >= nbTotalPartSeed) {
         _particleSeedBufferLooped = true;
         _particleCircularSeedId = 0;
     }
 
-    int seedingDensity = int(NB_PARTICLES_TO_SEED_PER_DIM);
+    int seedingDensity = int(_nbParticlesPerSeedGroupPerDimension);
 
 
     for (int i = 0; i < seedingDensity; ++i) {

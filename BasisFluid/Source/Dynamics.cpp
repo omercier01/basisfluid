@@ -18,11 +18,19 @@ void Application::AddParticleForcesToBasisFlows()
     float* agesPointer = _partAges->getCpuDataPointer();
 
 
+    float cellSizeX = (_forceField->_boundXMax-_forceField->_boundXMin)/_forceField->_nbCellsX;
+    float cellSizeY = (_forceField->_boundYMax-_forceField->_boundYMin)/_forceField->_nbCellsY;
     for (unsigned int i = 0; i < _partPos->_nbElements; i++) {
-        uvec2 index = _forceField->pointToClosestIndex(particlesPointer[i]);
-        index = glm::clamp(index, uvec2(0), uvec2(_nbParticlesPerCell->_nbElementsX - 1,
-            _nbParticlesPerCell->_nbElementsY - 1));
-        _forceField->addVectorCpuData(index.x, index.y, _dt * powf(_buoyancyDecayRatioWithAge, agesPointer[i]) * _buoyancyPerParticle*vec2(0, 1));
+        uvec2 indexCell = _forceField->pointToCellIndex(particlesPointer[i]);
+        vec2 lowerCellCornerPosition = _forceField->indexToPosition(indexCell);
+        vec2 increment = _dt * powf(_buoyancyDecayRatioWithAge, agesPointer[i]) * _buoyancyPerParticle*vec2(0, 1);
+        for(int iX = 0; iX <= 1; iX++) {
+            for(int iY = 0; iY <= 1; iY++) {
+                _forceField->addVectorCpuData(
+                    indexCell.x+iX, indexCell.y+iY,
+                    increment * (1-abs(lowerCellCornerPosition.x-particlesPointer[i].x)/cellSizeX) * ((1-abs(lowerCellCornerPosition.y-particlesPointer[i].y)/cellSizeY)));
+            }
+        }
     }
 
     BasisFlow* basisFlowParamsPointer = _basisFlowParams->getCpuDataPointer();
