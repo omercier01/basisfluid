@@ -124,16 +124,13 @@ void Application::ComputeParticleAdvection()
 void Application::SeedParticles()
 {
     // reset seed cursor at beginning of circular buffer after loop, and detect looping to switch from appending to replacing
-    unsigned int nbTotalPartSeed = _maxNbParticleSeedGroups * _nbParticlesPerSeedGroupPerDimension;
+    unsigned int nbTotalPartSeed = _particleLifeTime * _nbParticlesPerSeedGroupPerDimension;
     if (_particleCircularSeedId >= nbTotalPartSeed) {
         _particleSeedBufferLooped = true;
         _particleCircularSeedId = 0;
     }
 
-    int seedingDensity = int(_nbParticlesPerSeedGroupPerDimension);
-
-
-    for (int i = 0; i < seedingDensity; ++i) {
+    for (int i = 0; i < _nbParticlesPerSeedGroupPerDimension; ++i) {
         // random seeding
         vec2 p = vec2(_seedCenterX, _seedCenterY) + glm::diskRand(_seedRadius);
         bool isInsideObstacle = false;

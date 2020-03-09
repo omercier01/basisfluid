@@ -1,6 +1,7 @@
 
-#include "Application.h"
 #include "Obstacles.h"
+#include "Application.h"
+
 
 #include <glm/gtc/random.hpp>
 #include <glm/ext.hpp>
@@ -20,7 +21,6 @@ float distanceToPlane(vec2 x, vec2 p, vec2 n) {
 }
 
 BasisFlow Application::ComputeStretch(BasisFlow b, bool staticObstaclesOnly, bool noStretch) {
-    const float stretchBandRatio = STRETCH_BAND_RATIO; // band of possible corner movement has width _this_ times the basis support half size.
 
     BasisSupport s = b.getSupport();
     vec2 shs = b.supportHalfSize();
@@ -98,7 +98,7 @@ BasisFlow Application::ComputeStretch(BasisFlow b, bool staticObstaclesOnly, boo
 
             if (dist <= 0 && // must be squished
                 (
-                    abs((sp - originalCorner).x) > shs.x*stretchBandRatio || abs((sp - originalCorner).y) > shs.y*stretchBandRatio
+                    abs((sp - originalCorner).x) > shs.x*_stretchBandRatio || abs((sp - originalCorner).y) > shs.y*_stretchBandRatio
                     )
                 ) {
                 // stretched point too close to center, basis is invalid
@@ -108,7 +108,7 @@ BasisFlow Application::ComputeStretch(BasisFlow b, bool staticObstaclesOnly, boo
             }
             else if (dist >= 0 && // must be stretched
                 (
-                    abs((sp - originalCorner).x) >= shs.x*stretchBandRatio || abs((sp - originalCorner).y) >= shs.y*stretchBandRatio
+                    abs((sp - originalCorner).x) >= shs.x*_stretchBandRatio || abs((sp - originalCorner).y) >= shs.y*_stretchBandRatio
                     )
                 ) {
                 // corner is stretched too far away, leave it unstretched.
@@ -214,7 +214,7 @@ BasisFlow Application::ComputeStretch(BasisFlow b, bool staticObstaclesOnly, boo
 
                     if (dist >= 0 && // must be stretched
                         (
-                            abs((sp - *stretchedCorner).x) >= shs.x*stretchBandRatio || abs((sp - *stretchedCorner).y) >= shs.y*stretchBandRatio
+                            abs((sp - *stretchedCorner).x) >= shs.x*_stretchBandRatio || abs((sp - *stretchedCorner).y) >= shs.y*_stretchBandRatio
                             )
                         ) {
                         // corner is stretched too far away, leave it unstretched.
@@ -288,12 +288,11 @@ void Application::ComputeStretches()
 vec2 Application::QuadCoord(vec2 p, BasisFlow const& b)
 {
     // inverse trilinear interpolation with Newton's method
-    const int maxIt = NB_NEWTON_ITERATIONS_INVERSION;
     const float tol = 1e-2f; // tolerance to check the iterations have converged (in UV space, not world space)
     vec2 c(0.5); // coordinates to find, with initial guess
     vec2 delta;
 
-    for (int it = 0; it < maxIt; it++) {
+    for (int it = 0; it < int(_nbNewtonInversionIterations); it++) {
 
         vec2 r =
             (1 - c.x)*(1 - c.y)*b.stretchedCornerLB

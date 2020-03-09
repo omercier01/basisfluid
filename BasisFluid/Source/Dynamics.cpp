@@ -236,7 +236,7 @@ void Application::ComputeBasisAdvection()
 
             if (!AllBitsSet(bi.bitFlags, INTERIOR) && !AllBitsSet(bi.bitFlags, DYNAMIC_BOUNDARY_PROJECTION)) { continue; }
 
-            bi.coeff += _factorDeformation * bi.newCoeff;
+            bi.coeff += bi.newCoeff;
         }
 
     }
