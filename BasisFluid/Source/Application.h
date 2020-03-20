@@ -81,13 +81,6 @@ public:
     const float _explicitTransferSpeed = 0.05f;
     const float _explicitTransferExponent = -1.66f;
 
-    // Size of influence band around dynamic objects. See Equation 27
-    const float _boundarySDFBandDecrease = 0.25f;
-
-    // multiplicator for projected flow around moving obstacles
-    const float _obstacleBoundaryFactor = 1.5f;
-
-
     // the region of allowed basis corner movement has width _stretchBandRatio times the basis support half size, 
     // i.e. the basis can be stretched or sqquished by at most this ratio, otherwise it is discarded
     const float _stretchBandRatio = 0.5f;
@@ -121,9 +114,15 @@ public:
 
     const float _obstacleBarWidth = 0.1f;
     const float _obstacleBarHeight = 0.2f;
-    const float _obstacleBarRotationSpeed = 0.567f;
+    const float _obstacleBarRotationSpeed = 0.789f;
     const float _obstacleBarMotionSpeed = 0.75f;
     const float _obstacleBarMotionAmplitude = 0.25f;
+
+    // Size of influence band around dynamic objects. See Equation 27
+    const float _boundarySDFBandDecrease = 0.25f;
+
+    // multiplicator for projected flow around moving obstacles
+    const float _obstacleBoundaryFactor = 3.f;
 
     // simulation domain
     const glm::vec2 _domainCenter = { 0,0 };
@@ -246,8 +245,12 @@ public:
     // Computes \int_{S}(bVec)/\int_{S}, where S is bSupport's support. See Equation 18.
     glm::vec2 AverageBasisOnSupport(BasisFlow bVec, BasisFlow bSupport);
 
-    // Computes the stretch of a given basis flow, see Section 6.1
-    BasisFlow ComputeStretch(BasisFlow b);
+    // Computes the stretch of a given basis flow, see Section 6.1. If staticObstaclesOnly is true,
+    // only static obstacles will be used. During initialization, we need to excluse dynamic obstacles
+    // otherwise basis flows that are not used during the first frame could become used in later frames
+    // after a dynamic obstacle has moed. By only using stati obstacls, we make sure all basis flows
+    // are accounted for when precomputing interaction coefficients.
+    BasisFlow ComputeStretch(BasisFlow b, bool staticObstaclesOnly);
     
     // Compute stretches for all basis flows
     void ComputeStretches();

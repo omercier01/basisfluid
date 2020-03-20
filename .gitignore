@@ -1,7 +1,7 @@
 /VisualStudio/Build/x64/Debug/*
 /VisualStudio/Build/x64/Release/*
 !/VisualStudio/Build/x64/Release/BasisFluid.exe
-!/VisualStudio/Build/x64/Release/glew32mx.dll
+!/VisualStudio/Build/x64/Release/glew32.dll
 !/VisualStudio/Build/x64/Release/glfw3.dll
 
 /VisualStudio/.vs/*

@@ -20,7 +20,7 @@ float distanceToPlane(vec2 x, vec2 p, vec2 n) {
     return dot(x - p, n);
 }
 
-BasisFlow Application::ComputeStretch(BasisFlow b) {
+BasisFlow Application::ComputeStretch(BasisFlow b, bool staticObstaclesOnly) {
 
     BasisSupport s = b.getSupport();
     vec2 shs = b.supportHalfSize();
@@ -30,6 +30,8 @@ BasisFlow Application::ComputeStretch(BasisFlow b) {
 
     for (Obstacle* obs : _obstacles)
     {
+        if (staticObstaclesOnly && obs->dynamic) { continue; }
+
         // if the center of the basis is inside the obstacle, we know the stretch will be too important, so we directly invalidate this basis. This prevents from running into undefined obstacle gradient cases inside the obstacle.
         if (obs->phi(b.center) < 0) {
             b.bitFlags = UnsetBits(b.bitFlags, INTERIOR);
@@ -54,6 +56,8 @@ BasisFlow Application::ComputeStretch(BasisFlow b) {
 
     for (Obstacle* obs : _obstacles)
     {
+        if (staticObstaclesOnly && obs->dynamic) { continue; }
+
         // compute plane approximation of obstacles near basis center
         vec2 centerObsGrad = obs->gradPhi(b.center); // TODO: should this be not normalized, to get a better planar approximation?
         vec2 obsPlanePoint = b.center - obs->phi(b.center)*centerObsGrad;
@@ -173,6 +177,8 @@ BasisFlow Application::ComputeStretch(BasisFlow b) {
             // push
             for (Obstacle* obs : _obstacles)
             {
+                if (staticObstaclesOnly && obs->dynamic) { continue; }
+
                 // compute plane approximation of obstacles near basis center
                 vec2 centerObsGrad = obs->gradPhi(b.center); // TODO: should this be not normalized, to get a better planar approximation?
                 vec2 obsPlanePoint = b.center - obs->phi(b.center)*centerObsGrad;
@@ -270,7 +276,7 @@ void Application::ComputeStretches()
 {
     for (unsigned int iBasis = 0; iBasis < _basisFlowParams->_nbElements; ++iBasis) {
         BasisFlow b = _basisFlowParams->getCpuData(iBasis);
-        b = ComputeStretch(b);
+        b = ComputeStretch(b, false);
         _basisFlowParams->setCpuData(iBasis, b);
     }
 
@@ -346,7 +352,7 @@ vec2 Application::VecObstacle_stretch(vec2 p, BasisFlow const& b)
             (
                 TranslatedBasisEval(pos, b.freqLvl, b.center)
                 / (2.f * b.supportHalfSize()) // division to inverse deformation from UV to Basis
-            );
+                );
     }
 
     return vec;

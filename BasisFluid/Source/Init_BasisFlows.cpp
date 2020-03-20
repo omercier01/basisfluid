@@ -85,7 +85,7 @@ bool Application::Init_BasisFlows() {
                     vec2 extraOffset = extraOffsets[iOffset];
                     vec2 center = origin + _lengthLvl0 * vec2(iOffsetX*stride.x, iOffsetY*stride.y) + _lengthLvl0 * vec2(extraOffset.x*stride.x, extraOffset.y*stride.y);
 
-                    BasisFlow stretchedBasis_staticOnly = ComputeStretch(BasisFlow(freqLvl, center));
+                    BasisFlow stretchedBasis_staticOnly = ComputeStretch(BasisFlow(freqLvl, center), true);
 
                     if (
                         AllBitsSet(stretchedBasis_staticOnly.bitFlags, INTERIOR)
