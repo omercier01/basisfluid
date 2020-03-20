@@ -85,7 +85,7 @@ bool Application::Init_BasisFlows() {
                     vec2 extraOffset = extraOffsets[iOffset];
                     vec2 center = origin + _lengthLvl0 * vec2(iOffsetX*stride.x, iOffsetY*stride.y) + _lengthLvl0 * vec2(extraOffset.x*stride.x, extraOffset.y*stride.y);
 
-                    BasisFlow stretchedBasis_staticOnly = ComputeStretch(BasisFlow(freqLvl, center), true);
+                    BasisFlow stretchedBasis_staticOnly = ComputeStretch(BasisFlow(freqLvl, center));
 
                     if (
                         AllBitsSet(stretchedBasis_staticOnly.bitFlags, INTERIOR)
@@ -106,7 +106,6 @@ bool Application::Init_BasisFlows() {
         for (unsigned int iOffset = 0; iOffset < nbOffsets; iOffset++) {
             _orthogonalBasisGroupIds.push_back(newOrthogonalBasisGroups[iOffset]);
         }
-        _sameBasisTemplateGroupIds.push_back(newSameBasisTemplateGroup);
     }
 
 
@@ -243,8 +242,6 @@ bool Application::Init_BasisFlows() {
     _coeffsBBDecompressedIntersections.resize(N);
     _coeffBBExplicitTransferSum_abs.clear();
     _coeffBBExplicitTransferSum_abs.resize(N);
-    _coeffBBExplicitTransferSum_sqr.clear();
-    _coeffBBExplicitTransferSum_sqr.resize(N);
     for (int iRelFreq = 0; iRelFreq < _nbExplicitTransferFreqs; iRelFreq++) {
         _intersectingBasesIdsDeformation[iRelFreq]->resize(N);
         for (unsigned int i = 0; i < _basisFlowParams->_nbElements; i++) {
@@ -257,7 +254,6 @@ bool Application::Init_BasisFlows() {
         vector<CoeffBBDecompressedIntersectionInfo>& intersectionInfos = _coeffsBBDecompressedIntersections[i];
         vector<unsigned int>* localIntersectingBasesIds = _intersectingBasesSignificantBBIds->getCpuData(i);
         float explicitTransferTotalWeight_abs[_nbExplicitTransferFreqs] = { 0 };
-        float explicitTransferTotalWeight_sqr[_nbExplicitTransferFreqs] = { 0 };
 
 
         ivec2 freqI = _basisFlowParams->getCpuData(i).freqLvl;
@@ -271,7 +267,6 @@ bool Application::Init_BasisFlows() {
                 if (freqJ - freqI == _explicitTransferFreqs[iRelFreq]) {
 
                     explicitTransferTotalWeight_abs[iRelFreq] += abs(coeff);
-                    explicitTransferTotalWeight_sqr[iRelFreq] += Sqr(coeff);
 
                     _intersectingBasesIdsDeformation[iRelFreq]->getCpuData(i)->push_back(CoeffBBDecompressedIntersectionInfo((*it), coeff));
                 }
@@ -281,7 +276,6 @@ bool Application::Init_BasisFlows() {
 
         for (int iRelFreq = 0; iRelFreq < _nbExplicitTransferFreqs; iRelFreq++) {
             _coeffBBExplicitTransferSum_abs[i].coeffs[iRelFreq] = explicitTransferTotalWeight_abs[iRelFreq];
-            _coeffBBExplicitTransferSum_sqr[i].coeffs[iRelFreq] = std::sqrt(explicitTransferTotalWeight_sqr[iRelFreq]);
         }
 
         if ((i + 1) % 1000 == 0) {

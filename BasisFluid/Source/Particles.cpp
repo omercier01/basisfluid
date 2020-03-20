@@ -130,7 +130,7 @@ void Application::SeedParticles()
         _particleCircularSeedId = 0;
     }
 
-    for (int i = 0; i < _nbParticlesPerSeedGroupPerDimension; ++i) {
+    for (int i = 0; i < int(_nbParticlesPerSeedGroupPerDimension); ++i) {
         // random seeding
         vec2 p = vec2(_seedCenterX, _seedCenterY) + glm::diskRand(_seedRadius);
         bool isInsideObstacle = false;

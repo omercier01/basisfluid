@@ -340,9 +340,9 @@ void Application::LoadCoeffsT(string filename)
 
 
 // TODO: optimize this using const&
-vec2 Application::MatTCoeff(int i, int j) {
-    BasisFlow bTransported = _basisFlowParams->getCpuData(i);
-    BasisFlow bTransporting = _basisFlowParams->getCpuData(j);
+vec2 Application::MatTCoeff(int iTransported, int iTransporting) {
+    BasisFlow bTransported = _basisFlowParams->getCpuData(iTransported);
+    BasisFlow bTransporting = _basisFlowParams->getCpuData(iTransporting);
     return MatTCoeff(bTransported, bTransporting);
 }
 

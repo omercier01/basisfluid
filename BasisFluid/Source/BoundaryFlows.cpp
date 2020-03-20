@@ -20,7 +20,7 @@ float distanceToPlane(vec2 x, vec2 p, vec2 n) {
     return dot(x - p, n);
 }
 
-BasisFlow Application::ComputeStretch(BasisFlow b, bool staticObstaclesOnly, bool noStretch) {
+BasisFlow Application::ComputeStretch(BasisFlow b) {
 
     BasisSupport s = b.getSupport();
     vec2 shs = b.supportHalfSize();
@@ -30,8 +30,6 @@ BasisFlow Application::ComputeStretch(BasisFlow b, bool staticObstaclesOnly, boo
 
     for (Obstacle* obs : _obstacles)
     {
-        if (staticObstaclesOnly && obs->dynamic) { continue; }
-
         // if the center of the basis is inside the obstacle, we know the stretch will be too important, so we directly invalidate this basis. This prevents from running into undefined obstacle gradient cases inside the obstacle.
         if (obs->phi(b.center) < 0) {
             b.bitFlags = UnsetBits(b.bitFlags, INTERIOR);
@@ -56,8 +54,6 @@ BasisFlow Application::ComputeStretch(BasisFlow b, bool staticObstaclesOnly, boo
 
     for (Obstacle* obs : _obstacles)
     {
-        if (staticObstaclesOnly && obs->dynamic) { continue; }
-
         // compute plane approximation of obstacles near basis center
         vec2 centerObsGrad = obs->gradPhi(b.center); // TODO: should this be not normalized, to get a better planar approximation?
         vec2 obsPlanePoint = b.center - obs->phi(b.center)*centerObsGrad;
@@ -134,7 +130,7 @@ BasisFlow Application::ComputeStretch(BasisFlow b, bool staticObstaclesOnly, boo
 
         }
 
-        if (!noStretch && _nbStretchLoops > 0 && basisIsStretched)
+        if (_nbStretchLoops > 0 && basisIsStretched)
         {
             // stretch relatively to basis center in direction orthogonal to obstacle plane
             float stretchRatio = (maxOriginalDistToPlane - minOriginalDistToPlane) / (maxStretchedDistToPlane - minStretchedDistToPlane);
@@ -169,7 +165,7 @@ BasisFlow Application::ComputeStretch(BasisFlow b, bool staticObstaclesOnly, boo
     b.stretched = basisIsStretched;
 
 
-    if (!noStretch && AllBitsSet(b.bitFlags, INTERIOR) && b.stretched)
+    if (AllBitsSet(b.bitFlags, INTERIOR) && b.stretched)
     {
         for (uint iStretchLoop = 0; iStretchLoop < _nbStretchLoops; iStretchLoop++)
         {
@@ -177,8 +173,6 @@ BasisFlow Application::ComputeStretch(BasisFlow b, bool staticObstaclesOnly, boo
             // push
             for (Obstacle* obs : _obstacles)
             {
-                if (staticObstaclesOnly && obs->dynamic) { continue; }
-
                 // compute plane approximation of obstacles near basis center
                 vec2 centerObsGrad = obs->gradPhi(b.center); // TODO: should this be not normalized, to get a better planar approximation?
                 vec2 obsPlanePoint = b.center - obs->phi(b.center)*centerObsGrad;
