@@ -4,6 +4,8 @@
 
 void Application::SimulationStep()
 {
+    _velocityGridNeedsUpdating = true;
+
     // update dynamic obstacles
     for (Obstacle* obs : _obstacles)
     {
@@ -56,21 +58,14 @@ void Application::SimulationStep()
     SetParticlesInAccelGrid();
 
     // project dynamic obstacle boundary on bases (reusing forces grid)
-    float boundaryPhiBandDecrease = 99999;
-    float obstacleBoundaryFactor = 1.5f;
-    float obstacleBoundaryFactorTransferOnly = 1.5f;
-
-
-    // clear forces
     _forceField->populateWithFunction([=](float /*x*/, float /*y*/) { return vec2(0); });
-
     for (Obstacle* obs : _obstacles)
     {
         if (obs->dynamic)
         {
             _forceField->addFunction([=](float x, float y) {
                 float phi = obs->phi(vec2(x, y));
-                return -(obstacleBoundaryFactor * (phi - obs->prevPhi(vec2(x, y))) / _dt * obs->gradPhi(vec2(x, y))) * glm::max<float>(1.f - abs(phi) / boundaryPhiBandDecrease, 0.f);
+                return -(_obstacleBoundaryFactor * (phi - obs->prevPhi(vec2(x, y))) / _dt * obs->gradPhi(vec2(x, y))) * glm::max<float>(1.f - abs(phi) / _boundarySDFBandDecrease, 0.f);
             });
         }
     }

@@ -81,8 +81,11 @@ public:
     const float _explicitTransferSpeed = 0.05f;
     const float _explicitTransferExponent = -1.66f;
 
+    // Size of influence band around dynamic objects. See Equation 27
+    const float _boundarySDFBandDecrease = 0.25f;
+
     // multiplicator for projected flow around moving obstacles
-    const float _obstacleBoundaryFactorTransferOnly = 1.5f;
+    const float _obstacleBoundaryFactor = 1.5f;
 
 
     // the region of allowed basis corner movement has width _stretchBandRatio times the basis support half size, 
@@ -118,7 +121,7 @@ public:
 
     const float _obstacleBarWidth = 0.1f;
     const float _obstacleBarHeight = 0.2f;
-    const float _obstacleBarRotationSpeed = 0.789f;
+    const float _obstacleBarRotationSpeed = 0.567f;
     const float _obstacleBarMotionSpeed = 0.75f;
     const float _obstacleBarMotionAmplitude = 0.25f;
 
@@ -336,12 +339,18 @@ public:
     std::unique_ptr<DataBuffer1D<vec4>> _integrationTransferBufferGpu = nullptr;
     std::unique_ptr<DataBuffer1D<float>> _integrationMultipleTransferBufferGpu = nullptr;
     std::unique_ptr<DataBuffer1D<vec2>> _integrationBasisCentersBufferGpu = nullptr;
+
+    // Stores, for all bais flows, the ID of all beighboring basis flows.
     std::unique_ptr<DataBuffer1D<std::vector<unsigned int>*>> _intersectingBasesIds = nullptr;
-    std::unique_ptr<DataBuffer1D<std::vector<unsigned int>*>> _intersectingBasesSignificantBBIds = nullptr;
+
+    // Stores, for all basis flows, the ID of all neighboring basis flows of the same frequency.
+    // This is used during basis transport. Since a basis will usually transported near its
+    // current location, e only need to look at neighboring basis flows of the same frequencies
+    // to transfer its weight.
     std::unique_ptr<DataBuffer1D<std::vector<unsigned int>*>> _intersectingBasesIdsTransport = nullptr;
     
-    // stores the B^T.B for basis flows for all of their neighbors, to more easily compute the energy transfer
-    // of Equation 24.
+    // Stores, for all basis flows, the B^T.B coefficient of all neighboring basis flows. This is
+    // used during energy transfer in Equation 24.
     std::unique_ptr<DataBuffer1D<std::vector<CoeffBBDecompressedIntersectionInfo>*>>
         _intersectingBasesIdsDeformation[_nbExplicitTransferFreqs];
 
@@ -387,6 +396,7 @@ public:
     bool _basisStretchedUpdateRequired = true;
     unsigned int _particleCircularSeedId = 0;
     bool _particleSeedBufferLooped = false;
+    bool _velocityGridNeedsUpdating = true;
 
 };
 

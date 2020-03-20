@@ -97,7 +97,10 @@ void Application::Draw()
 
     if (_showVelocity) {
 
-        ComputeVelocityGridForDisplay();
+        if(_velocityGridNeedsUpdating) {
+            ComputeVelocityGridForDisplay();
+            _velocityGridNeedsUpdating = false;
+        }
 
         memcpy(
             _bufferArrows->getCpuDataPointer(),

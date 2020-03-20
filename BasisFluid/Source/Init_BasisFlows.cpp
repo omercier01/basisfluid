@@ -146,12 +146,10 @@ bool Application::Init_BasisFlows() {
 
     // precompute intersection bases (including themselves)
     _intersectingBasesIds->resize(N);
-    _intersectingBasesSignificantBBIds->resize(N);
     _intersectingBasesIdsTransport->resize(N);
 
     for (unsigned int i = 0; i < _basisFlowParams->_nbElements; i++) {
         _intersectingBasesIds->setCpuData(i, new vector<unsigned int>);
-        _intersectingBasesSignificantBBIds->setCpuData(i, new vector<unsigned int>);
         _intersectingBasesIdsTransport->setCpuData(i, new vector<unsigned int>);
     }
 
@@ -181,10 +179,6 @@ bool Application::Init_BasisFlows() {
                 _intersectingBasesIds->getCpuData(iBasis1)->push_back(iBasis2);
                 _intersectingBasesIds->getCpuData(iBasis2)->push_back(iBasis1);
 
-                _intersectingBasesSignificantBBIds->getCpuData(iBasis1)->push_back(iBasis2);
-                _intersectingBasesSignificantBBIds->getCpuData(iBasis2)->push_back(iBasis1);
-
-
                 // transport
                 if (
                     b2.freqLvl == b1.freqLvl &&
@@ -199,7 +193,6 @@ bool Application::Init_BasisFlows() {
         }
         // include itself in intersections
         _intersectingBasesIds->getCpuData(iBasis1)->push_back(iBasis1);
-        _intersectingBasesSignificantBBIds->getCpuData(iBasis1)->push_back(iBasis1);
         _intersectingBasesIdsTransport->getCpuData(iBasis1)->push_back(iBasis1);
 
 
@@ -210,8 +203,8 @@ bool Application::Init_BasisFlows() {
 
     // sort sets by ID number
     for (unsigned int i = 0; i < _basisFlowParams->_nbElements; ++i) {
-        std::sort(_intersectingBasesSignificantBBIds->getCpuData(i)->begin(),
-            _intersectingBasesSignificantBBIds->getCpuData(i)->end());
+        std::sort(_intersectingBasesIds->getCpuData(i)->begin(),
+            _intersectingBasesIds->getCpuData(i)->end());
     }
 
     basisSupports.clear();
@@ -252,7 +245,7 @@ bool Application::Init_BasisFlows() {
 
     for (unsigned int i = 0; i < N; i++) {
         vector<CoeffBBDecompressedIntersectionInfo>& intersectionInfos = _coeffsBBDecompressedIntersections[i];
-        vector<unsigned int>* localIntersectingBasesIds = _intersectingBasesSignificantBBIds->getCpuData(i);
+        vector<unsigned int>* localIntersectingBasesIds = _intersectingBasesIds->getCpuData(i);
         float explicitTransferTotalWeight_abs[_nbExplicitTransferFreqs] = { 0 };
 
 

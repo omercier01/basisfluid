@@ -102,7 +102,7 @@ void Application::ComputeBasisAdvection()
         // compute displacement (I is transported by J)
         vector<CoeffTDecompressedIntersectionInfo>& intersectionInfos = _coeffsTDecompressedIntersections[i];
         for (CoeffTDecompressedIntersectionInfo& inter : intersectionInfos) {
-            avgDisplacement += inter.coeff * (basisFlowParamsPointer[inter.j].coeff + _obstacleBoundaryFactorTransferOnly * basisFlowParamsPointer[inter.j].coeffBoundary);
+            avgDisplacement += inter.coeff * (basisFlowParamsPointer[inter.j].coeff + _obstacleBoundaryFactor * basisFlowParamsPointer[inter.j].coeffBoundary);
         }
 
 
@@ -220,7 +220,7 @@ void Application::ComputeBasisAdvection()
                     BasisFlow& bj = basisFlowParamsPointer[inter.j];
 
                     float alphaBiCoeff;
-                    alphaBiCoeff = alpha * (bi.coeff + _obstacleBoundaryFactorTransferOnly * bi.coeffBoundary);
+                    alphaBiCoeff = alpha * (bi.coeff + _obstacleBoundaryFactor * bi.coeffBoundary);
 
                     bj.newCoeff += alphaBiCoeff * transferCoeffs[iRelFreq] * inter.coeff / _coeffBBExplicitTransferSum_abs[i].coeffs[iRelFreq];
 

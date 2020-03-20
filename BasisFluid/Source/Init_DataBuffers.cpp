@@ -159,9 +159,6 @@ bool Application::Init_DataBuffers() {
     _intersectingBasesIds = make_unique<DataBuffer1D<vector<unsigned int>*>>(0);
     _intersectingBasesIds->createCpuStorage();
 
-    _intersectingBasesSignificantBBIds = make_unique<DataBuffer1D<std::vector<unsigned int>*>>(0);
-    _intersectingBasesSignificantBBIds->createCpuStorage();
-
     _intersectingBasesIdsTransport = make_unique<DataBuffer1D<std::vector<unsigned int>*>>(0);
     _intersectingBasesIdsTransport->createCpuStorage();
 
