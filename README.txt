@@ -3,6 +3,7 @@
 
 On Windows, running "VisualStudio\Build\x64\Release\BasisFluid.exe" directly should work.
 
+- All paramters are near the top of Application.h
 
 --------
 CONTROLS
