@@ -26,7 +26,7 @@ void Application::SimulationStep()
     BasisFlow* basisFlowParamsPointer = _basisFlowParams->getCpuDataPointer();
     for (unsigned int iBasis = 0; iBasis < _basisFlowParams->_nbElements; ++iBasis) {
         BasisFlow& b = basisFlowParamsPointer[iBasis];
-        b.prevBitFlags = b.bitFlags;
+        //b.prevBitFlags = b.bitFlags;
         b.coeffBoundary = 0;
     }
 

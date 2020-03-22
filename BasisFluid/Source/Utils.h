@@ -8,28 +8,35 @@
 
 #define M_PI 3.141592653589793238462643
 
+
 inline bool AllBitsSet(unsigned int bitfield, unsigned int mask) {
     return !(~bitfield & mask);
 }
+
 
 inline bool AtLeastOneBitNotSet(unsigned int bitfield, unsigned int mask) {
     return (~bitfield & mask) != 0;
 }
 
+
 inline unsigned int SetBits(unsigned int bitfield, unsigned int mask) {
     return bitfield | mask;
 }
+
 
 inline unsigned int UnsetBits(unsigned int bitfield, unsigned int mask) {
     return bitfield & ~mask;
 }
 
+
 inline float RoundToMultiple(float val, float step) {
     return round(val / step)*step;
 }
 
+
 template <typename T>
 inline T Sqr(T a) { return a * a; }
+
 
 inline unsigned int SizeOfEnumType(GLenum enumType) {
     switch (enumType) {
@@ -60,6 +67,7 @@ inline unsigned int SizeOfEnumType(GLenum enumType) {
     }
 }
 
+
 template <typename T>
 inline bool IsInClosedInterval(T x, T min, T max) {
     return min <= x && x <= max;
@@ -72,6 +80,7 @@ inline float RatioZero(float a, float b) {
     else return a / (a - b);
 }
 
+
 inline float VecNorm(glm::vec2 vec) {
     return std::sqrt(vec.x*vec.x + vec.y*vec.y);
 }
@@ -80,6 +89,7 @@ inline float VecNorm(glm::vec2 vec) {
 inline float VecNorm(glm::vec3 vec) {
     return std::sqrt(vec.x*vec.x + vec.y*vec.y + vec.z*vec.z);
 }
+
 
 inline void PrintTime() {
     time_t rawtime = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());

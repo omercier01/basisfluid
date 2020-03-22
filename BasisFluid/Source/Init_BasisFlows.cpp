@@ -91,7 +91,7 @@ bool Application::Init_BasisFlows() {
                         AllBitsSet(stretchedBasis_staticOnly.bitFlags, INTERIOR)
 
                         ) {
-                        _basisFlowParams->appendCpu(BasisFlow(freqLvl, center, uint(_orthogonalBasisGroupIds.size()) + iOffset));
+                        _basisFlowParams->appendCpu(BasisFlow(freqLvl, center));
 
                         // Add to basis groups
                         newOrthogonalBasisGroups[iOffset].push_back(_basisFlowParams->_nbElements - 1);
@@ -286,11 +286,11 @@ bool Application::Init_BasisFlows() {
     }
 
 
-    // set prevBilFlags
-    for (unsigned int iBasis = 0; iBasis < N; ++iBasis) {
-        BasisFlow& b = basisFlowParamsPointer[iBasis];
-        b.prevBitFlags = b.bitFlags;
-    }
+    //// set prevBilFlags
+    //for (unsigned int iBasis = 0; iBasis < N; ++iBasis) {
+    //    BasisFlow& b = basisFlowParamsPointer[iBasis];
+    //    b.prevBitFlags = b.bitFlags;
+    //}
 
 
     ss.str("");

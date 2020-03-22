@@ -205,7 +205,7 @@ public:
     float MatBBCoeff(int i, int j);
     float MatBBCoeff(const BasisFlow& b1, const BasisFlow& b2);
 
-    // Computes the T coefficient, using cached value if coefficient has been previously computed
+    // Computes the T coefficient, using cached value if coefficient has been previously computed. 
     // iTransported, bTransported: index or basis info of basis being transported
     // iTransporting, bTransporting: index or basis info of basis acting on the other
     glm::vec2 MatTCoeff(int iTransported, int iTransporting);
@@ -215,6 +215,8 @@ public:
     // turned on. This is used to project forces onto the basis (where boundary basis flows are ignored)
     // or to project a moving obstacle's motion onto the boundary bases (in which cases nly boundary
     // basis flows are used).
+    // Uses Gauss-Seidel iterations. Since basis flows are ordered by wavenumber, doing only one step of
+    // Gauss-Seidel is equivalent to projection frequency layers independently.
     void InverseBBMatrix(
         DataBuffer1D<double>* vecX,
         DataBuffer1D<double>* vecB,
@@ -242,7 +244,8 @@ public:
     // Computes \int(b.vecField), where velField is a vector field defined on the simulation domain.
     float IntegrateBasisGrid(BasisFlow& b, VectorField2D* velField);
 
-    // Computes \int_{S}(bVec)/\int_{S}, where S is bSupport's support. See Equation 18.
+    // Computes basis flow's average on its support, i.e.
+    // \int_{S}(bVec)/\int_{S}, where S is bSupport's support. See Equation 18.
     glm::vec2 AverageBasisOnSupport(BasisFlow bVec, BasisFlow bSupport);
 
     // Computes the stretch of a given basis flow, see Section 6.1. If staticObstaclesOnly is true,
@@ -255,7 +258,7 @@ public:
     // Compute stretches for all basis flows
     void ComputeStretches();
 
-    // Evaluated a stretched basis flow at point p.
+    // Evaluates a stretched basis flow at point p, weighted by the basis's coefficient.
     // p: evaluatiom point
     // b: stretched basis
     vec2 VecObstacle_stretch(vec2 p, BasisFlow const& b);

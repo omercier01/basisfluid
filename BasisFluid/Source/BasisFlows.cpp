@@ -26,14 +26,8 @@ int minVec(T v) { return glm::min<int>(v.x, v.y); }
 
 bool IntersectionInteriorEmpty(const BasisSupport& sup1, const BasisSupport& sup2)
 {
-    return (glm::max(sup1.left, sup2.left) >= glm::min(sup1.right, sup2.right))
-        || (glm::max(sup1.bottom, sup2.bottom) >= glm::min(sup1.top, sup2.top))
-        ;
-}
-
-
-bool BasisFlow::EmptyIntersectionWithBasis(const BasisFlow& b) const {
-    return IntersectionInteriorEmpty(getSupport(), b.getSupport());
+    return (glm::max(sup1.left, sup2.left) >= glm::min(sup1.right, sup2.right)) ||
+        (glm::max(sup1.bottom, sup2.bottom) >= glm::min(sup1.top, sup2.top));
 }
 
 
@@ -54,10 +48,6 @@ void Application::InverseBBMatrixMain(
 }
 
 
-
-// Solves BB * x = b using Gauss-Seidel.
-// Since bases are ordered by wavenumber, doing only one step of GS is equivalent to projection by frequency layer.
-// The bitMask indicates the bits that must be set for the basis to be used in the inversion.
 void Application::InverseBBMatrix(
     DataBuffer1D<double>* vecX,
     DataBuffer1D<double>* vecB,
@@ -71,35 +61,29 @@ void Application::InverseBBMatrix(
     double* vecBPointer = vecB->getCpuDataPointer();
     BasisFlow* basisFlowParamsPointer = _basisFlowParams->getCpuDataPointer();
 
-
     // zero x
     for (int i = 0; i < int(n); i++) {
         vecXPointer[i] = 0.;
     }
 
-    uint iIt = 0;
-    while (iIt < _maxNbItMatBBInversion) {
-
+    // Gauss-Seidel iterations
+    for (uint iIt = 0; iIt < _maxNbItMatBBInversion; iIt++) {
         for (int iBasisGroup = 0; iBasisGroup < _orthogonalBasisGroupIds.size(); iBasisGroup++)
         {
             vector<unsigned int> ids = _orthogonalBasisGroupIds[iBasisGroup];
-#pragma omp parallel for num_threads(7) shared(vecXPointer,vecBPointer,ids,basisFlowParamsPointer) firstprivate(basisBitMask,minFreq) default(none)
-            for (int idid = 0; idid < ids.size(); idid++) {
-                int iRow = ids[idid];
-                if (
-                    AllBitsSet(basisFlowParamsPointer[iRow].bitFlags, basisBitMask)
-                    ) {
+#pragma omp parallel for shared(vecXPointer,vecBPointer,ids,basisFlowParamsPointer) firstprivate(basisBitMask,minFreq) default(none)
+            for (int id2 = 0; id2 < ids.size(); id2++) {
+                int iRow = ids[id2];
+                if (AllBitsSet(basisFlowParamsPointer[iRow].bitFlags, basisBitMask)) {
                     InverseBBMatrixMain(iRow, vecXPointer, vecBPointer, basisFlowParamsPointer, basisBitMask);
                 }
             }
         }
-
-        iIt++;
     }
-
 }
 
 
+// eigenflows of Equation 6
 dvec2 eigenLaplace(dvec2 p, dvec2 k) {
     return dvec2(
         k.y*sin(M_PI*p.x*k.x)*cos(M_PI*p.y*k.y),
@@ -108,7 +92,6 @@ dvec2 eigenLaplace(dvec2 p, dvec2 k) {
 }
 
 
-// integrates basis(...) dot a vector field defined on a grid
 float Application::IntegrateBasisGrid(BasisFlow& b, VectorField2D* velField)
 {
     // compute intersection of supports
@@ -119,25 +102,21 @@ float Application::IntegrateBasisGrid(BasisFlow& b, VectorField2D* velField)
     float supBottom = glm::max(supportBasis.bottom, supportField.bottom);
     float supTop = glm::min(supportBasis.top, supportField.top);
 
-    if (supLeft >= supRight || supBottom >= supTop
-        ) {
+    if (supLeft >= supRight || supBottom >= supTop) {
         return 0.f;
     }
 
     // compute integral as discretized sum at grid centers
     float sum = 0;
-
-
     for (uint i = 0; i <= _integralGridRes; i++) {
         for (uint j = 0; j <= _integralGridRes; j++) {
-
-            vec2 p = vec2(supLeft + float(i) / _integralGridRes * (supRight - supLeft),
+            vec2 p = vec2(
+                supLeft + float(i) / _integralGridRes * (supRight - supLeft),
                 supBottom + float(j) / _integralGridRes * (supTop - supBottom));
 
-            sum += ((i == 0 || i == _integralGridRes) ? 0.5f : 1.f) * ((j == 0 || j == _integralGridRes) ? 0.5f : 1.f) *
-                glm::dot(TranslatedBasisEval(p, b.freqLvl, b.center),
-                    velField->interp(p));
-
+            sum += ((i == 0 || i == _integralGridRes) ? 0.5f : 1.f) *
+                ((j == 0 || j == _integralGridRes) ? 0.5f : 1.f) *
+                glm::dot(TranslatedBasisEval(p, b.freqLvl, b.center), velField->interp(p));
         }
     }
 
@@ -145,11 +124,6 @@ float Application::IntegrateBasisGrid(BasisFlow& b, VectorField2D* velField)
 }
 
 
-
-
-
-
-// integrates basis(...) dot basis(...)
 float Application::IntegrateBasisBasis(BasisFlow b1, BasisFlow b2) {
 
     BasisSupport sup1 = b1.getSupport();
@@ -159,23 +133,21 @@ float Application::IntegrateBasisBasis(BasisFlow b1, BasisFlow b2) {
     float supBottom = glm::max(sup1.bottom, sup2.bottom);
     float supTop = glm::min(sup1.top, sup2.top);
 
-    if (supLeft >= supRight || supBottom >= supTop
-        ) {
+    if (supLeft >= supRight || supBottom >= supTop) {
         return 0.f;
     }
 
-
     // compute integral as discretized sum at grid centers
     float sum = 0;
-
-
     for (int i = 0; i <= int(_integralGridRes); i++) {
         for (int j = 0; j <= int(_integralGridRes); j++) {
-
-            vec2 p = vec2(supLeft + float(i) / _integralGridRes * (supRight - supLeft),
+            vec2 p = vec2(
+                supLeft + float(i) / _integralGridRes * (supRight - supLeft),
                 supBottom + float(j) / _integralGridRes * (supTop - supBottom));
-            sum += ((i == 0 || i == _integralGridRes) ? 0.5f : 1.f) * ((j == 0 || j == _integralGridRes) ? 0.5f : 1.f) *
-                glm::dot(TranslatedBasisEval(p, b1.freqLvl, b1.center),
+            sum += ((i == 0 || i == _integralGridRes) ? 0.5f : 1.f) *
+                ((j == 0 || j == _integralGridRes) ? 0.5f : 1.f) *
+                glm::dot(
+                    TranslatedBasisEval(p, b1.freqLvl, b1.center),
                     TranslatedBasisEval(p, b2.freqLvl, b2.center));
         }
     }
@@ -185,7 +157,6 @@ float Application::IntegrateBasisBasis(BasisFlow b1, BasisFlow b2) {
 }
 
 
-// gives the average value of bVec over the support of bSupport
 vec2 Application::AverageBasisOnSupport(BasisFlow bVec, BasisFlow bSupport) {
 
     // compute intersection of supports
@@ -196,32 +167,29 @@ vec2 Application::AverageBasisOnSupport(BasisFlow bVec, BasisFlow bSupport) {
     float supBottom = glm::max(supportVec.bottom, supportSup.bottom);
     float supTop = glm::min(supportVec.top, supportSup.top);
 
-    if (supLeft >= supRight || supBottom >= supTop
-        ) {
+    if (supLeft >= supRight || supBottom >= supTop) {
         return vec2(0);
     }
 
     // compute integral as discretized sum at grid centers
     vec2 sum(0);
-
-
     for (uint i = 0; i <= _integralGridRes; i++) {
         for (uint j = 0; j <= _integralGridRes; j++) {
-
-            vec2 p = vec2(supLeft + float(i) / _integralGridRes * (supRight - supLeft),
+            vec2 p = vec2(
+                supLeft + float(i) / _integralGridRes * (supRight - supLeft),
                 supBottom + float(j) / _integralGridRes * (supTop - supBottom));
 
-            sum += ((i == 0 || i == _integralGridRes) ? 0.5f : 1.f) * ((j == 0 || j == _integralGridRes) ? 0.5f : 1.f) *
+            sum += ((i == 0 || i == _integralGridRes) ? 0.5f : 1.f) *
+                ((j == 0 || j == _integralGridRes) ? 0.5f : 1.f) *
                 TranslatedBasisEval(p, bVec.freqLvl, bVec.center);
         }
     }
 
     // divide by domain size to get averaged value
-    return vec2(sum) * (supRight - supLeft)*(supTop - supBottom) / float(Sqr(_integralGridRes)) / ((1.f / float(1 << bSupport.freqLvl.x))*(1.f / float(1 << bSupport.freqLvl.y)));
-
+    float domainSize = ((1.f / float(1 << bSupport.freqLvl.x))*(1.f / float(1 << bSupport.freqLvl.y)));
+    return vec2(sum) *
+        (supRight - supLeft) * (supTop - supBottom) / float(Sqr(_integralGridRes)) / domainSize;
 }
-
-
 
 
 void Application::SaveCoeffsBB(string filename)
@@ -277,7 +245,6 @@ void Application::LoadCoeffsBB(string filename)
     }
     file.close();
 }
-
 
 
 void Application::SaveCoeffsT(string filename)
@@ -337,9 +304,6 @@ void Application::LoadCoeffsT(string filename)
 }
 
 
-
-
-// TODO: optimize this using const&
 vec2 Application::MatTCoeff(int iTransported, int iTransporting) {
     BasisFlow bTransported = _basisFlowParams->getCpuData(iTransported);
     BasisFlow bTransporting = _basisFlowParams->getCpuData(iTransporting);
@@ -347,12 +311,11 @@ vec2 Application::MatTCoeff(int iTransported, int iTransporting) {
 }
 
 
-// compute the integral and store it for future use
 vec2 Application::MatTCoeff(BasisFlow bTransported, BasisFlow bTransporting)
 {
-
-    if (IntersectionInteriorEmpty(bTransported.getSupport(), bTransporting.getSupport())) { return vec2(0); }
-
+    if (IntersectionInteriorEmpty(bTransported.getSupport(), bTransporting.getSupport())) {
+        return vec2(0);
+    }
 
     int baseLvl;
     baseLvl = glm::min<int>(
@@ -370,7 +333,7 @@ vec2 Application::MatTCoeff(BasisFlow bTransported, BasisFlow bTransporting)
         bTransported.center.y - bTransporting.center.y
     );
 
-    // snap offset to very fine grid to avoid float errors
+    // snap offset to fine grid to avoid float errors in dictionary lookups
     vec2 snappedRelativeOffset(RoundToMultiple(relativeOffset.x, _coeffSnapSize),
         RoundToMultiple(relativeOffset.y, _coeffSnapSize)
     );
@@ -404,7 +367,7 @@ vec2 Application::MatTCoeff(BasisFlow bTransported, BasisFlow bTransporting)
         _newTCoeffComputed = true;
     }
 
-    // scaled coefficient
+    // scaled coefficient, see Table 2 (exponent is 1)
     return result * baseFreq;
 
 }
@@ -440,8 +403,6 @@ float Application::MatBBCoeff(const BasisFlow& b1, const BasisFlow& b2)
         b2.center.y - b1.center.y
     );
 
-
-
     // snap offset to very fine grid to avoid float errors
     vec2 snappedRelativeOffset = vec2(RoundToMultiple(relativeOffset.x, _coeffSnapSize),
         RoundToMultiple(relativeOffset.y, _coeffSnapSize)
@@ -475,18 +436,11 @@ float Application::MatBBCoeff(const BasisFlow& b1, const BasisFlow& b2)
         _newBBCoeffComputed = true;
     }
 
-    // scaled coefficient
+    // scaled coefficient, see Table 2 (exponent is 0).
     return result;
 }
 
 
-
-
-
-// using harmonics 1-3-5, see frequencyExploration_cleaned.nb. It's the
-// \widehat{h} from the paper. We include the normalization parameter in the
-// definition, and only compute cases where kx = 1, so ky = 2^log2Aniso.
-// Oriented along Y axis
 dvec2 flowBasisHat(dvec2 p, int log2Aniso)
 {
     // frequencies are 2^level
@@ -534,11 +488,10 @@ dvec2 flowBasisHat(dvec2 p, int log2Aniso)
         norm = 0.5618900800300474;
         break;
     default:
-        std::cout << "unknown basis parameters" << endl;
+        std::cout << "Unknown basis parameters." << endl;
         return dvec2(0, 0);
         break;
     }
-
 
     dvec2 p2(p.x + 0.5 / kx, p.y + 0.5 / ky);
 
@@ -553,7 +506,6 @@ dvec2 flowBasisHat(dvec2 p, int log2Aniso)
         coeffs[2][1] * eigenLaplace(p2, dvec2(5 * kx, 3 * ky)) +
         coeffs[2][2] * eigenLaplace(p2, dvec2(5 * kx, 5 * ky))
         );
-
 }
 
 
@@ -564,9 +516,10 @@ vec2 Application::TranslatedBasisEval(
     const ivec2 freqLvl,
     const vec2 center)
 {
-
     vec2 result;
 
+    // Refer to Equation 15. Because we work with log2 of basis frequencies, we replace
+    // \hat{k} = k/min(k) by log2(k) - min(log2(k))
     int minLvl = glm::min<int>(freqLvl.x, freqLvl.y);
     if (freqLvl.x <= freqLvl.y) {
         result = _basisFlowTemplates[freqLvl.y - freqLvl.x]->interp(
@@ -601,24 +554,10 @@ BasisSupport BasisFlow::getSupport() const
 }
 
 
-
 vec2 BasisFlow::supportHalfSize() const
 {
     vec2 freq(1 << freqLvl.x, 1 << freqLvl.y);
     return 0.5f / freq;
-}
-
-
-
-vec2 BasisFlow::normalizedPositionInSupport(vec2 p) {
-    return (p - center) / (2.f*supportHalfSize());
-}
-
-
-bool BasisFlow::pointIsInSupport(vec2 p) {
-    vec2 normalizedPos = normalizedPositionInSupport(p);
-    return IsInClosedInterval(normalizedPos.x, -0.5f, 0.5f) &&
-        IsInClosedInterval(normalizedPos.y, -0.5f, 0.5f);
 }
 
 
