@@ -16,9 +16,7 @@ GridData2D<T>::GridData2D(float parBoundXMin, float parBoundXMax, float parBound
     _boundYMin = parBoundYMin;
     _boundYMax = parBoundYMax;
 
-    // resizes, but does not necessarily allocate the data.
     _data.resize(nbCellsX, nbCellsY);
-
 }
 
 
@@ -28,11 +26,13 @@ void GridData2D<T>::setCpuData(unsigned int i, unsigned int j, T data)
     _data.setCpuData(i, j, data);
 }
 
+
 template <class T>
 T GridData2D<T>::getCpuData(unsigned int i, unsigned int j)
 {
     return _data.getCpuData(i, j);
 }
+
 
 template <class T>
 void GridData2D<T>::createCpuStorage()
@@ -40,17 +40,20 @@ void GridData2D<T>::createCpuStorage()
     _data.createCpuStorage();
 }
 
+
 template <class T>
 unsigned int GridData2D<T>::nbElementsX()
 {
     return _nbCellsX;
 }
 
+
 template <class T>
 unsigned int GridData2D<T>::nbElementsY()
 {
     return _nbCellsY;
 }
+
 
 template <class T>
 uvec2 GridData2D<T>::pointToClosestIndex(vec2 point)
@@ -59,7 +62,6 @@ uvec2 GridData2D<T>::pointToClosestIndex(vec2 point)
 
     float normalizedX = (point.x - _boundXMin) / (_boundXMax - _boundXMin)*_nbCellsX;
     float normalizedY = (point.y - _boundYMin) / (_boundYMax - _boundYMin)*_nbCellsY;
-
 
     if (normalizedX < 0) {
         index.x = 0;

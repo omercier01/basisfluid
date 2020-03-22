@@ -1,5 +1,6 @@
-//the order for [i,j] is the same as [x,y] on a cartesian plane, and we store
-//consecutive rows (fixed y, moving x).
+
+// Generic 2D buffer. The order for [i,j] is the same as [x,y] on a cartesian plane, x is the
+// fast moving variable in linear order.
 
 #ifndef DATABUFFER2D_H
 #define DATABUFFER2D_H
@@ -11,6 +12,7 @@ struct Metadata2DCpu {
     void* dataPointer;
 };
 
+
 struct Metadata2DTexture2D {
     GLuint textureId;
     unsigned int nbElementsX;
@@ -20,6 +22,7 @@ struct Metadata2DTexture2D {
     GLenum externalFormat; // external texel format, used to communicate with user, e.g. set or get the texture data. (http://docs.gl/gl4/glGetTexImage)
     GLenum sizedExternalFormat;
 };
+
 
 struct Metadata2DImage2D {
     GLuint textureId;
@@ -31,7 +34,6 @@ struct Metadata2DImage2D {
     GLenum sizedExternalFormat;
     unsigned int level;
 };
-
 
 
 template<class T>

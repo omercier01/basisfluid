@@ -280,7 +280,8 @@ public:
     // Adds new particles
     void SeedParticles();
 
-    // Projects all buoyancy forces from particles onto the basis flows
+    // Projects all buoyancy forces from particles onto the basis flows. Splats particle buoyancy
+    // on a grid, and projects forces from that grid to the basis flows.
     void AddParticleForcesToBasisFlows();
 
     // Computes blinear weights for basis advection. See Equation 20.

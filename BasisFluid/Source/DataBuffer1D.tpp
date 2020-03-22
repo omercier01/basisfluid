@@ -98,7 +98,6 @@ void DataBuffer1D<T>::createTexture1DStorage(GLenum internalFormat,
 }
 
 
-
 template<class T>
 void DataBuffer1D<T>::deleteTexture1DStorage()
 {
@@ -174,8 +173,6 @@ void DataBuffer1D<T>::resize(unsigned int size)
 
             _metadataBuffer.bufferId = newBuffer;
             _metadataBuffer.nbElements = _nbElements;
-
-
         }
 
         if (_hasTexture1DStorage) {
@@ -207,6 +204,7 @@ void DataBuffer1D<T>::resize(unsigned int size)
         }
     }
 }
+
 
 template <class T>
 void DataBuffer1D<T>::appendCpu(T elem)

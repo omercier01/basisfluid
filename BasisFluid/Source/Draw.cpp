@@ -19,7 +19,7 @@ void Application::Draw()
 
             for (int offset = -nbOffsets; offset <= nbOffsets; offset++) {
 
-                // obstacle boundary with marching square
+                // get obstacle boundary with marching square
                 float dx = (_domainRight - _domainLeft) / _obstacleDisplayRes;
                 float dy = (_domainTop - _domainBottom) / _obstacleDisplayRes;
                 for (int i = -2; i <= int(_obstacleDisplayRes) + 1; i++) {
@@ -83,8 +83,6 @@ void Application::Draw()
         _obstacleDisplayNeedsUpdating = false;
     }
 
-
-
     // display all simulation elements
     glClearColor(1, 1, 1, 1);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -97,7 +95,7 @@ void Application::Draw()
 
     if (_showVelocity) {
 
-        if(_velocityGridNeedsUpdating) {
+        if (_velocityGridNeedsUpdating) {
             ComputeVelocityGridForDisplay();
             _velocityGridNeedsUpdating = false;
         }
@@ -118,13 +116,11 @@ void Application::Draw()
         _pipelineParticle->Execute();
     }
 
-
     glfwSwapBuffers(_glfwWindow);
-
 }
 
 
-// used for display only
+// Used for display only
 void Application::ComputeVelocityGridForDisplay()
 {
     // clear velocity grid
@@ -144,7 +140,7 @@ void Application::ComputeVelocityGridForDisplay()
 
             vec += b.coeffBoundary * (vec2)(
                 TranslatedBasisEval(p, b.freqLvl, b.center)
-            );
+                );
 
             return vec;
         }

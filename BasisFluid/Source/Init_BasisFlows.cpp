@@ -11,7 +11,7 @@ using namespace std;
 
 bool Application::Init_BasisFlows() {
 
-    std::cout << "Computing bais coefficients..." << endl;
+    std::cout << "Computing basis coefficients..." << endl;
     PrintTime();
 
     stringstream ss;
@@ -23,7 +23,6 @@ bool Application::Init_BasisFlows() {
     ss.str("");
     ss << "Data/Coeffs" << "-" << _maxFreqLvl << "-" << _maxAnisoLvl << "-T.txt";
     LoadCoeffsT(ss.str());
-
 
     // compute possible frequencies
     _freqLvls.clear();
@@ -47,15 +46,15 @@ bool Application::Init_BasisFlows() {
         _freqLvls.end(),
         [](ivec2 a, ivec2 b) {return (1 << a.x)*(1 << a.x) + (1 << a.y)*(1 << a.y) < (1 << b.x)*(1 << b.x) + (1 << b.y)*(1 << b.y); });
 
+    //
     // set all bases of each frequency
+    //
     _basisFlowParams->resize(0);
 
     unsigned int nbBasesTested = 0;
 
-
     for (int iFreqLvl = 0; iFreqLvl < _freqLvls.size(); iFreqLvl++)
     {
-
         ivec2 freqLvl = _freqLvls[iFreqLvl];
         ivec2 freq = ivec2(powf(2.f, float(freqLvl.x)), powf(2.f, float(freqLvl.y)));
 
@@ -67,7 +66,6 @@ bool Application::Init_BasisFlows() {
         int offsetMaxX = int(floor((_domainRight - origin.x) / _lengthLvl0 / stride.x)) + 1;
         int offsetMinY = int(ceil((_domainBottom - origin.y) / _lengthLvl0 / stride.y)) - 1;
         int offsetMaxY = int(floor((_domainTop - origin.y) / _lengthLvl0 / stride.y)) + 1;
-
 
         unsigned int nbOffsets = sizeof(extraOffsets) / sizeof(vec2);
         vector<vector<unsigned int>> newOrthogonalBasisGroups;
@@ -96,10 +94,8 @@ bool Application::Init_BasisFlows() {
                         // Add to basis groups
                         newOrthogonalBasisGroups[iOffset].push_back(_basisFlowParams->_nbElements - 1);
                         newSameBasisTemplateGroup.push_back(_basisFlowParams->_nbElements - 1);
-
                     }
                 }
-
             }
         }
 
@@ -108,15 +104,14 @@ bool Application::Init_BasisFlows() {
         }
     }
 
-
-    unsigned int N = _basisFlowParams->_nbElements;
+    unsigned int nbBasisFlows = _basisFlowParams->_nbElements;
 
 
 
 
     // compute basis norm squared
     BasisFlow* basisFlowParamsPointer = _basisFlowParams->getCpuDataPointer();
-    for (unsigned int iBasis = 0; iBasis < N; ++iBasis) {
+    for (unsigned int iBasis = 0; iBasis < nbBasisFlows; ++iBasis) {
         BasisFlow& b = basisFlowParamsPointer[iBasis];
         b.normSquared = MatBBCoeff(b, b);
     }

@@ -16,7 +16,7 @@ using namespace glm;
 
 bool Application::Init() {
 
-    // Init GLFW
+    // Initialize GLFW
     if( !glfwInit() )
     {
         cerr << "Failed to initialize GLFW.\n";
@@ -25,7 +25,7 @@ bool Application::Init() {
         clog << "Initialized GLFW." << endl;
     }
 
-    // Init Window
+    // Initialize Window
     glfwDefaultWindowHints();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
@@ -43,7 +43,7 @@ bool Application::Init() {
     glfwSetKeyCallback( _glfwWindow, Application::CallbackKey );
     glfwSetScrollCallback( _glfwWindow, Application::CallbackMouseScroll );
 
-    // Init GLEW
+    // Initialize GLEW
     glewExperimental = GL_TRUE; // Needed for core profile
     GLenum err = glewInit();
     if (err != GLEW_OK) {
@@ -61,9 +61,6 @@ bool Application::Init() {
     // Random
     srand((unsigned int)(time(0)));
 
-    //
-    // Init basis flows
-    //  
 
     if(!Init_DataBuffers()) {
         cerr << "Error initializing data buffers." << endl;
@@ -84,6 +81,7 @@ bool Application::Init() {
 
     return true;
 }
+
 
 bool Application::Init_Shaders() {
 

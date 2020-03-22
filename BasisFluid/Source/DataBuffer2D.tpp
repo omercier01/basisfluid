@@ -3,6 +3,7 @@
 
 using namespace glm;
 
+
 template<class T>
 DataBuffer2D<T>::DataBuffer2D(unsigned int sizeX, unsigned int sizeY)
 {
@@ -13,6 +14,7 @@ DataBuffer2D<T>::DataBuffer2D(unsigned int sizeX, unsigned int sizeY)
 
 }
 
+
 template<class T>
 void DataBuffer2D<T>::createCpuStorage()
 {
@@ -20,12 +22,14 @@ void DataBuffer2D<T>::createCpuStorage()
     _hasCpuStorage = true;
 }
 
+
 template<class T>
 void DataBuffer2D<T>::deleteCpuStorage()
 {
     delete[] _dataCpu;
     _hasCpuStorage = false;
 }
+
 
 template<class T>
 void DataBuffer2D<T>::createTexture2DStorage(
@@ -84,8 +88,8 @@ void DataBuffer2D<T>::createTexture2DStorage(
     _metadataTexture2D.sizedInternalFormat = _texture2DSizedInternalFormat;
     _metadataTexture2D.externalFormat = _texture2DExternalFormat;
     _metadataTexture2D.sizedExternalFormat = _texture2DSizedExternalFormat;
-
 }
+
 
 template<class T>
 void DataBuffer2D<T>::deleteTexture2DStorage()
@@ -114,6 +118,7 @@ void DataBuffer2D<T>::setFromCpuData(T* inData) {
     }
 }
 
+
 // assumes the size of data is the same as the DataBuffer's size.
 template<class T>
 void DataBuffer2D<T>::setFromImage(Metadata2DImage2D srcImage, unsigned int level) {
@@ -128,9 +133,8 @@ void DataBuffer2D<T>::setFromImage(Metadata2DImage2D srcImage, unsigned int leve
     } else {
         // TODO: error, texture storage required.
     }
-
-
 }
+
 
 template <class T>
 T DataBuffer2D<T>::interp(glm::vec2 pos)
@@ -143,7 +147,6 @@ T DataBuffer2D<T>::interp(glm::vec2 pos)
     float weightX;
     float weightY;
 
-    // TODO: this is not clean...
     float _boundXMin = 0;
     float _boundYMin = 0;
     float _boundXMax = 1;
@@ -153,8 +156,6 @@ T DataBuffer2D<T>::interp(glm::vec2 pos)
 
     float normalizedX = (x - _boundXMin)/(_boundXMax - _boundXMin)*mNbCellsX;
     float normalizedY = (y - _boundYMin)/(_boundYMax - _boundYMin)*mNbCellsX;
-
-
 
     if(normalizedX < 0.5) {
         return T();
@@ -175,24 +176,12 @@ T DataBuffer2D<T>::interp(glm::vec2 pos)
         weightY = normalizedY - (indexYLeft + 0.5f);
     }
 
-
-
-    //TODO: indices might still be out of range because of numerical errors,
-    //check for that and if it happens, the out-of-bound indices will have to
-    //be dealt with in terms of indices, not positions.
-
-//    return (1-weightX)*(1-weightY)*mVectors(indexXLeft , indexYLeft ) +
-//           (1-weightX)*(  weightY)*mVectors(indexXLeft , indexYRight) +
-//           (  weightX)*(1-weightY)*mVectors(indexXRight, indexYLeft ) +
-//           (  weightX)*(  weightY)*mVectors(indexXRight, indexYRight);
-
     return (1-weightX)*(1-weightY)*getCpuData(indexXLeft , indexYLeft ) +
            (1-weightX)*(  weightY)*getCpuData(indexXLeft , indexYRight) +
            (  weightX)*(1-weightY)*getCpuData(indexXRight, indexYLeft ) +
             (  weightX)*(  weightY)*getCpuData(indexXRight, indexYRight);
 }
 
-// TODO: instead do something similar to DataBuffer1D's resize with the *2 scheme to amortize costs.
 template<class T>
 void DataBuffer2D<T>::resize(unsigned int newSizeX, unsigned int newSizeY)
 {
@@ -235,6 +224,7 @@ void DataBuffer2D<T>::resize(unsigned int newSizeX, unsigned int newSizeY)
     _nbElementsY = newSizeY;
 }
 
+
 template <class T>
 T DataBuffer2D<T>::getCpuData(unsigned int i, unsigned int j)
 {
@@ -254,6 +244,7 @@ void DataBuffer2D<T>::setCpuData(unsigned int i, unsigned int j, T inData)
 {
     _dataCpu[_nbElementsX*j + i] = inData;
 }
+
 
 template <class T>
 void DataBuffer2D<T>::addCpuData(unsigned int i, unsigned int j, T inData)

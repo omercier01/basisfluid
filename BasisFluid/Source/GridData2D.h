@@ -1,19 +1,18 @@
 
-// grid with world space dimensions storing any type of data. Data is at cell centers.
+// Generic grid with world space dimensions storing any type of data. Data is stored at cell centers.
 
 #ifndef GRIDDATA2D_H
 #define GRIDDATA2D_H
 
 #include "DataBuffer2D.h"
 
-
 template <class T>
 class GridData2D
 {
 public:
     DataBuffer2D<T> _data;
-    float _boundXMin, _boundXMax, _boundYMin, _boundYMax;
-    unsigned int _nbCellsX, _nbCellsY;
+    float _boundXMin, _boundXMax, _boundYMin, _boundYMax; // world dimensions
+    unsigned int _nbCellsX, _nbCellsY; // number of cells
 public:
     GridData2D(float boundXMin, float boundXMax, float boundYMin,
         float boundYMax, unsigned int nbCellsX, unsigned int nbCellsY);
