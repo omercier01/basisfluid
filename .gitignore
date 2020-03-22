@@ -5,6 +5,5 @@
 !/VisualStudio/Build/x64/Release/glfw3.dll
 
 /VisualStudio/.vs/*
-/VisualStudio/BasisFluid.vcxproj.user
 Data/*
 Output/*
