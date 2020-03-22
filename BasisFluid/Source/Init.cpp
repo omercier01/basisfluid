@@ -30,7 +30,7 @@ bool Application::Init() {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    _glfwWindow = glfwCreateWindow(1000, 1000, "Local Bases for Model-reduced Smoke Simulations", 0, 0);
+    _glfwWindow = glfwCreateWindow(_windowWidth, _windowHeight, "Local Bases for Model-reduced Smoke Simulations", 0, 0);
     glfwMakeContextCurrent(_glfwWindow);
     if( _glfwWindow == NULL )
     {

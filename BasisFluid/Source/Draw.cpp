@@ -5,6 +5,13 @@
 #include "Application.h"
 #include "Obstacles.h"
 
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image_write.h"
+
+#include <filesystem>
+
+using namespace std;
+
 void Application::Draw()
 {
     // update obstacle display
@@ -116,6 +123,10 @@ void Application::Draw()
         _pipelineParticle->Execute();
     }
 
+    if (_saveWindowToFile) {
+        SaveWindowToFile();
+    }
+
     glfwSwapBuffers(_glfwWindow);
 }
 
@@ -145,5 +156,44 @@ void Application::ComputeVelocityGridForDisplay()
             return vec;
         }
         );
+    }
+}
+
+
+void Application::SaveWindowToFile() {
+
+    static bool initialized = false;
+    static std::vector<char> pixels = {};
+    static std::vector<char> pixelsFlipped = {};
+
+    if (!initialized) {
+        filesystem::create_directory("Output");
+        pixels.resize(4 * _windowWidth * _windowHeight);
+        pixelsFlipped.resize(4 * _windowWidth * _windowHeight);
+        initialized = true;
+    }
+
+    stringstream filename;
+    filename.clear();
+    filename << "Output/" << "frame" << setfill('0') << setw(5) << _appFrameCount << ".png";
+
+    glReadPixels(0, 0, _windowWidth, _windowHeight, GL_RGBA, GL_UNSIGNED_BYTE, pixels.data());
+
+    // flip image vertically
+    for (int j = 0; j < int(_windowHeight); j++) {
+        for (int i = 0; i < 4 * int(_windowWidth); i++) {
+            pixelsFlipped[4 * _windowWidth*j + i] =
+                pixels[4 * _windowWidth*(_windowHeight - j - 1) + i];
+        }
+    }
+
+    bool success = stbi_write_png(
+        filename.str().c_str(), _windowWidth, _windowHeight, 4, pixelsFlipped.data(), 4 * _windowWidth);
+
+    if (success) {
+        std::cout << "Frame saved to file '" << filename.str() << "'." << std::endl;
+    }
+    else {
+        std::cout << "Saving frame to file failed." << std::endl;
     }
 }

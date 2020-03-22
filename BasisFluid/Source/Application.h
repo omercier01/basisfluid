@@ -32,6 +32,13 @@ public:
     //================================================
     // Parameters
 
+    // Save simulation images to file or not
+    bool _saveWindowToFile = true;
+
+    // Window dimensions
+    unsigned int _windowWidth = 1000;
+    unsigned int _windowHeight = 1000;
+
     // Frequency levels
     // Note: Pick maximum basis flows sizes (minimum frequency levels) that are not too large
     // compared to domain features, otherwise basis stretch can sometimes fail
@@ -40,7 +47,9 @@ public:
     const int _minAnisoLvl = 0;
     const int _maxAnisoLvl = 1; // MAXIMUM 2, OTHER BASES ARE NOT DEFINED
 
+    //
     // Simulation parameters
+    //
 
     // nb iterations to project forces
     const uint _maxNbItMatBBInversion = 10;
@@ -102,7 +111,9 @@ public:
     const float _explicitTransfer_0m1 = 0.f;
     const float _explicitTransfer_m1m1 = 0.f;
 
-    // obstacle parameters
+    //
+    // Obstacle parameters
+    //
 
     //ObstacleType _obstacleType = ObstacleType::None;
     ObstacleType _obstacleType = ObstacleType::Circle;
@@ -198,6 +209,9 @@ public:
 
     // Render velocity grid
     void ComputeVelocityGridForDisplay();
+
+    // Save window as png in the Output folder.
+    void SaveWindowToFile();
 
     // Computes the B^T.B coefficient, using cached value if coefficient has been previously computed
     // i,j: indices of coefficient to compute
@@ -404,6 +418,7 @@ public:
     unsigned int _particleCircularSeedId = 0;
     bool _particleSeedBufferLooped = false;
     bool _velocityGridNeedsUpdating = true;
+    unsigned int _appFrameCount = 0;
 
 };
 

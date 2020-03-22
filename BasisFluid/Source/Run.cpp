@@ -19,6 +19,7 @@ bool Application::Run() {
             SimulationStep();
         }
         Draw();
+        _appFrameCount++;
     }
 
     return 0;

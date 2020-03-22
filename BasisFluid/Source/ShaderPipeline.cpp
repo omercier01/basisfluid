@@ -16,7 +16,6 @@ ShaderPipeline::ShaderProgram::ShaderProgram(
     size_t nbSources = src.size();
     const char ** sourceCodes = new const char *[nbSources];
     int count = 0;
-    string* sourceCodeStrings;
 
     for (initializer_list<string>::iterator iSrc = src.begin(); iSrc != src.end(); iSrc++) {
         sourceCodes[count++] = iSrc->c_str();

@@ -153,7 +153,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile />
       <PrecompiledHeaderOutputFile />
-      <AdditionalIncludeDirectories>C:\Users\Olivier\Documents\projects\basisfluid2020\Libs\glm-0.9.5.4\glm;C:\Users\Olivier\Documents\projects\basisfluid2020\Libs\glfw-3.1.2.bin.WIN64\include;C:\Users\Olivier\Documents\projects\basisfluid2020\Libs\glew-1.13.0.WIN64\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\Libs\glm-0.9.5.4\glm;$(SolutionDir)..\Libs\glfw-3.1.2.bin.WIN64\include;$(SolutionDir)..\Libs\glew-1.13.0.WIN64\include;$(SolutionDir)..\Libs\stb;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <WarningLevel>Level3</WarningLevel>
     </ClCompile>
@@ -200,7 +200,7 @@ xcopy /y "$(ProjectDir)..\Libs\glfw-3.1.2.bin.WIN64\lib-vc2015\glfw3.dll" "$(Out
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile />
       <PrecompiledHeaderOutputFile />
-      <AdditionalIncludeDirectories>C:\Users\Olivier\Documents\projects\basisfluid2020\Libs\glm-0.9.5.4\glm;C:\Users\Olivier\Documents\projects\basisfluid2020\Libs\glfw-3.1.2.bin.WIN64\include;C:\Users\Olivier\Documents\projects\basisfluid2020\Libs\glew-1.13.0.WIN64\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\Libs\glm-0.9.5.4\glm;$(SolutionDir)..\Libs\glfw-3.1.2.bin.WIN64\include;$(SolutionDir)..\Libs\glew-1.13.0.WIN64\include;$(SolutionDir)..\Libs\stb;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <WarningLevel>Level3</WarningLevel>
     </ClCompile>
