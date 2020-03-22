@@ -47,8 +47,8 @@ public:
         )";
 
         UseShaders({
-            new ShaderPipeline::ShaderProgram(GL_VERTEX_SHADER  , {vertexSource  }, true),
-            new ShaderPipeline::ShaderProgram(GL_FRAGMENT_SHADER, {fragmentSource}, true)
+            new ShaderPipeline::ShaderProgram(GL_VERTEX_SHADER  , {vertexSource  }),
+            new ShaderPipeline::ShaderProgram(GL_FRAGMENT_SHADER, {fragmentSource})
             });
 
         bufferPositions_loc = glGetAttribLocation(_vertexShader->_glidShaderProgram, "pos");
@@ -97,7 +97,6 @@ public:
         _nbPrimitives = app->_partPos->_metadataBuffer.nbElements;
 
         glDrawArrays(_primitiveType, 0, _nbPrimitives * _nbVerticesPerPrimitive);
-
     }
 
     GLuint bufferPositions_loc;

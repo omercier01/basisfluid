@@ -110,7 +110,6 @@ public:
             }
         )";
 
-
         const char* fragmentSource = R"(
             #version 430 core
 
@@ -123,11 +122,10 @@ public:
             }
         )";
 
-
         UseShaders({
-            new ShaderPipeline::ShaderProgram(GL_VERTEX_SHADER  , {vertexSource  }, true),
-            new ShaderPipeline::ShaderProgram(GL_GEOMETRY_SHADER, {geometrySource}, true),
-            new ShaderPipeline::ShaderProgram(GL_FRAGMENT_SHADER, {fragmentSource}, true)
+            new ShaderPipeline::ShaderProgram(GL_VERTEX_SHADER  , {vertexSource  }),
+            new ShaderPipeline::ShaderProgram(GL_GEOMETRY_SHADER, {geometrySource}),
+            new ShaderPipeline::ShaderProgram(GL_FRAGMENT_SHADER, {fragmentSource})
             });
 
         bufferStart_loc = glGetAttribLocation(_vertexShader->_glidShaderProgram, "pos");
@@ -153,7 +151,6 @@ public:
 
         _nbVerticesPerPrimitive = 1;
         _primitiveType = GL_POINTS;
-
     }
 
     void Execute() {
@@ -243,7 +240,6 @@ public:
 
     GLint vpMat_loc;
     GLenum vpMat_shaderType;
-
 };
 
 

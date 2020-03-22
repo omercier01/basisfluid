@@ -12,9 +12,6 @@ using namespace std;
 #define min8(a,b,c,d,e,f,g,h) std::min( std::min( std::min(a,b), std::min(c,d) ), std::min( std::min(e,f), std::min(g,h) ) )
 #define max8(a,b,c,d,e,f,g,h) std::max( std::max( std::max(a,b), std::max(c,d) ), std::max( std::max(e,f), std::max(g,h) ) )
 
-
-
-// clears the acceleration structure for particles, and then palces each particles in the acceleration grid.
 void Application::SetParticlesInAccelGrid()
 {
     for (uint i = 0; i < _accelParticlesRes; i++) {
@@ -34,10 +31,8 @@ void Application::SetParticlesInAccelGrid()
 }
 
 
-// compute particle direction first without moving them (because the velocity of a basis flow on a particle depends on its position). Then apply movement.
 void Application::ComputeParticleAdvection()
 {
-
     vec2* particlesPointer = _partPos->getCpuDataPointer();
     vec2* partVecsPointer = _partVecs->getCpuDataPointer();
     float* partAgesPointer = _partAges->getCpuDataPointer();
@@ -50,7 +45,7 @@ void Application::ComputeParticleAdvection()
             partVecsPointer[iPart] = vec2(0);
         }
 
-        // accumulate particle movement from basis velocities. Do not acutally move particles yet.
+        // accumulate particle movement from basis velocities. Does not move particles yet.
         for (unsigned int iBasis = 0; iBasis < _basisFlowParams->_nbElements; ++iBasis) {
             BasisFlow& b = basisFlowParamsPointer[iBasis];
 
@@ -86,12 +81,7 @@ void Application::ComputeParticleAdvection()
                             partVecsPointer[*partIt] += VecObstacle_stretch(p, b);
                         }
                         partVecsPointer[*partIt] += b.coeffBoundary *
-                            TranslatedBasisEval(
-                                p, b.freqLvl, b.center
-                            )
-                            ;
-
-
+                            TranslatedBasisEval(p, b.freqLvl, b.center);
                     }
                 }
             }
@@ -102,7 +92,6 @@ void Application::ComputeParticleAdvection()
             vec2 vec = partVecsPointer[iPart];
             particlesPointer[iPart] += _dt / _substepsParticles * vec;
             partAgesPointer[iPart] += _dt / _substepsParticles;
-
         }
 
         // move particles out of obstacles
@@ -120,7 +109,6 @@ void Application::ComputeParticleAdvection()
 }
 
 
-
 void Application::SeedParticles()
 {
     // reset seed cursor at beginning of circular buffer after loop, and detect looping to switch from appending to replacing
@@ -131,7 +119,7 @@ void Application::SeedParticles()
     }
 
     for (int i = 0; i < int(_nbParticlesPerSeedGroupPerDimension); ++i) {
-        // random seeding
+        // random seeding in disk
         vec2 p = vec2(_seedCenterX, _seedCenterY) + glm::diskRand(_seedRadius);
         bool isInsideObstacle = false;
         for (Obstacle* obs : _obstacles) {
@@ -143,7 +131,6 @@ void Application::SeedParticles()
         if (isInsideObstacle) { continue; }
         float temp = mod(float(10.f*(p.y - _domainBottom) / (_domainTop - _domainBottom)), 1.f);
         vec3 c = vec3(0, 0, 0);
-
 
         if (_particleSeedBufferLooped) {
             _partPos->setCpuData(_particleCircularSeedId, p);

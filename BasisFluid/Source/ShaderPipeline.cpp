@@ -9,49 +9,17 @@ using namespace std;
 
 ShaderPipeline::ShaderProgram::ShaderProgram(
     GLenum shaderType,
-    std::initializer_list<string> srcFilenames,
-    bool readSrcFilenamesAsSourceCode)
+    std::initializer_list<string> src)
 {
     _shaderType = shaderType;
 
-    size_t nbSources = srcFilenames.size();
+    size_t nbSources = src.size();
     const char ** sourceCodes = new const char *[nbSources];
     int count = 0;
     string* sourceCodeStrings;
 
-    if (readSrcFilenamesAsSourceCode) {
-        for (initializer_list<string>::iterator iSrc = srcFilenames.begin();
-            iSrc != srcFilenames.end(); iSrc++)
-        {
-            sourceCodes[count++] = iSrc->c_str();
-        }
-
-    }
-    else {
-        // Read the Vertex Shader code from the files
-        // based on http://www.opengl-tutorial.org/beginners-tutorials/tutorial-2-the-first-triangle/
-
-        sourceCodeStrings = new string[nbSources];
-
-        for (initializer_list<string>::iterator iSrc = srcFilenames.begin();
-            iSrc != srcFilenames.end(); iSrc++)
-        {
-            ifstream sourceCodeStream(*iSrc, ios::in);
-            if (sourceCodeStream.is_open())
-            {
-                string line = "";
-                while (getline(sourceCodeStream, line)) {
-                    sourceCodeStrings[count] += line + "\n";
-                }
-                sourceCodeStream.close();
-            }
-            else {
-                cout << "Error loading shader : " << *iSrc << endl;
-            }
-            sourceCodes[count] = sourceCodeStrings[count].c_str();
-            count++;
-        }
-
+    for (initializer_list<string>::iterator iSrc = src.begin(); iSrc != src.end(); iSrc++) {
+        sourceCodes[count++] = iSrc->c_str();
     }
 
     GLint result;
@@ -86,8 +54,6 @@ ShaderPipeline::ShaderProgram::ShaderProgram(
             cerr << info << endl;
         }
     }
-
-
 }
 
 
@@ -97,7 +63,7 @@ GLenum ShaderPipeline::GetAttribDataType(GLuint program, string attribName)
     GLint nbActiveAttribs;
     glGetProgramiv(program, GL_ACTIVE_ATTRIBUTES, &nbActiveAttribs);
     GLsizei tempLength; GLint tempSize; GLenum tempType; GLchar* tempName;
-    tempName = new GLchar[attribName.size() + 1]; // +1 so if the returned name has the same beginning but is longer, we'll discard it.
+    tempName = new GLchar[attribName.size() + 1]; // +1 so if the returned name has the same beginning but is longer, it will be discarded.
     for (int i = 0; i < nbActiveAttribs; i++) {
         glGetActiveAttrib(program, i, GLsizei(attribName.size() + 1), &tempLength, &tempSize, &tempType, tempName);
         if (!strcmp(attribName.c_str(), tempName)) { // if same name
@@ -109,7 +75,6 @@ GLenum ShaderPipeline::GetAttribDataType(GLuint program, string attribName)
     cout << "ShaderPipeline::GetAttribDataType : Unknown attribute name." << endl;
     return 0;
 }
-
 
 
 // adapted from https://chromium.googlesource.com/angle/angle/+/chromium/2027/src/common/utilities.cpp
@@ -202,6 +167,7 @@ GLbitfield ShaderPipeline::ShaderTypeEnumToBitField(
     return shaderBit;
 }
 
+
 ShaderPipeline::ShaderProgram *ShaderPipeline::GetShader(GLenum shaderType)
 {
     switch (shaderType) {
@@ -284,7 +250,7 @@ void ShaderPipeline::UseShaders(
             break;
         }
 
-        // attach shader shage
+        // attach shader stage
         glUseProgramStages(_glidProgramPipeline, shaderBit,
             (*iShader)->_glidShaderProgram);
     }
@@ -302,15 +268,15 @@ void ShaderPipeline::UseShaders(
         cerr << "Validation error in program pipeline :" << endl;
         cerr << info << endl;
     }
-
 }
+
 
 void ShaderPipeline::RemoveShader(GLenum shaderStage)
 {
     glUseProgramStages(_glidProgramPipeline,
         ShaderTypeEnumToBitField(shaderStage), 0);
 
-    // store shader ID
+    // remove shader ID
     switch (shaderStage) {
     case GL_VERTEX_SHADER:
         _vertexShader = 0;

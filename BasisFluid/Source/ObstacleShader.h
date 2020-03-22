@@ -38,8 +38,8 @@ public:
         )";
 
         UseShaders({
-            new ShaderPipeline::ShaderProgram(GL_VERTEX_SHADER  , {vertexSource  }, true),
-            new ShaderPipeline::ShaderProgram(GL_FRAGMENT_SHADER, {fragmentSource}, true)
+            new ShaderPipeline::ShaderProgram(GL_VERTEX_SHADER  , {vertexSource  }),
+            new ShaderPipeline::ShaderProgram(GL_FRAGMENT_SHADER, {fragmentSource})
             });
 
         bufferLineSegmentsVertices_loc = glGetAttribLocation(_vertexShader->_glidShaderProgram, "pos");
@@ -57,7 +57,6 @@ public:
 
         _nbVerticesPerPrimitive = 2;
         _primitiveType = GL_LINES;
-
     }
 
     void Execute() {
@@ -89,8 +88,6 @@ public:
         _nbPrimitives = app->_obstacleLines->_metadataBuffer.nbElements / 2;
 
         glDrawArrays(_primitiveType, 0, _nbPrimitives * _nbVerticesPerPrimitive);
-
-
     }
 
     GLuint bufferLineSegmentsVertices_loc;

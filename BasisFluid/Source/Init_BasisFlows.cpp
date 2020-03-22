@@ -49,6 +49,7 @@ bool Application::Init_BasisFlows() {
     //
     // set all bases of each frequency
     //
+
     _basisFlowParams->resize(0);
 
     unsigned int nbBasesTested = 0;
@@ -85,10 +86,7 @@ bool Application::Init_BasisFlows() {
 
                     BasisFlow stretchedBasis_staticOnly = ComputeStretch(BasisFlow(freqLvl, center), true);
 
-                    if (
-                        AllBitsSet(stretchedBasis_staticOnly.bitFlags, INTERIOR)
-
-                        ) {
+                    if (AllBitsSet(stretchedBasis_staticOnly.bitFlags, INTERIOR)) {
                         _basisFlowParams->appendCpu(BasisFlow(freqLvl, center));
 
                         // Add to basis groups
@@ -106,9 +104,6 @@ bool Application::Init_BasisFlows() {
 
     unsigned int nbBasisFlows = _basisFlowParams->_nbElements;
 
-
-
-
     // compute basis norm squared
     BasisFlow* basisFlowParamsPointer = _basisFlowParams->getCpuDataPointer();
     for (unsigned int iBasis = 0; iBasis < nbBasisFlows; ++iBasis) {
@@ -116,18 +111,14 @@ bool Application::Init_BasisFlows() {
         b.normSquared = MatBBCoeff(b, b);
     }
 
-
-
     // resize matrix computation vectors
-    _vecX->resize(N);
-    _vecTemp->resize(N);
-    _vecXForces->resize(N);
-    _vecXBoundaryForces->resize(N);
-    _vecB->resize(N);
-
+    _vecX->resize(nbBasisFlows);
+    _vecXForces->resize(nbBasisFlows);
+    _vecXBoundaryForces->resize(nbBasisFlows);
+    _vecB->resize(nbBasisFlows);
 
     // fill basis centers acceleration structure
-    for (unsigned int iBasis = 0; iBasis < N; ++iBasis) {
+    for (unsigned int iBasis = 0; iBasis < nbBasisFlows; ++iBasis) {
         BasisFlow b = _basisFlowParams->getCpuData(iBasis);
         uint idX = glm::clamp<int>(
             int(floor((b.center.x - _domainLeft) / (_domainRight - _domainLeft)*_accelBasisRes)),
@@ -138,34 +129,32 @@ bool Application::Init_BasisFlows() {
         _accelBasisCentersIds->getCpuData(idX, idY)->push_back(iBasis);
     }
 
-
     // precompute intersection bases (including themselves)
-    _intersectingBasesIds->resize(N);
-    _intersectingBasesIdsTransport->resize(N);
+    _intersectingBasesIds->resize(nbBasisFlows);
+    _intersectingBasesIdsTransport->resize(nbBasisFlows);
 
     for (unsigned int i = 0; i < _basisFlowParams->_nbElements; i++) {
         _intersectingBasesIds->setCpuData(i, new vector<unsigned int>);
         _intersectingBasesIdsTransport->setCpuData(i, new vector<unsigned int>);
     }
 
-
     basisFlowParamsPointer = _basisFlowParams->getCpuDataPointer();
 
     // precompute basis supports intersections
     std::vector<BasisSupport> basisSupports;
-    for (unsigned int iBasis = 0; iBasis < N; ++iBasis) {
+    for (unsigned int iBasis = 0; iBasis < nbBasisFlows; ++iBasis) {
         BasisFlow& b = basisFlowParamsPointer[iBasis];
         basisSupports.push_back(b.getSupport());
     }
 
     // compute basis intersections and transport
-    for (unsigned int iBasis1 = 0; iBasis1 < N; ++iBasis1) {
+    for (unsigned int iBasis1 = 0; iBasis1 < nbBasisFlows; ++iBasis1) {
         BasisFlow& b1 = basisFlowParamsPointer[iBasis1];
         BasisSupport& b1Support = basisSupports[iBasis1];
 
         vec2 b1TransportLimits = b1.supportHalfSize()*0.5f*1.01f;
 
-        for (unsigned int iBasis2 = iBasis1 + 1; iBasis2 < N; ++iBasis2) {
+        for (unsigned int iBasis2 = iBasis1 + 1; iBasis2 < nbBasisFlows; ++iBasis2) {
             BasisFlow& b2 = basisFlowParamsPointer[iBasis2];
             BasisSupport& b2Support = basisSupports[iBasis2];
 
@@ -179,7 +168,8 @@ bool Application::Init_BasisFlows() {
                     b2.freqLvl == b1.freqLvl &&
                     abs(b2.center.x - b1.center.x) <= b1TransportLimits.x &&
                     abs(b2.center.y - b1.center.y) <= b1TransportLimits.y
-                    ) {
+                    )
+                {
                     _intersectingBasesIdsTransport->getCpuData(iBasis1)->push_back(iBasis2);
                     _intersectingBasesIdsTransport->getCpuData(iBasis2)->push_back(iBasis1);
                 }
@@ -189,8 +179,6 @@ bool Application::Init_BasisFlows() {
         // include itself in intersections
         _intersectingBasesIds->getCpuData(iBasis1)->push_back(iBasis1);
         _intersectingBasesIdsTransport->getCpuData(iBasis1)->push_back(iBasis1);
-
-
 
         if ((iBasis1 + 1) % 1000 == 0) { std::cout << "Basis intersection: " << iBasis1 + 1 << "/" << _basisFlowParams->_nbElements << endl; }
     }
@@ -205,11 +193,10 @@ bool Application::Init_BasisFlows() {
     basisSupports.clear();
 
     // precompute decompressed T coefficients
-
     std::cout << "computing decompressed coefficients T..." << endl;
     _coeffsTDecompressedIntersections.clear();
-    _coeffsTDecompressedIntersections.resize(N);
-    for (unsigned int i = 0; i < N; i++) {
+    _coeffsTDecompressedIntersections.resize(nbBasisFlows);
+    for (unsigned int i = 0; i < nbBasisFlows; i++) {
         vector<CoeffTDecompressedIntersectionInfo>& intersectionInfos = _coeffsTDecompressedIntersections[i];
         vector<unsigned int>* localIntersectingBasesIds = _intersectingBasesIds->getCpuData(i);
         for (auto itJ = localIntersectingBasesIds->begin(); itJ != localIntersectingBasesIds->end(); ++itJ) {
@@ -218,31 +205,28 @@ bool Application::Init_BasisFlows() {
         }
 
         if ((i + 1) % 1000 == 0) {
-            std::cout << "decompressed T : " << i + 1 << " / " << N << endl;
+            std::cout << "decompressed T : " << i + 1 << " / " << nbBasisFlows << endl;
         }
     }
-    std::cout << "decompressed T : " << N << " / " << N << endl;
-
+    std::cout << "decompressed T : " << nbBasisFlows << " / " << nbBasisFlows << endl;
 
     // precompute decompressed BB coefficients
     std::cout << "computing decompressed coefficients BB..." << endl;
     _coeffsBBDecompressedIntersections.clear();
-    _coeffsBBDecompressedIntersections.resize(N);
+    _coeffsBBDecompressedIntersections.resize(nbBasisFlows);
     _coeffBBExplicitTransferSum_abs.clear();
-    _coeffBBExplicitTransferSum_abs.resize(N);
+    _coeffBBExplicitTransferSum_abs.resize(nbBasisFlows);
     for (int iRelFreq = 0; iRelFreq < _nbExplicitTransferFreqs; iRelFreq++) {
-        _intersectingBasesIdsDeformation[iRelFreq]->resize(N);
+        _intersectingBasesIdsDeformation[iRelFreq]->resize(nbBasisFlows);
         for (unsigned int i = 0; i < _basisFlowParams->_nbElements; i++) {
             _intersectingBasesIdsDeformation[iRelFreq]->setCpuData(i, new vector<CoeffBBDecompressedIntersectionInfo>);
         }
     }
 
-
-    for (unsigned int i = 0; i < N; i++) {
+    for (unsigned int i = 0; i < nbBasisFlows; i++) {
         vector<CoeffBBDecompressedIntersectionInfo>& intersectionInfos = _coeffsBBDecompressedIntersections[i];
         vector<unsigned int>* localIntersectingBasesIds = _intersectingBasesIds->getCpuData(i);
         float explicitTransferTotalWeight_abs[_nbExplicitTransferFreqs] = { 0 };
-
 
         ivec2 freqI = _basisFlowParams->getCpuData(i).freqLvl;
         for (auto it = localIntersectingBasesIds->begin(); it != localIntersectingBasesIds->end(); ++it) {
@@ -253,40 +237,28 @@ bool Application::Init_BasisFlows() {
             ivec2 freqJ = _basisFlowParams->getCpuData(*it).freqLvl;
             for (int iRelFreq = 0; iRelFreq < _nbExplicitTransferFreqs; iRelFreq++) {
                 if (freqJ - freqI == _explicitTransferFreqs[iRelFreq]) {
-
                     explicitTransferTotalWeight_abs[iRelFreq] += abs(coeff);
-
                     _intersectingBasesIdsDeformation[iRelFreq]->getCpuData(i)->push_back(CoeffBBDecompressedIntersectionInfo((*it), coeff));
                 }
             }
         }
-
 
         for (int iRelFreq = 0; iRelFreq < _nbExplicitTransferFreqs; iRelFreq++) {
             _coeffBBExplicitTransferSum_abs[i].coeffs[iRelFreq] = explicitTransferTotalWeight_abs[iRelFreq];
         }
 
         if ((i + 1) % 1000 == 0) {
-            std::cout << "Decompressed BB : " << i + 1 << " / " << N << endl;
+            std::cout << "Decompressed BB : " << i + 1 << " / " << nbBasisFlows << endl;
         }
     }
-    std::cout << "Decompressed BB : " << N << " / " << N << endl;
-
+    std::cout << "Decompressed BB : " << nbBasisFlows << " / " << nbBasisFlows << endl;
 
     unsigned int minNbBases = -1;
     unsigned int maxNbBases = 0;
-    for (unsigned int i = 0; i < N; i++) {
+    for (unsigned int i = 0; i < nbBasisFlows; i++) {
         minNbBases = glm::min(minNbBases, (unsigned int)_coeffsBBDecompressedIntersections[i].size());
         maxNbBases = glm::max(maxNbBases, (unsigned int)_coeffsBBDecompressedIntersections[i].size());
     }
-
-
-    //// set prevBilFlags
-    //for (unsigned int iBasis = 0; iBasis < N; ++iBasis) {
-    //    BasisFlow& b = basisFlowParamsPointer[iBasis];
-    //    b.prevBitFlags = b.bitFlags;
-    //}
-
 
     ss.str("");
     ss << "Data/Coeffs" << "-" << _maxFreqLvl << "-" << _maxAnisoLvl << "-BB.txt";
@@ -296,7 +268,6 @@ bool Application::Init_BasisFlows() {
     ss.str("");
     ss << "Data/Coeffs" << "-" << _maxFreqLvl << "-" << _maxAnisoLvl << "-T.txt";
     SaveCoeffsT(ss.str());
-
 
     std::cout << "Basis setup done." << endl;
     PrintTime();

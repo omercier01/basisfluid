@@ -284,6 +284,9 @@ public:
     // on a grid, and projects forces from that grid to the basis flows.
     void AddParticleForcesToBasisFlows();
 
+    // Projects dynamic obsacle motion onto boundary basis flows. See Secton 6.2 .
+    void ProjectDynamicObstacleBoundaryMotion();
+
     // Computes blinear weights for basis advection. See Equation 20.
     // newCenter: position where basis bi is being moved
     // bi: basis being moved
@@ -317,7 +320,6 @@ public:
 
     // simulation buffers
     std::unique_ptr<VectorField2D> _velocityField = nullptr;
-    std::unique_ptr<VectorField2D> _prevVelocityField = nullptr;
     std::unique_ptr<VectorField2D> _forceField = nullptr;
     std::unique_ptr<VectorField2D>* _basisFlowTemplates = nullptr;
     std::unique_ptr<DataBuffer1D<BasisFlow>> _basisFlowParams = nullptr;
@@ -327,6 +329,8 @@ public:
     std::unique_ptr<DataBuffer1D<vec2>> _partPos = nullptr;
     std::unique_ptr<DataBuffer1D<vec2>> _partVecs = nullptr;
     std::unique_ptr<DataBuffer1D<float>> _partAges = nullptr;
+
+    // particle acceleration grid
     std::unique_ptr<GridData2D<std::vector<unsigned int>*>> _accelParticles = nullptr;
 
     // draw buffers
@@ -336,18 +340,14 @@ public:
 
     // force projection buffers
     std::unique_ptr<DataBuffer1D<double>> _vecX = nullptr;
-    std::unique_ptr<DataBuffer1D<double>> _vecTemp = nullptr;
     std::unique_ptr<DataBuffer1D<double>> _vecXForces = nullptr;
     std::unique_ptr<DataBuffer1D<double>> _vecXBoundaryForces = nullptr;
     std::unique_ptr<DataBuffer1D<double>> _vecB = nullptr;
 
-    // integration buffers
+    // acceleration structure to fetch basis flows that intersect a region of the simulation domain
     std::unique_ptr<DataBuffer2D<std::vector<unsigned int>*>> _accelBasisCentersIds = nullptr;
-    std::unique_ptr<DataBuffer1D<vec4>> _integrationTransferBufferGpu = nullptr;
-    std::unique_ptr<DataBuffer1D<float>> _integrationMultipleTransferBufferGpu = nullptr;
-    std::unique_ptr<DataBuffer1D<vec2>> _integrationBasisCentersBufferGpu = nullptr;
 
-    // Stores, for all bais flows, the ID of all beighboring basis flows.
+    // Stores, for all basis flows, the ID of all beighboring basis flows.
     std::unique_ptr<DataBuffer1D<std::vector<unsigned int>*>> _intersectingBasesIds = nullptr;
 
     // Stores, for all basis flows, the ID of all neighboring basis flows of the same frequency.

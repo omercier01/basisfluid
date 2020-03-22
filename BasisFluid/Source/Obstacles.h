@@ -5,15 +5,11 @@ public:
     std::function<float(glm::vec2)> phi; // assumed eikonal, to be updated by updatePhi().
     std::function<glm::vec2(glm::vec2)> gradPhi; // assumed unit norm, to be updated by updatePhi().
 
-    bool dynamic; // if can move during the simulation
-    bool visible;
+    bool dynamic; // true is obstacle moves or deforms during simulation
     std::function<float(glm::vec2)> prevPhi; // only used for dynamic obstacles, copied from phi;
     std::function<glm::vec2(glm::vec2)> prevGradPhi; // only used for dynamic obstacles, copied from gradPhi;
 
-
-    Obstacle(
-    ) {
-        visible = true;
+    Obstacle() {
         dynamic = true;
     }
 
@@ -29,7 +25,6 @@ public:
         prevGradPhi = gradPhi;
 
         dynamic = false;
-        visible = inVisible;
     }
 
     virtual void updatePhi() {} // to update dynamic obstacles
@@ -38,13 +33,11 @@ public:
 class ObstacleCircle : public Obstacle {
 public:
 
-    ObstacleCircle()
-    {
+    ObstacleCircle() {
         dynamic = true;
     }
 
     void updatePhi() override {
-
         _frameCount++;
 
         glm::vec2 center = app->_obstacleCircleMotionRadius*glm::vec2(sin(app->_obstacleCircleMotionSpeed*app->_dt*_frameCount),
@@ -65,11 +58,9 @@ public:
 
 struct ObstacleBar : Obstacle {
 
-    ObstacleBar()
-    {
+    ObstacleBar() {
         dynamic = true;
     }
-
 
     void updatePhi() override {
 
@@ -103,12 +94,7 @@ struct ObstacleBar : Obstacle {
                 return std::sqrt(Sqr(x + widthX) + Sqr(y + widthY));
             }
             else {
-                return glm::max<float>
-                    (
-                        abs(x) - widthX,
-                        abs(y) - widthY
-                        )
-                    ;
+                return glm::max<float> (abs(x) - widthX, abs(y) - widthY);
             }
         };
 
@@ -124,5 +110,4 @@ struct ObstacleBar : Obstacle {
     }
 
     unsigned int _frameCount = 0;
-
 };

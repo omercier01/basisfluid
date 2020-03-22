@@ -1,4 +1,4 @@
-// vector field defined by vectors on a regular grid. Data is on cell corners.
+// vector field defined by vectors on a regular grid. Data is stored on cell corners.
 
 #ifndef VECTORFIELD2D_H
 #define VECTORFIELD2D_H

@@ -57,7 +57,6 @@ void Application::InverseBBMatrix(
 
     // get references
     double* vecXPointer = vecX->getCpuDataPointer();
-    double* vecTempPointer = _vecTemp->getCpuDataPointer();
     double* vecBPointer = vecB->getCpuDataPointer();
     BasisFlow* basisFlowParamsPointer = _basisFlowParams->getCpuDataPointer();
 

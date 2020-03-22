@@ -22,8 +22,7 @@ public:
         GLuint _glidShaderProgram;
     public:
         ShaderProgram(GLenum shaderType,
-                      std::initializer_list<std::string> srcFilenames,
-                      bool readSrcFilenamesAsSourceCode = false);
+                      std::initializer_list<std::string> src);
         ~ShaderProgram() {}
     };
 
@@ -49,7 +48,6 @@ public:
     static unsigned int NumberOfComponentsInType(GLenum type);
     GLenum GetAttribDataType(GLuint program, std::string attribName);
     ShaderProgram* GetShader(GLenum shaderType);
-
 };
 
 

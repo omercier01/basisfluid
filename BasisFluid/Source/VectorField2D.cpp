@@ -1,6 +1,8 @@
 #include "VectorField2D.h"
 
+
 using namespace glm;
+
 
 VectorField2D::VectorField2D(
     float boundXMin, float boundXMax, float boundYMin, float boundYMax,
@@ -18,6 +20,7 @@ VectorField2D::VectorField2D(
     _vectors.resize(nbCellsX + 1, nbCellsY + 1);
 }
 
+
 void VectorField2D::populateWithFunction(std::function<vec2(float x, float y)> function)
 {
     vec2* _vectorsPointer = _vectors.getCpuDataPointer();
@@ -30,6 +33,7 @@ void VectorField2D::populateWithFunction(std::function<vec2(float x, float y)> f
             _vectorsPointer[nxVec*j + i] = function(x, y);
         }
 }
+
 
 void VectorField2D::addFunction(std::function<vec2(float, float)> function)
 {
@@ -44,6 +48,7 @@ void VectorField2D::addFunction(std::function<vec2(float, float)> function)
         }
 }
 
+
 vec2 VectorField2D::interp(vec2 pos)
 {
     float x = pos.x;
@@ -56,7 +61,6 @@ vec2 VectorField2D::interp(vec2 pos)
 
     float normalizedX = (x - _boundXMin) / (_boundXMax - _boundXMin)*_nbCellsX;
     float normalizedY = (y - _boundYMin) / (_boundYMax - _boundYMin)*_nbCellsY;
-
 
     if (normalizedX < 0) {
         return vec2(0, 0);
@@ -94,28 +98,32 @@ vec2 VectorField2D::interp(vec2 pos)
         (1 - weightY)*_vectorsPointer[nx*indexYLeft + indexXRight] +
             (weightY)*_vectorsPointer[nx*indexYRight + indexXRight]
             );
-
 }
+
 
 void VectorField2D::addVectorCpuData(unsigned int i, unsigned int j, vec2 data)
 {
     _vectors.addCpuData(i, j, data);
 }
 
+
 void VectorField2D::setVectorCpuData(unsigned int i, unsigned int j, vec2 data)
 {
     _vectors.setCpuData(i, j, data);
 }
+
 
 glm::vec2 VectorField2D::getVectorCpuData(unsigned int i, unsigned int j)
 {
     return _vectors.getCpuData(i, j);
 }
 
+
 void VectorField2D::createVectorCpuStorage()
 {
     _vectors.createCpuStorage();
 }
+
 
 void VectorField2D::createVectorTexture2DStorage(
     GLenum internalFormat,
@@ -145,7 +153,6 @@ void VectorField2D::createVectorTexture2DStorage(
 
 void VectorField2D::vectorTexture2DStorageAdjustBoundaryCondition()
 {
-    //LINEAR, FLAT, ZERO, MIRROR, PERIODIC
     float borderColor[] = { 0.0f, 0.0f, 0.0f, 0.0f };
     glTextureParameteri(_vectors._glidTexture2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
     glTextureParameteri(_vectors._glidTexture2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
@@ -158,10 +165,12 @@ void VectorField2D::setVectorsFromImage(Metadata2DImage2D metadataImage2D, unsig
     _vectors.setFromImage(metadataImage2D, level);
 }
 
+
 unsigned int VectorField2D::nbElementsX()
 {
     return _nbCellsX + 1;
 }
+
 
 unsigned int VectorField2D::nbElementsY()
 {
@@ -185,7 +194,6 @@ uvec2 VectorField2D::pointToClosestNodeIndex(vec2 point)
     float normalizedX = (point.x - _boundXMin) / (_boundXMax - _boundXMin)*_nbCellsX;
     float normalizedY = (point.y - _boundYMin) / (_boundYMax - _boundYMin)*_nbCellsY;
 
-
     if (normalizedX < 0) {
         index.x = 0;
     }
@@ -207,6 +215,7 @@ uvec2 VectorField2D::pointToClosestNodeIndex(vec2 point)
 
     return index;
 }
+
 
 uvec2 VectorField2D::pointToCellIndex(vec2 point)
 {

@@ -1,5 +1,6 @@
 
 #include "Application.h"
+#include "Obstacles.h"
 
 #include "glm/ext.hpp"
 
@@ -60,6 +61,37 @@ void Application::AddParticleForcesToBasisFlows()
     double* vecXForcesPointer = _vecXForces->getCpuDataPointer();
     for (unsigned int i = 0; i < _basisFlowParams->_nbElements; ++i) {
         basisFlowParamsPointer[i].coeff += _dt * float(vecXForcesPointer[i]);
+    }
+}
+
+
+void Application::ProjectDynamicObstacleBoundaryMotion()
+{
+    _forceField->populateWithFunction([=](float /*x*/, float /*y*/) { return vec2(0); });
+    for (Obstacle* obs : _obstacles)
+    {
+        if (obs->dynamic)
+        {
+            _forceField->addFunction([=](float x, float y) {
+                float phi = obs->phi(vec2(x, y));
+                return -(_obstacleBoundaryFactor * (phi - obs->prevPhi(vec2(x, y))) / _dt * obs->gradPhi(vec2(x, y))) * glm::max<float>(1.f - abs(phi) / _boundarySDFBandDecrease, 0.f);
+            });
+        }
+    }
+
+    BasisFlow* basisFlowParamsPointer = _basisFlowParams->getCpuDataPointer();
+    double* vecBPointer = _vecB->getCpuDataPointer();
+    for (unsigned int iBasis = 0; iBasis < _basisFlowParams->_nbElements; ++iBasis)
+    {
+        BasisFlow& b = basisFlowParamsPointer[iBasis];
+        vecBPointer[iBasis] = IntegrateBasisGrid(b, _forceField.get());
+    }
+
+    InverseBBMatrix(_vecXBoundaryForces.get(), _vecB.get(), BASIS_FLAGS::DYNAMIC_BOUNDARY_PROJECTION);
+
+    double* vecXBoundaryForcesPointer = _vecXBoundaryForces->getCpuDataPointer();
+    for (unsigned int i = 0; i < _basisFlowParams->_nbElements; ++i) {
+        basisFlowParamsPointer[i].coeffBoundary = float(vecXBoundaryForcesPointer[i]);
     }
 }
 
@@ -127,13 +159,11 @@ void Application::ComputeBasisAdvection()
 
             for (uint iX = minId.x; iX <= maxId.x; iX++) {
                 for (uint iY = minId.y; iY <= maxId.y; iY++) {
+                    for (unsigned int basisId : *(_accelBasisCentersIds->getCpuData(iX, iY)))
                     {
-                        for (unsigned int basisId : *(_accelBasisCentersIds->getCpuData(iX, iY)))
-                        {
-                            BasisFlow& bj = basisFlowParamsPointer[basisId];
-                            if (bj.freqLvl == bi.freqLvl) {
-                                ComputeNewCenterProportions(newCenter, bi, bj, interBasisDist);
-                            }
+                        BasisFlow& bj = basisFlowParamsPointer[basisId];
+                        if (bj.freqLvl == bi.freqLvl) {
+                            ComputeNewCenterProportions(newCenter, bi, bj, interBasisDist);
                         }
                     }
                 }
