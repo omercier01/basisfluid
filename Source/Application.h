@@ -33,7 +33,7 @@ public:
     // Parameters
 
     // Save simulation images to file or not
-    bool _saveWindowToFile = true;
+    bool _saveWindowToFile = false;
 
     // Window dimensions
     unsigned int _windowWidth = 1000;

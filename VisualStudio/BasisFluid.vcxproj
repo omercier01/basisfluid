@@ -19,48 +19,48 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\BasisFluid\Source\Application.cpp" />
-    <ClCompile Include="..\BasisFluid\Source\BasisFlows.cpp" />
-    <ClCompile Include="..\BasisFluid\Source\BoundaryFlows.cpp" />
-    <ClCompile Include="..\BasisFluid\Source\DataBuffer1D.tpp">
+    <ClCompile Include="..\Source\Application.cpp" />
+    <ClCompile Include="..\Source\BasisFlows.cpp" />
+    <ClCompile Include="..\Source\BoundaryFlows.cpp" />
+    <ClCompile Include="..\Source\DataBuffer1D.tpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="..\BasisFluid\Source\DataBuffer2D.tpp">
+    <ClCompile Include="..\Source\DataBuffer2D.tpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="..\BasisFluid\Source\Dynamics.cpp" />
-    <ClCompile Include="..\BasisFluid\Source\GridData2D.tpp">
+    <ClCompile Include="..\Source\Dynamics.cpp" />
+    <ClCompile Include="..\Source\GridData2D.tpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="..\BasisFluid\Source\Init.cpp" />
-    <ClCompile Include="..\BasisFluid\Source\Init_BasisFlows.cpp" />
-    <ClCompile Include="..\BasisFluid\Source\Init_DataBuffers.cpp" />
-    <ClCompile Include="..\BasisFluid\Source\Init_Obstacles.cpp" />
-    <ClCompile Include="..\BasisFluid\Source\Obstacles.h" />
-    <ClCompile Include="..\BasisFluid\Source\Particles.cpp" />
-    <ClCompile Include="..\BasisFluid\Source\ShaderPipeline.cpp" />
-    <ClCompile Include="..\BasisFluid\Source\Run.cpp" />
-    <ClCompile Include="..\BasisFluid\Source\Draw.cpp" />
-    <ClCompile Include="..\BasisFluid\Source\Main.cpp" />
-    <ClCompile Include="..\BasisFluid\Source\Callbacks.cpp" />
-    <ClCompile Include="..\BasisFluid\Source\SimulationStep.cpp" />
-    <ClCompile Include="..\BasisFluid\Source\VectorField2D.cpp" />
+    <ClCompile Include="..\Source\Init.cpp" />
+    <ClCompile Include="..\Source\Init_BasisFlows.cpp" />
+    <ClCompile Include="..\Source\Init_DataBuffers.cpp" />
+    <ClCompile Include="..\Source\Init_Obstacles.cpp" />
+    <ClCompile Include="..\Source\Obstacles.h" />
+    <ClCompile Include="..\Source\Particles.cpp" />
+    <ClCompile Include="..\Source\ShaderPipeline.cpp" />
+    <ClCompile Include="..\Source\Run.cpp" />
+    <ClCompile Include="..\Source\Draw.cpp" />
+    <ClCompile Include="..\Source\Main.cpp" />
+    <ClCompile Include="..\Source\Callbacks.cpp" />
+    <ClCompile Include="..\Source\SimulationStep.cpp" />
+    <ClCompile Include="..\Source\VectorField2D.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\BasisFluid\Source\Application.h" />
-    <ClInclude Include="..\BasisFluid\Source\BasisFlows.h" />
-    <ClInclude Include="..\BasisFluid\Source\DataBuffer1D.h" />
-    <ClInclude Include="..\BasisFluid\Source\DataBuffer2D.h" />
-    <ClInclude Include="..\BasisFluid\Source\GridData2D.h" />
-    <ClInclude Include="..\BasisFluid\Source\ObstacleShader.h" />
-    <ClInclude Include="..\BasisFluid\Source\ParticleShader.h" />
-    <ClInclude Include="..\BasisFluid\Source\ShaderPipeline.h" />
-    <ClInclude Include="..\BasisFluid\Source\Utils.h" />
-    <ClInclude Include="..\BasisFluid\Source\VectorField2D.h" />
-    <ClInclude Include="..\BasisFluid\Source\VelocityArrowShader.h" />
+    <ClInclude Include="..\Source\Application.h" />
+    <ClInclude Include="..\Source\BasisFlows.h" />
+    <ClInclude Include="..\Source\DataBuffer1D.h" />
+    <ClInclude Include="..\Source\DataBuffer2D.h" />
+    <ClInclude Include="..\Source\GridData2D.h" />
+    <ClInclude Include="..\Source\ObstacleShader.h" />
+    <ClInclude Include="..\Source\ParticleShader.h" />
+    <ClInclude Include="..\Source\ShaderPipeline.h" />
+    <ClInclude Include="..\Source\Utils.h" />
+    <ClInclude Include="..\Source\VectorField2D.h" />
+    <ClInclude Include="..\Source\VelocityArrowShader.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
